@@ -58,3 +58,13 @@ class ProjectUpdateView(UpdateView):
 class ProjectDetailView(DetailView):
     model = Project
     template_name = 'project_detail.html'
+
+
+class ProjectDeleteView(DeleteView):
+    model = Project
+    template_name = 'project_delete.html'
+    success_url = '/projects'
+
+    def test_func(self):
+        # TODO check if request sender is project lead
+        return True
