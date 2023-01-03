@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from ..models import User, Project, Visibility
+from mini_githubcic.models import User, Project, Visibility
 
 
 class Command(BaseCommand):
@@ -26,17 +26,20 @@ class Command(BaseCommand):
 
         p1 = Project(title="project", description="d1", licence="l1", visibility=Visibility.PUBLIC,
                      link="https://github.com/" + u1.username + "/project.git", lead=u1)
+        p1.save()
         p1.developers.add(u1)
         p1.save()
 
         p2 = Project(title="test", description="d2", licence="l2", visibility=Visibility.PUBLIC,
                      link="https://github.com/" + u2.username + "/test.git", lead=u2)
+        p2.save()
         p2.developers.add(u1)
         p2.developers.add(u2)
         p2.save()
 
         p3 = Project(title="gitic", description="d3", licence="l3", visibility=Visibility.PRIVATE,
                      link="https://github.com/" + u3.username + "/gitic.git", lead=u3)
+        p3.save()
         p3.developers.add(u3)
         p3.save()
 

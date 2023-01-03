@@ -1,10 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="title">Repositories</h1>
+
+<div class="container">
+    <a class="btn btn-primary default-button" href="/projects/add">New repository</a>
+    <br/>
+    {% if projects %}
+    {% for project in projects %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ project }} </p>
+            <a class="btn btn-danger" href="/projects/{{project.id}}/delete">Delete</a>
+            <a class="btn btn-primary" href="/projects/{{project.id}}/update">View</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    No repositories.
+    {% endif %}
+</div>
+{% endblock %}
