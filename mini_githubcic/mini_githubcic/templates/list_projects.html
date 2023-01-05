@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="title">Repositories</h1>
+
+<div class="container">
+    <a class="btn btn-primary default-button" href="{% url 'add_project' %}">New repository</a>
+    <br/>
+    {% if projects %}
+    {% for project in projects %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ project }} </p>
+            <a class="btn btn-danger" href="{% url 'project_delete' project.id %}">Delete</a>
+            <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no added repositories.
+    {% endif %}
+</div>
+{% endblock %}
