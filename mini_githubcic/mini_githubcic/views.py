@@ -9,14 +9,16 @@ from django.views.generic import (
 )
 from .models import Project, User
 
+
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
-    return render(request,'index.html',{"title":title})
+    return render(request, 'index.html', {"title": title})
 
-def login(request,id=None):
+
+def login(request, id=None):
     if request.method == 'GET':
         return render(request, "login.html")
-    if request.method=='POST':
+    if request.method == 'POST':
 
         username = request.POST['username']
         password = request.POST['password']
@@ -31,7 +33,8 @@ def login(request,id=None):
 
         except:
             return render(request, "login.html",
-                {"users_error": "User with this username and password does not exist"})
+                          {"users_error": "User with this username and password does not exist"})
+
 
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
