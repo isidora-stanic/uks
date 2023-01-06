@@ -7,8 +7,33 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-
 from .models import Project, User
+
+
+def index(request):
+    title = apps.get_app_config('mini_githubcic').verbose_name
+    return render(request, 'index.html', {"title": title})
+
+
+def login(request, id=None):
+    if request.method == 'GET':
+        return render(request, "login.html")
+    if request.method == 'POST':
+
+        username = request.POST['username']
+        password = request.POST['password']
+
+        try:
+            user = User.objects.get(username=username)
+            if user.password != password:
+                return render(request, "login.html",
+                              {"users_error": "User with this username and password does not exist"})
+
+            return render(request, "index.html", {"title": "first page"})
+
+        except:
+            return render(request, "login.html",
+                          {"users_error": "User with this username and password does not exist"})
 
 
 def index(request):

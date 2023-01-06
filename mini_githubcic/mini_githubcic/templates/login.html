@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+{% if users_error  %}
+<h1>Log in is not possible</h1>
+{% if users_error %}
+<p>{{users_error}}</p>
+{% endif %}
+{% else %}
+<h1>Log in:</h1>
+<form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <table>
+        <tr>
+            <td>Username:</td>
+            <td>
+                <input type="text" name="username" value="{{ username }}"/></td>
+            <td>
+                {% if username_error %}
+                <div class="greska">{{username_error}}</div>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Password:</td>
+            <td>
+                <input type="text" name="password" value="{{ password }}"></td>
+            <td>
+                {% if password %}
+                <div class="greska">{{password_error}}</div>
+                {% endif %}
+            </td>
+        </tr>
+
+
+        {% if stari_id %}
+        <tr>
+            <td>
+                <input type="hidden" name="stari_id" value="{{ stari_id }}"/>
+            </td>
+        </tr>
+
+        {% endif %}
+        <tr>
+            <td><input type="submit" value="Unesi"/></td>
+        </tr>
+    </table>
+</form>
+{% endif %}
+{% endblock %}
