@@ -30,7 +30,6 @@ urlpatterns = [
 
     path('projects/<int:pk>/issues/', IssueListView.as_view(), name='project_issues'),
     path('projects/<int:pk>/issues/add', IssueCreateView.as_view(), name='add_issue'),
-    # mora pk da bude za issue - kada se radi sa detail view
     path('projects/<int:prk>/issues/<int:pk>', IssueDetailView.as_view(), name='issue_detail'),
     path('projects/<int:pk>/issues/<int:ik>/update', IssueUpdateView.as_view(), name='issue_update'),
     path('projects/<int:pk>/issues/<int:ik>/delete', IssueDeleteView.as_view(), name='issue_delete'),
