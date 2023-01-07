@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="title">Milestones</h1>
+
+<div class="container">
+    <a class="btn btn-primary default-button" href="{% url 'add_milestone' %}">New milestone</a>
+    <br/>
+    {% if milestones %}
+    {% for milestone in milestones %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ milestone }} </p>
+            <a class="btn btn-danger" href="{% url 'milestone_delete' milestone.id %}">Delete</a>
+            <a class="btn btn-primary" href="{% url 'milestone_detail' milestone.id %}">View</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no added milestones.
+    {% endif %}
+</div>
+{% endblock %}

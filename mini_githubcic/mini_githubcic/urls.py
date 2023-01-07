@@ -27,4 +27,9 @@ urlpatterns = [
     path('projects/<int:pk>', ProjectDetailView.as_view(), name='project_detail'),
     path('projects/<int:pk>/update', ProjectUpdateView.as_view(), name='project_update'),
     path('projects/<int:pk>/delete', ProjectDeleteView.as_view(), name='project_delete'),
+    path('milestones/', MilestoneListView.as_view(), name='list_milestones'),
+    path('milestones/add', MilestoneCreateView.as_view(), name='add_milestone'),
+    path('milestones/<int:pk>', MilestoneDetailView.as_view(), name='milestone_detail'),
+    path('milestones/<int:pk>/update', MilestoneUpdateView.as_view(), name='milestone_update'),
+    path('milestones/<int:pk>/delete', MilestoneDeleteView.as_view(), name='milestone_delete')
 ]

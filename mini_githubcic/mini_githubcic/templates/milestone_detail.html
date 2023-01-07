@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Detail milestone</h1>
+<article class="container">
+    <div>
+        <h2> Title - {{ object.title }}</h2>
+        <p> Description - {{ object.description }}</p>
+        <p> due date - {{ object.due_date }}</p>
+        <p> Status - {{ object.status }}</p>
+    </div>
+    <div>
+        <a class="btn btn-primary" href="{% url 'milestone_update' object.id %}">Update</a>
+        <a class="btn btn-danger" href="{% url 'milestone_delete' object.id %}">Delete</a>
+    </div>
+</article>
+{% endblock content %}

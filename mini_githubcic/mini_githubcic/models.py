@@ -61,6 +61,12 @@ class Milestone(models.Model):
     due_date = models.DateTimeField
     state = models.CharField(max_length=20, choices=State.choices, default=State.OPEN)
 
+    def __str__(self):
+        return "%s" % (self.title)
+
+    def get_absolute_url(self):
+        return reverse('milestone_detail', kwargs={'pk': self.pk})
+
 
 class Task(models.Model):
     title = models.CharField(max_length=50)
