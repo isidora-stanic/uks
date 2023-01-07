@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from mini_githubcic.models import User, Project, Visibility
+from mini_githubcic.models import User, Project, Visibility, Issue
 
 
 class Command(BaseCommand):
@@ -43,6 +43,30 @@ class Command(BaseCommand):
         p3.developers.add(u3)
         p3.save()
 
+    def _insert_issues(self):
+        Issue.objects.all().delete()
+
+        u1 = User.objects.get(username="U1")
+        u2 = User.objects.get(username="U2")
+        u3 = User.objects.get(username="U3")
+
+        p1 = Project.objects.get(description="d1")
+        p2 = Project.objects.get(description="d2")
+        p3 = Project.objects.get(description="d3")
+
+        i1 = Issue(title="issue1", description="i1", creator=u1, assigned_to=u1, project=p1, is_open=True)
+        i1.save()
+
+        i2 = Issue(title="issue2", description="i2", creator=u2, assigned_to=u2, project=p2, is_open=True)
+        i2.save()
+
+        i3 = Issue(title="issue3", description="i3", creator=u1, assigned_to=u3, project=p3, is_open=True)
+        i3.save()
+
+        i4 = Issue(title="issue4", description="i4", creator=u1, assigned_to=u1, project=p1, is_open=False)
+        i4.save()
+
     def handle(self, *args, **options):
         self._insert_users()
         self._insert_projects()
+        self._insert_issues()
