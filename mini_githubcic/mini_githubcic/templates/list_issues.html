@@ -32,7 +32,7 @@
                 <div class="card-body">
                     <p class="card-text">{{ issue }} </p>
                     <a class="btn btn-danger" href="{% url 'issue_delete' issue.project.id issue.id %}">Delete</a>
-                    <a class="btn btn-primary" href="{% url issue %}">View</a>
+                    <a class="btn btn-primary" href="{% url 'issue_detail' issue.project.id issue.id %}">View</a>
                 </div>
             </div>
         {% endfor %}
@@ -43,7 +43,7 @@
                 <div class="card-body">
                     <p class="card-text">{{ issue }} </p>
                     <a class="btn btn-danger" href="{% url 'issue_delete' issue.project.id issue.id %}">Delete</a>
-                    <a class="btn btn-primary" href="{% url issue %}">View</a>
+                    <a class="btn btn-primary" href="{% url 'issue_detail' issue.project.id issue.id %}">View</a>
                 </div>
             </div>
         {% endfor %}
@@ -54,7 +54,7 @@
                 <div class="card-body">
                     <p class="card-text">{{ issue }} </p>
                     <a class="btn btn-danger" href="{% url 'issue_delete' issue.project.id issue.id %}">Delete</a>
-                    <a class="btn btn-primary" href="{% url issue %}">View</a>
+                    <a class="btn btn-primary" href="{% url 'issue_detail' issue.project.id issue.id %}">View</a>
                 </div>
             </div>
         {% endfor %}
