@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from mini_githubcic.models import User, Project, Visibility, Issue
+from mini_githubcic.models import User, Project, Visibility, Issue, Milestone, State
 
 
 class Command(BaseCommand):
@@ -66,7 +66,31 @@ class Command(BaseCommand):
         i4 = Issue(title="issue4", description="i4", creator=u1, assigned_to=u1, project=p1, is_open=False)
         i4.save()
 
+    def _insert_milestones(self):
+        Milestone.objects.all().delete()
+
+        u1 = User.objects.get(username="U1")
+        u2 = User.objects.get(username="U2")
+        u3 = User.objects.get(username="U3")
+
+        p1 = Project.objects.get(description="d1")
+        p2 = Project.objects.get(description="d2")
+        p3 = Project.objects.get(description="d3")
+
+        m1 = Issue(title="issue1", description="i1",project=p2, creator=u1,)
+        m1.save()
+
+        # m2 = Issue(title="issue2", description="i2", creator=u2, assigned_to=u2, project=p2, is_open=True)
+        # m2.save()
+        #
+        # m3 = Issue(title="issue3", description="i3", creator=u1, assigned_to=u3, project=p3, is_open=True)
+        # m3.save()
+        #
+        # m4 = Issue(title="issue4", description="i4", creator=u1, assigned_to=u1, project=p1, is_open=False)
+        # m4.save()
+
     def handle(self, *args, **options):
         self._insert_users()
         self._insert_projects()
         self._insert_issues()
+        self._insert_milestones()

@@ -9,8 +9,8 @@
         <p> Status - {{ object.status }}</p>
     </div>
     <div>
-        <a class="btn btn-primary" href="{% url 'milestone_update' object.id %}">Update</a>
-        <a class="btn btn-danger" href="{% url 'milestone_delete' object.id %}">Delete</a>
+        <a class="btn btn-primary" href="{% url 'milestone_update' milestone.project.id object.id %}">Update</a>
+        <a class="btn btn-danger" href="{% url 'milestone_delete' milestone.project.id object.id %}">Delete</a>
     </div>
 </article>
 {% endblock content %}

@@ -9,7 +9,7 @@
             {{ form | crispy }}
         </fieldset>
         <div class="form-group">
-            <a class="btn btn-danger" href="{% url 'list_milestones' %}">Cancel</a>
+            <a class="btn btn-danger" href="{% url 'list_milestones' project_id%}">Cancel</a>
             <button class="btn btn-primary" type="submit">Save</button>
         </div>
     </form>

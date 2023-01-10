@@ -8,11 +8,8 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-<<<<<<< HEAD
-from .models import Project, User, Milestone
-=======
-from .models import Project, User, Issue
->>>>>>> develop
+from .models import Project, User, Milestone, Issue
+
 
 
 def index(request):
@@ -40,10 +37,7 @@ def login(request, id=None):
             return render(request, "login.html",
                           {"users_error": "User with this username and password does not exist"})
 
-<<<<<<< HEAD
-=======
 
->>>>>>> develop
 class ProjectListView(ListView):
     model = Project
     template_name = 'list_projects.html'
@@ -78,7 +72,7 @@ class ProjectCreateView(CreateView):
         form.instance.lead = User.objects.get(username="U1")
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if Project.objects.filter(title=form.instance.title).exists():
-            form.add_error('titleExists', 'Title already in use')#ovde imam gresku??
+            form.add_error('titleExists', 'Title already in use')
 
         return super().form_valid(form)
 
@@ -112,9 +106,9 @@ class ProjectUpdateView(UpdateView):
 
     def form_valid(self, form):
 
-        if Project.objects.filter(title=form.instance.title).exists():#ovde kopirati kao kod mene jer izaziva gresku
+        if Project.objects.filter(title=form.instance.title).exists():
             if self.get_object().name != form.instance.name:
-                form.add_error('titleExists', 'Title already in use')#ovde imam gresku??
+                form.add_error('titleExists', 'Title already in use')
 
         return super().form_valid(form)
 
@@ -154,11 +148,18 @@ class ProjectDeleteView(DeleteView):
 
 
 class MilestoneListView(ListView):
-    # TODO per project
+
     model = Milestone
     template_name = 'list_milestones.html'
     context_object_name = 'milestones'
     ordering = ['title']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(MilestoneListView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=context['project_id']).first()
+        context['milestones'] = Milestone.objects.filter(project__id=context['project_id'])
+        return context
 
     def get_queryset(self):
         return Milestone.objects.all()
@@ -166,29 +167,37 @@ class MilestoneListView(ListView):
 class MilestoneCreateView(CreateView):
     model = Milestone
     template_name = 'new_milestone.html'
-    fields = ['title', 'description',  'state']#'due_date',
+    fields = ['title', 'description', 'due_date', 'state']
 
     def form_valid(self, form):
         # TODO link to logged in user
-        # TODO project
+        context = self.get_context_data()
+        form.instance.project = context['project']
         form.instance.lead = User.objects.get(username="U1")
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
-        if Milestone.objects.filter(title=form.instance.title).exists():
-            form.add_error('titleExists', 'Title already in use') #ovde imam gresku??
+        if len(Milestone.objects.filter(title=form.instance.title)) != 0:
+            form.add_error(None, 'Title already in use')
+            return super().form_invalid(form)
 
         return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(MilestoneCreateView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        return context
 
 class MilestoneUpdateView(UpdateView):
     model = Milestone
     template_name = 'milestone_update.html'
-    fields = ['title', 'description',  'state']#'due_date',
+
+    fields = ['title', 'description', 'due_date', 'state']
 
     def form_valid(self, form):
-
-        print(Milestone.objects.filter(title=form.instance.title))
         if len(Milestone.objects.filter(title=form.instance.title)) != 0: #pazi da je na nivou projekta TODO
             if self.get_object().title != form.instance.title:
-                form.add_error('titleExists', 'Title already in use') #ovde imam gresku??
+                form.add_error(None, 'Title already in use')
+                return super().form_invalid(form)
 
         return super().form_valid(form)
 
@@ -201,7 +210,7 @@ class MilestoneDetailView(DetailView):
 class MilestoneDeleteView(DeleteView):
     model = Milestone
     template_name = 'milestone_delete.html'
-    success_url = '/milestones'
+    success_url = '../'
 
     def test_func(self):
         # TODO check if request sender is project lead
