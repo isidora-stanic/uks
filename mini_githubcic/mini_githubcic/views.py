@@ -83,7 +83,9 @@ class IssueCreateView(CreateView):
 
     def form_valid(self, form):
         if Issue.objects.filter(title=form.instance.title).exists():
-            form.add_error('titleExists', 'Title already in use')
+            form.add_error(None, 'Title already in use')
+            return super().form_invalid(form)
+
         context = self.get_context_data()
         form.instance.project = context['project']
         form.instance.creator = User.objects.get(username="U1")
@@ -121,7 +123,8 @@ class IssueUpdateView(UpdateView):
 
         if Issue.objects.filter(title=form.instance.title).exists():
             if self.get_object().id != form.instance.id:
-                form.add_error('titleExists', 'Title already in use')
+                form.add_error(None, 'Title already in use')
+                return super().form_invalid(form)
 
         return super().form_valid(form)
 
@@ -149,16 +152,16 @@ class ProjectDeleteView(DeleteView):
 class IssueDeleteView(DeleteView):
     model = Issue
     template_name = 'issue_delete.html'
-    success_url = '../'
+    success_url = '/projects'
 
     def test_func(self):
         # TODO check if request sender is developer on the project
         return True
 
 
-def issue_state_toggle(request, pk=None, ik=None):
+def issue_state_toggle(request, pk=None):
     if request.method == 'GET':
-        issue = Issue.objects.get(id=ik)
+        issue = Issue.objects.get(id=pk)
         if issue.is_open:
             issue.is_open = False
         else:

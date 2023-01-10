@@ -30,8 +30,8 @@ urlpatterns = [
 
     path('projects/<int:pk>/issues/', IssueListView.as_view(), name='project_issues'),
     path('projects/<int:pk>/issues/add', IssueCreateView.as_view(), name='add_issue'),
-    path('projects/<int:prk>/issues/<int:pk>', IssueDetailView.as_view(), name='issue_detail'),
-    path('projects/<int:pk>/issues/<int:ik>/update', IssueUpdateView.as_view(), name='issue_update'),
-    path('projects/<int:pk>/issues/<int:ik>/delete', IssueDeleteView.as_view(), name='issue_delete'),
-    path('projects/<int:pk>/issues/<int:ik>/state-toggle', issue_state_toggle, name='issue_state_toggle')
+    path('issues/<int:pk>', IssueDetailView.as_view(), name='issue_detail'),
+    path('issues/<int:pk>/update', IssueUpdateView.as_view(), name='issue_update'),
+    path('issues/<int:pk>/delete', IssueDeleteView.as_view(), name='issue_delete'),
+    path('issues/<int:pk>/state-toggle', issue_state_toggle, name='issue_state_toggle')
 ]

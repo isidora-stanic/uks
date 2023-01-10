@@ -13,9 +13,9 @@
         <p> Open - {{ object.is_open }}</p>
     </div>
     <div>
-        <a class="btn btn-primary" href="{% url 'issue_update' object.project.id object.id %}">Update</a>
-
-        <a class="btn btn-warning" href="{% url 'issue_state_toggle' object.project.id object.id %}">
+        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back</a>
+        <a class="btn btn-primary" href="{% url 'issue_update' object.id %}">Update</a>
+        <a class="btn btn-warning" href="{% url 'issue_state_toggle' object.id %}">
             {% if object.is_open %}
                 Close
             {% else %}
@@ -23,7 +23,7 @@
             {% endif %}
         </a>
 
-        <a class="btn btn-danger" href="{% url 'issue_delete' object.project.id object.id %}">Delete</a>
+        <a class="btn btn-danger" href="{% url 'issue_delete' object.id %}">Delete</a>
     </div>
 </article>
 {% endblock content %}
