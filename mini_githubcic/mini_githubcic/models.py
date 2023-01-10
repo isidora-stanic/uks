@@ -72,7 +72,7 @@ class Task(models.Model):
     title = models.CharField(max_length=50)
     description = models.TextField()
     date_created = models.DateTimeField(default=timezone.now)
-    assigned_to = models.ForeignKey(User, blank=True, related_name='assigned_to', on_delete=models.CASCADE)
+    assigned_to = models.ForeignKey(User, blank=True, null=True, related_name='assigned_to', on_delete=models.CASCADE)
     creator = models.ForeignKey(User, blank=False, related_name='creator', on_delete=models.CASCADE)
 
 
@@ -114,12 +114,21 @@ class Commit(models.Model):
 
 
 class Issue(Task):
-    milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE)  # ManyToOne
+    milestone = models.ForeignKey(Milestone, blank=True, null=True, on_delete=models.CASCADE)  # ManyToOne
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
+    is_open = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        return reverse('issue_detail', kwargs={'pk': self.project.id, 'ik': self.pk})
+
+    def __str__(self):
+        return "#%s - %s" % (self.id, self.title)
 
 
 class PullRequest(Task):
     target = models.ForeignKey(Branch, blank=False, related_name='target', on_delete=models.CASCADE)
     source = models.ForeignKey(Branch, blank=False, related_name='source', on_delete=models.CASCADE)
+    state = models.CharField(max_length=20, choices=State.choices, default=State.OPEN)
 
 
 class Reaction(models.Model):

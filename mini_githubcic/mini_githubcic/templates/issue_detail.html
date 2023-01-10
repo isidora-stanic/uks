@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Issue details</h1>
+<article class="container">
+    <div>
+        <h2> #{{ object.id }} - {{ object.title }}</h2>
+        <p> Description - {{ object.description }}</p>
+        <p> Creator - {{ object.creator }}</p>
+        <p> Assignee - {{ object.assigned_to }}</p>
+        <p> Date Created - {{ object.date_created }}</p>
+        <p> Milestone - {{ object.milestone }}</p>
+        <p> Project - {{ object.project }}</p>
+        <p> Open - {{ object.is_open }}</p>
+    </div>
+    <div>
+        <a class="btn btn-primary" href="{% url 'issue_update' object.project.id object.id %}">Update</a>
+
+        <a class="btn btn-warning" href="{% url 'issue_state_toggle' object.project.id object.id %}">
+            {% if object.is_open %}
+                Close
+            {% else %}
+                Reopen
+            {% endif %}
+        </a>
+
+        <a class="btn btn-danger" href="{% url 'issue_delete' object.project.id object.id %}">Delete</a>
+    </div>
+</article>
+{% endblock content %}
