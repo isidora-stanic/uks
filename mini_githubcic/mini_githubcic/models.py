@@ -113,7 +113,7 @@ class Issue(Task):
     is_open = models.BooleanField(default=True)
 
     def get_absolute_url(self):
-        return reverse('issue_detail', kwargs={'prk': self.project.id, 'pk': self.pk})
+        return reverse('issue_detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return "#%s - %s" % (self.id, self.title)
