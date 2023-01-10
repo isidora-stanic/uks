@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
-
+from colorfield.fields import ColorField
 
 class State(models.TextChoices):
     OPEN = 'OPEN'
@@ -47,12 +47,15 @@ class Project(models.Model):
 
 class Label(models.Model):
     name = models.CharField(max_length=100)
-    color = models.CharField(max_length=10)
+    color = ColorField(default="#FFFFFF")
     description = models.TextField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return self.name + " " + self.description
+
+    def get_absolute_url(self):
+        return reverse('label_detail', kwargs={'pk': self.pk})
 
 
 class Milestone(models.Model):
@@ -113,7 +116,7 @@ class Issue(Task):
     is_open = models.BooleanField(default=True)
 
     def get_absolute_url(self):
-        return reverse('issue_detail', kwargs={'pk': self.project.id, 'ik': self.pk})
+        return reverse('issue_detail', kwargs={'prk': self.project.id, 'pk': self.pk})
 
     def __str__(self):
         return "#%s - %s" % (self.id, self.title)

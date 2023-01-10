@@ -8,7 +8,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-from .models import Project, User, Issue
+from .models import Project, User, Issue, Label
 
 
 def index(request):
@@ -71,7 +71,8 @@ class ProjectCreateView(CreateView):
         form.instance.lead = User.objects.get(username="U1")
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if Project.objects.filter(title=form.instance.title).exists():
-            form.add_error('titleExists', 'Title already in use')
+            form.add_error(None, 'Title already in use')
+            return super().form_invalid(form)
 
         return super().form_valid(form)
 
@@ -107,8 +108,8 @@ class ProjectUpdateView(UpdateView):
 
         if Project.objects.filter(title=form.instance.title).exists():
             if self.get_object().name != form.instance.name:
-                form.add_error('titleExists', 'Title already in use')
-
+                form.add_error(None, 'Title already in use')
+                return super().form_invalid(form)
         return super().form_valid(form)
 
 
@@ -165,3 +166,75 @@ def issue_state_toggle(request, pk=None, ik=None):
             issue.is_open = True
         issue.save()
         return redirect(issue)
+
+# ======== LABEL ========
+class LabelListView(ListView):
+    model = Label
+    template_name = 'list_labels.html'
+    context_object_name = 'labels'
+    ordering = ['name']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(LabelListView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        return context
+
+    def get_queryset(self):
+        return Label.objects.all()
+
+class LabelCreateView(CreateView):
+    model = Label
+    template_name = 'new_label.html'
+    fields = ['name', 'description', 'color']
+
+    def get_form(self, form_class=None):
+        form = super(LabelCreateView, self).get_form(form_class)
+        form.fields['description'].required = False
+        return form
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        form.instance.project = context['project']
+
+        if Label.objects.filter(name=form.instance.name, project_id=form.instance.project.id).exists():
+            form.add_error(None, 'Name already in use')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(LabelCreateView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        return context
+
+class LabelUpdateView(UpdateView):
+    model = Label
+    template_name = 'label_update.html'
+    fields = ['name', 'description', 'color']
+
+    def get_form(self, form_class=None):
+        form = super(LabelUpdateView, self).get_form(form_class)
+        form.fields['description'].required = False
+        return form
+
+    def form_valid(self, form):
+        if Label.objects.filter(name=form.instance.name, project_id=form.instance.project.id).exists():
+            if self.get_object().name != form.instance.name:
+                form.add_error(None, 'Name already in use')
+                return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+class LabelDetailView(DetailView):
+    model = Label
+    template_name = 'label_detail.html'
+
+
+class LabelDeleteView(DeleteView):
+    model = Label
+    template_name = 'label_delete.html'
+    success_url = '../..'
+
+# ========================

@@ -1,68 +1,84 @@
-{% extends 'base.html' %}
-{% load issue_extras %}
-{% block content %}
-    {% if project_id %}
-        <h1 class="title">Issues for <b>{{ project.title }}</b></h1>
-    {% endif %}
+{% extends 'base.html' %} {% load issue_extras %} {% block content %} {% if
+project_id %}
+<h1 class="title">Issues for <b>{{ project.title }}</b></h1>
+{% endif %}
 
 <div class="container">
-    <a class="btn btn-primary default-button" href="{% url 'add_issue' project_id %}">New issue</a>
-    <br/>
-{% if issues %}
-    <div class="container">
-
+  <a
+    class="btn btn-primary default-button"
+    href="{% url 'list_labels' project_id %}"
+    >Labels</a
+  >
+  <a
+    class="btn btn-primary default-button"
+    href="{% url 'add_issue' project_id %}"
+    >New issue</a
+  >
+  <br />
+  {% if issues %}
+  <div class="container">
     <!-- Nav tabs -->
     <ul class="nav nav-tabs">
-    <li class="nav-item">
-      <a class="nav-link active" data-toggle="tab" href="#open">Open</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#closed">Closed</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#all">All</a>
-    </li>
+      <li class="nav-item">
+        <a class="nav-link active" data-toggle="tab" href="#open">Open</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="tab" href="#closed">Closed</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="tab" href="#all">All</a>
+      </li>
     </ul>
 
     <!-- Tab panes -->
     <div class="tab-content">
-    <div class="tab-pane container active" id="open">
+      <div class="tab-pane container active" id="open">
         {% for issue in issues|is_open:True %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <p class="card-text">{{ issue }} </p>
-                    <a class="btn btn-danger" href="{% url 'issue_delete' issue.project.id issue.id %}">Delete</a>
-                    <a class="btn btn-primary" href="{% url issue %}">View</a>
-                </div>
-            </div>
+        <div class="card mb-3">
+          <div class="card-body">
+            <p class="card-text">{{ issue }}</p>
+            <a
+              class="btn btn-danger"
+              href="{% url 'issue_delete' issue.project.id issue.id %}"
+              >Delete</a
+            >
+            <a class="btn btn-primary" href="{% url issue %}">View</a>
+          </div>
+        </div>
         {% endfor %}
-    </div>
-    <div class="tab-pane container fade" id="closed">
+      </div>
+      <div class="tab-pane container fade" id="closed">
         {% for issue in issues|is_open:False %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <p class="card-text">{{ issue }} </p>
-                    <a class="btn btn-danger" href="{% url 'issue_delete' issue.project.id issue.id %}">Delete</a>
-                    <a class="btn btn-primary" href="{% url issue %}">View</a>
-                </div>
-            </div>
+        <div class="card mb-3">
+          <div class="card-body">
+            <p class="card-text">{{ issue }}</p>
+            <a
+              class="btn btn-danger"
+              href="{% url 'issue_delete' issue.project.id issue.id %}"
+              >Delete</a
+            >
+            <a class="btn btn-primary" href="{% url issue %}">View</a>
+          </div>
+        </div>
         {% endfor %}
-    </div>
-    <div class="tab-pane container fade" id="all">
+      </div>
+      <div class="tab-pane container fade" id="all">
         {% for issue in issues %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <p class="card-text">{{ issue }} </p>
-                    <a class="btn btn-danger" href="{% url 'issue_delete' issue.project.id issue.id %}">Delete</a>
-                    <a class="btn btn-primary" href="{% url issue %}">View</a>
-                </div>
-            </div>
+        <div class="card mb-3">
+          <div class="card-body">
+            <p class="card-text">{{ issue }}</p>
+            <a
+              class="btn btn-danger"
+              href="{% url 'issue_delete' issue.project.id issue.id %}"
+              >Delete</a
+            >
+            <a class="btn btn-primary" href="{% url issue %}">View</a>
+          </div>
+        </div>
         {% endfor %}
-    </div>
+      </div>
     </div>
   </div>
-    {% else %}
-    There are no added issues.
-    {% endif %}
+  {% else %} There are no added issues. {% endif %}
 </div>
 {% endblock %}
