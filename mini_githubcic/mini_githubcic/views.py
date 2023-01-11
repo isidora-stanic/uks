@@ -1,4 +1,5 @@
 from django.apps.registry import apps
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views.generic import (
@@ -8,7 +9,9 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-from .models import Project, User, Milestone, Issue, Label
+from .models import Project, User, Milestone, Issue, Label, Commit, Branch
+import uuid
+
 
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
@@ -250,6 +253,7 @@ def milestone_close(request, pk=None):
 class LabelListView(ListView):
     model = Label
     template_name = 'list_labels.html'
+    template_name = 'list_labels.html'
     context_object_name = 'labels'
     ordering = ['name']
 
@@ -316,5 +320,74 @@ class LabelDeleteView(DeleteView):
     template_name = 'label_delete.html'
     success_url = '../..'
 
-# ========================
+
+class CommitListView(ListView):
+    model = Commit
+    template_name = 'list_commits.html'
+    context_object_name = 'commits'
+    ordering = ['id']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CommitListView, self).get_context_data(*args, **kwargs)
+        context['branch_id'] = self.request.resolver_match.kwargs['pk']
+        context['branch'] = Branch.objects.filter(id=context['branch_id']).first()
+        context['commits'] = Commit.objects.filter(branch__id=context['branch_id'])
+        return context
+
+
+class CommitCreateView(CreateView):
+    model = Commit
+    template_name = 'new_commit.html'
+    fields = ['log_message']
+
+    def get_form(self, form_class=None):
+        form = super(CommitCreateView, self).get_form(form_class)
+        form.fields['log_message'].required = True
+        return form
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        form.instance.branch = context['branch']
+        # TODO link to logged in user
+        form.instance.author = User.objects.get(username="U1")
+        form.instance.date_time = timezone.now()
+        form.instance.hash = str(uuid.uuid4().hex) #todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
+        if form.is_valid:
+            new_commit = form.save()
+            new_commit.parents.add(context['previous_commit'])
+        return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CommitCreateView, self).get_context_data(*args, **kwargs)
+        context['branch_id'] = self.request.resolver_match.kwargs['pk']
+        context['branch'] = Branch.objects.filter(id=context['branch_id']).first()
+        context['previous_commit'] = Commit.objects.filter(branch__id=context['branch_id']).latest("date_time")
+        return context
+
+
+class CommitDetailView(DetailView):
+    model = Commit
+    template_name = 'commit_detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CommitDetailView, self).get_context_data(*args, **kwargs)
+        if len(self.get_object().parents.all()) == 1:
+            context['parent_id1'] = self.get_object().parents.all()[0]
+            print("PARENT IS:", context['parent_id1'])
+            context['parents'] = Commit.objects.filter(id=context['parent_id1'].id)
+        elif len(self.get_object().parents.all()) == 2:
+            context['parent_id1'] = self.get_object().parents.all()[0]
+            context['parent_id2'] = self.get_object().parents.all()[1]
+            print("PARENTS ARE:", context['parent_id1'], context['parent_id2'])
+            context['parents'] = Commit.objects.filter(Q(id=context['parent_id1'].id) | Q(id=context['parent_id2'].id))
+        else:
+            context['parents'] = context['parent_id1'] = context['parent_id2'] = None
+        return context
+
+
+#
+# class CommitDeleteView(DeleteView):
+#     model = Commit
+#     template_name = 'commit_delete.html'
+#     success_url = '../..'
 

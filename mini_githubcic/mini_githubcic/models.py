@@ -116,6 +116,16 @@ class Commit(models.Model):
     author = models.ForeignKey(User, blank=False, on_delete=models.CASCADE)
     branch = models.ForeignKey(Branch, blank=False, on_delete=models.CASCADE)
 
+    parents = models.ManyToManyField("self", symmetrical=False, blank=True)
+
+    def get_absolute_url(self):
+        return reverse('commit_detail', kwargs={'pk': self.pk})
+
+    def __str__(self):
+        return "[%s] %s" % (self.hash[0:7], self.log_message)
+
+
+
 
 class Issue(Task):
     milestone = models.ForeignKey(Milestone, blank=True, null=True, on_delete=models.CASCADE)  # ManyToOne

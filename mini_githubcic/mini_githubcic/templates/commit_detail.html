@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Edit commit</h1>
+<article class="container">
+    <div>
+        <h2> Hash - {{ object.hash }}</h2>
+        <p> Log message - {{ object.log_message }}</p>
+        <p> Branch - {{ object.branch }}</p>
+        <p> Date Created - {{ object.date_time }}</p>
+        <p> Author - {{ object.author }}</p>
+        {% if parents %}
+            <p>Parent commits</p>
+            {% for parent in parents %}
+                <a href="{% url 'commit_detail' parent.id %}">{{ parent }}</a>
+                <br>
+            {% endfor %}
+        {% else %}
+            <p>There are no parent commits</p>
+        {% endif %}
+    </div>
+    <div>
+{#        <a class="btn btn-primary" href="{% url 'commit_update' object.id %}">Update</a>#}
+{#        <a class="btn btn-danger" href="{% url 'commit_delete' object.id %}">Delete</a>#}
+    </div>
+</article>
+{% endblock content %}

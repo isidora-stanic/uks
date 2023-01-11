@@ -43,6 +43,11 @@ urlpatterns = [
     path('projects/<int:pk>/labels/add', LabelCreateView.as_view(), name='add_label'),
     path('labels/<int:pk>', LabelDetailView.as_view(), name='label_detail'),
     path('labels/<int:pk>/update', LabelUpdateView.as_view(), name='label_update'),
-    path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete')
+    path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete'),
 
+    path('branches/<int:pk>/commits/', CommitListView.as_view(), name='list_commits'),
+    path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
+    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
+    # path('commits/<int:pk>/update', LabelUpdateView.as_view(), name='commits_update'),
+    # path('commits/<int:pk>/delete', CommitsDeleteView.as_view(), name='commits_delete'),
 ]
