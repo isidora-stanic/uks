@@ -108,6 +108,12 @@ class Branch(models.Model):
     name = models.CharField(max_length=15)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)  # ManyToOne
 
+    def get_absolute_url(self):
+        return reverse('branch_detail', kwargs={'pk': self.pk})  # TODO
+
+    def __str__(self):
+        return "#%s - %s" % (self.id, self.title)
+
 
 class Commit(models.Model):
     date_time = models.DateTimeField(default=timezone.now)

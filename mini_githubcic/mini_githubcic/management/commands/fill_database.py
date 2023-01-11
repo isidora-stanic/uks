@@ -82,10 +82,32 @@ class Command(BaseCommand):
         l1 = Label(name="l1", description="d2", color="#FFFFFF", project=p1)
         l1.save()
 
+    def _insert_branches(self):
+        Branch.objects.all().delete()
+
+        p1 = Project.objects.get(description="d1")
+        p2 = Project.objects.get(description="d2")
+        p3 = Project.objects.get(description="d3")
+
+        b1 = Branch(name="main", project=p1)
+        b2 = Branch(name="develop", project=p1)
+        b3 = Branch(name="feature-login", project=p1)
+        b4 = Branch(name="main", project=p2)
+        b5 = Branch(name="main", project=p3)
+        b6 = Branch(name="develop", project=p3)
+        b1.save()
+        b2.save()
+        b3.save()
+        b4.save()
+        b5.save()
+        b6.save()
+
+
     def handle(self, *args, **options):
         self._insert_users()
         self._insert_projects()
         self._insert_issues()
         self._insert_milestones()
         self._insert_labels()
+        self._insert_branches()
 
