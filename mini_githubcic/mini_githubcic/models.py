@@ -66,7 +66,7 @@ class Milestone(models.Model):
         return "%s" % (self.title)
 
     def get_absolute_url(self):
-        return reverse('milestone_detail', kwargs={'pk': self.pk, 'prk': self.project.id})
+        return reverse('milestone_detail', kwargs={'pk': self.pk})
 
 
 class Task(models.Model):

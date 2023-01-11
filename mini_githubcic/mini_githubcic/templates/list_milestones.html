@@ -13,8 +13,8 @@
     <div class="card mb-3">
         <div class="card-body">
             <p class="card-text">{{ milestone }} </p>
-            <a class="btn btn-danger" href="{% url 'milestone_delete' milestone.project.id milestone.id %}">Delete</a>
-            <a class="btn btn-primary" href="{% url 'milestone_detail' milestone.project.id milestone.id %}">View</a>
+            <a class="btn btn-danger" href="{% url 'milestone_delete' milestone.id %}">Delete</a>
+            <a class="btn btn-primary" href="{% url 'milestone_detail' milestone.id %}">View</a>
         </div>
     </div>
     {% endfor %}

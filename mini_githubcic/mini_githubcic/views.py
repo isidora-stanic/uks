@@ -213,7 +213,7 @@ class MilestoneDetailView(DetailView):
 class MilestoneDeleteView(DeleteView):
     model = Milestone
     template_name = 'milestone_delete.html'
-    success_url = '../'
+    success_url = '/projects'
 
     def test_func(self):
         # TODO check if request sender is project lead
