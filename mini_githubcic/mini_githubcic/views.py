@@ -8,8 +8,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-from .models import Project, User, Issue, Label
-
+from .models import Project, User, Milestone, Issue, Label
 
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
@@ -163,6 +162,76 @@ class ProjectDeleteView(DeleteView):
         return True
 
 
+class MilestoneListView(ListView):
+
+    model = Milestone
+    template_name = 'list_milestones.html'
+    context_object_name = 'milestones'
+    ordering = ['title']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(MilestoneListView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=context['project_id']).first()
+        context['milestones'] = Milestone.objects.filter(project__id=context['project_id'])
+        return context
+
+    def get_queryset(self):
+        return Milestone.objects.all()
+
+class MilestoneCreateView(CreateView):
+    model = Milestone
+    template_name = 'new_milestone.html'
+    fields = ['title', 'description', 'due_date', 'is_open']
+
+    def form_valid(self, form):
+        # TODO link to logged in user
+        context = self.get_context_data()
+        form.instance.project = context['project']
+        form.instance.lead = User.objects.get(username="U1")
+        form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
+        if len(Milestone.objects.filter(title=form.instance.title)) != 0:
+            form.add_error(None, 'Title already in use')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(MilestoneCreateView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        return context
+
+class MilestoneUpdateView(UpdateView):
+    model = Milestone
+    template_name = 'milestone_update.html'
+
+    fields = ['title', 'description', 'due_date', 'is_open']
+
+    def form_valid(self, form):
+        if len(Milestone.objects.filter(title=form.instance.title)) != 0: 
+            if self.get_object().title != form.instance.title:
+                form.add_error(None, 'Title already in use')
+                return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+
+class MilestoneDetailView(DetailView):
+    model = Milestone
+    template_name = 'milestone_detail.html'
+
+
+class MilestoneDeleteView(DeleteView):
+    model = Milestone
+    template_name = 'milestone_delete.html'
+    success_url = '/projects'
+
+    def test_func(self):
+        # TODO check if request sender is project lead
+        return True
+
+
 class IssueDeleteView(DeleteView):
     model = Issue
     template_name = 'issue_delete.html'
@@ -183,7 +252,14 @@ def issue_state_toggle(request, pk=None):
         issue.save()
         return redirect(issue)
 
-# ======== LABEL ========
+
+def milestone_close(request, pk=None):
+    if request.method == 'GET':
+        milestone = Milestone.objects.get(id=pk)
+        milestone.is_open = not milestone.is_open
+        milestone.save()
+        return redirect(milestone)
+
 class LabelListView(ListView):
     model = Label
     template_name = 'list_labels.html'
@@ -253,4 +329,3 @@ class LabelDeleteView(DeleteView):
     template_name = 'label_delete.html'
     success_url = '../..'
 
-# ========================

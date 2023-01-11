@@ -64,8 +64,15 @@ class Label(models.Model):
 class Milestone(models.Model):
     title = models.CharField(max_length=30)
     description = models.CharField(max_length=120)
-    due_date = models.DateTimeField
-    state = models.CharField(max_length=20, choices=State.choices, default=State.OPEN)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
+    due_date = models.DateTimeField(default=timezone.now)
+    is_open = models.BooleanField(default=True)
+
+    def __str__(self):
+        return "%s" % (self.title)
+
+    def get_absolute_url(self):
+        return reverse('milestone_detail', kwargs={'pk': self.pk})
 
 
 class Task(models.Model):
