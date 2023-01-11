@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from mini_githubcic.models import User, Project, Visibility, Issue
-
+from mini_githubcic.models import *
 
 class Command(BaseCommand):
 
@@ -66,7 +65,15 @@ class Command(BaseCommand):
         i4 = Issue(title="issue4", description="i4", creator=u1, assigned_to=u1, project=p1, is_open=False)
         i4.save()
 
+    def _insert_labels(self):
+        Label.objects.all().delete()
+
+        p1 = Project.objects.get(description="d1")
+        l1 = Label(name="l1", description="d2", color="#FFFFFF", project=p1)
+        l1.save()
+
     def handle(self, *args, **options):
         self._insert_users()
         self._insert_projects()
         self._insert_issues()
+        self._insert_labels()
