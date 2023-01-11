@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if project_id %}
+<h1 class="title">Labels for <b>{{ project.title }}</b></h1>
+{% endif %}
+
+<div class="container">
+    <a class="btn btn-primary default-button" href="{% url 'add_label' project.id%}">New label</a>
+    <br/>
+    {% if labels %}
+    {% for label in labels %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ label }} </p>
+            <a class="btn btn-danger" href="{% url 'label_delete'  label.id %}">Delete</a>
+            <a class="btn btn-primary" href="{% url 'label_detail' label.id %}">View</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no added labels.
+    {% endif %}
+</div>
+{% endblock %}
