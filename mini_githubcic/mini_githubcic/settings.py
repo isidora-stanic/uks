@@ -54,7 +54,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'mini_githubcic.urls'
 
 # TODO https://django-crispy-forms.readthedocs.io/en/latest/layouts.html#overriding-project-templates
-CRISPY_TEMPLATE_PACK = 'uni_form'
+CRISPY_TEMPLATE_PACK = 'bootstrap4'  # bootstrap4 uni_form
 
 TEMPLATES = [
     {

@@ -27,6 +27,9 @@ class User(models.Model):
     def __str__(self):
         return self.username
 
+    def get_absolute_url(self):
+        return reverse('login') #TODO user_detail
+
 
 class Project(models.Model):
     title = models.CharField(max_length=20)

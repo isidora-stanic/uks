@@ -37,6 +37,18 @@ def login(request, id=None):
                           {"users_error": "User with this username and password does not exist"})
 
 
+class Register(CreateView):
+    model = User
+    template_name = 'registration.html'
+    fields = ['username', 'password']
+
+    def form_valid(self, form):
+        if User.objects.filter(username=form.instance.username).exists():
+            form.add_error('usernameExists', 'Username already in use')
+
+        return super().form_valid(form)
+
+
 class ProjectListView(ListView):
     model = Project
     template_name = 'list_projects.html'
