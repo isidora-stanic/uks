@@ -44,7 +44,7 @@ class Register(CreateView):
 
     def form_valid(self, form):
         if User.objects.filter(username=form.instance.username).exists():
-            form.add_error('usernameExists', 'Username already in use')
+            form.add_error(None, 'Username already in use')
             return super().form_invalid(form)
 
         return super().form_valid(form)
