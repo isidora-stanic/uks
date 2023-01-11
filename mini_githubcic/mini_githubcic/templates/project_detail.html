@@ -15,7 +15,9 @@
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
         <a class="btn btn-primary" href="{% url 'project_update' object.id %}">Update</a>
+        {% if request.user == project.lead %}
         <a class="btn btn-danger" href="{% url 'project_delete' object.id %}">Delete</a>
+        {% endif %}
     </div>
 </article>
 {% endblock content %}

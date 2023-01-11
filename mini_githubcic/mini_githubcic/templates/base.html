@@ -20,7 +20,11 @@
                 <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
             </li>
             <li>
-                <a href="{% url 'login' %}">login</a>
+                {% if not request.user.is_authenticated %}
+                    <a href="{% url 'login' %}">login</a>
+                {% else %}
+                    <a href="{% url 'logout' %}">logout</a>
+                {% endif %}
             </li>
 
         </ul>
