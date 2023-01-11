@@ -170,7 +170,7 @@ class MilestoneListView(ListView):
 class MilestoneCreateView(CreateView):
     model = Milestone
     template_name = 'new_milestone.html'
-    fields = ['title', 'description', 'due_date', 'state']
+    fields = ['title', 'description', 'due_date', 'is_open']
 
     def form_valid(self, form):
         # TODO link to logged in user
@@ -194,7 +194,7 @@ class MilestoneUpdateView(UpdateView):
     model = Milestone
     template_name = 'milestone_update.html'
 
-    fields = ['title', 'description', 'due_date', 'state']
+    fields = ['title', 'description', 'due_date', 'is_open']
 
     def form_valid(self, form):
         if len(Milestone.objects.filter(title=form.instance.title)) != 0: 

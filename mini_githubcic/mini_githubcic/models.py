@@ -60,7 +60,7 @@ class Milestone(models.Model):
     description = models.CharField(max_length=120)
     project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     due_date = models.DateTimeField(default=timezone.now)
-    state = models.CharField(max_length=20, choices=State.choices, default=State.OPEN)
+    is_open = models.BooleanField(default=True)
 
     def __str__(self):
         return "%s" % (self.title)

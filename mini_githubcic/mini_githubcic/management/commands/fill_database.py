@@ -69,15 +69,9 @@ class Command(BaseCommand):
     def _insert_milestones(self):
         Milestone.objects.all().delete()
 
-        u1 = User.objects.get(username="U1")
-        u2 = User.objects.get(username="U2")
-        u3 = User.objects.get(username="U3")
-
-        p1 = Project.objects.get(description="d1")
         p2 = Project.objects.get(description="d2")
-        p3 = Project.objects.get(description="d3")
 
-        m1 = Milestone(title="milestone1", description="i1",project=p2)
+        m1 = Milestone(title="milestone1", description="i1",project=p2, is_open=True)
         m1.save()
 
     def handle(self, *args, **options):

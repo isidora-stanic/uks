@@ -6,7 +6,7 @@
         <h2> Title - {{ object.title }}</h2>
         <p> Description - {{ object.description }}</p>
         <p> due date - {{ object.due_date }}</p>
-        <p> Status - {{ object.status }}</p>
+        <p> Is open - {{ object.is_open }}</p>
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'milestone_update' object.id %}">Update</a>
