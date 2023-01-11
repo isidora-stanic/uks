@@ -197,7 +197,7 @@ class MilestoneUpdateView(UpdateView):
     fields = ['title', 'description', 'due_date', 'state']
 
     def form_valid(self, form):
-        if len(Milestone.objects.filter(title=form.instance.title)) != 0: #pazi da je na nivou projekta TODO
+        if len(Milestone.objects.filter(title=form.instance.title)) != 0: 
             if self.get_object().title != form.instance.title:
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
