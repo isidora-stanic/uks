@@ -240,3 +240,10 @@ def issue_state_toggle(request, pk=None):
         issue.save()
         return redirect(issue)
 
+def milestone_close(request, pk=None):
+    if request.method == 'GET':
+        milestone = Milestone.objects.get(id=pk)
+        milestone.is_open = not milestone.is_open
+        milestone.save()
+        return redirect(milestone)
+

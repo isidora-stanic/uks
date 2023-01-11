@@ -10,6 +10,9 @@
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'milestone_update' object.id %}">Update</a>
+         {% if milestone.is_open %}
+            <a class="btn btn-primary" href="{% url 'milestone_close' object.id %}">Close</a>
+         {%endif%}
         <a class="btn btn-danger" href="{% url 'milestone_delete' object.id %}">Delete</a>
     </div>
 </article>

@@ -37,5 +37,6 @@ urlpatterns = [
     path('issues/<int:pk>', IssueDetailView.as_view(), name='issue_detail'),
     path('issues/<int:pk>/update', IssueUpdateView.as_view(), name='issue_update'),
     path('issues/<int:pk>/delete', IssueDeleteView.as_view(), name='issue_delete'),
-    path('issues/<int:pk>/state-toggle', issue_state_toggle, name='issue_state_toggle')
+    path('issues/<int:pk>/state-toggle', issue_state_toggle, name='issue_state_toggle'),
+    path('milestones/<int:pk>/close', milestone_close, name='milestone_close'),
 ]
