@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 
 from mini_githubcic.models import *
 
+
 class Command(BaseCommand):
 
     def _insert_users(self):
@@ -65,6 +66,15 @@ class Command(BaseCommand):
         i4 = Issue(title="issue4", description="i4", creator=u1, assigned_to=u1, project=p1, is_open=False)
         i4.save()
 
+
+    def _insert_milestones(self):
+        Milestone.objects.all().delete()
+
+        p2 = Project.objects.get(description="d2")
+
+        m1 = Milestone(title="milestone1", description="i1",project=p2, is_open=True)
+        m1.save()
+
     def _insert_labels(self):
         Label.objects.all().delete()
 
@@ -76,4 +86,6 @@ class Command(BaseCommand):
         self._insert_users()
         self._insert_projects()
         self._insert_issues()
+        self._insert_milestones()
         self._insert_labels()
+
