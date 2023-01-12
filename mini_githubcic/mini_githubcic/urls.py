@@ -23,6 +23,7 @@ urlpatterns = [
     path('', index, name='index'),
     path('login/', sign_in, name='login'),
     path('logout/', sign_out, name='logout'),
+    path('register/', Register.as_view(), name='register'),
     path('projects/', ProjectListView.as_view(), name='list_projects'),
     path('projects/add', ProjectCreateView.as_view(), name='add_project'),
     path('projects/<int:pk>', ProjectDetailView.as_view(), name='project_detail'),

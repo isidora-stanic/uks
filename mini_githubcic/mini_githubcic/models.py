@@ -49,6 +49,9 @@ class User(AbstractBaseUser):
     class Meta:
         db_table = u'users'
 
+    def get_absolute_url(self):
+        return reverse('login') #TODO user_detail
+
 
 class Project(models.Model):
     title = models.CharField(max_length=20)

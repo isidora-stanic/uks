@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
     <link href="{% static 'style.css' %}" rel="stylesheet"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
@@ -19,26 +21,30 @@
             <li>
                 <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
             </li>
-            <li>
+           
                 {% if not request.user.is_authenticated %}
+                  <li>
                     <a href="{% url 'login' %}">login</a>
+                  </li>
+                   <li>
+                    <a class="nav-links" href="{% url 'register'  %}">Sign up</a>
+                   </li>
                 {% else %}
+                  <li>
                     <a href="{% url 'logout' %}">logout</a>
+                  </li>
                 {% endif %}
-            </li>
+          
 
         </ul>
         {% block links %}{% endblock %}
     </nav>
-
 </header>
 
 <main>
-    <div class="row">
-        <div class="col">
-            {% block content %}
-            {% endblock %}
-        </div>
+    <div >
+        {% block content %}
+        {% endblock %}
     </div>
 </main>
 </body>

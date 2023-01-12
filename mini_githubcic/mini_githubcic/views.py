@@ -38,10 +38,25 @@ def sign_in(request, id=None):
                           {"users_error": "User with this username and password does not exist"})
 
 
+
 def sign_out(request):
     logout(request)
     request.session.flush()
     return redirect("login")
+
+class Register(CreateView):
+    model = User
+    template_name = 'registration.html'
+    fields = ['username', 'password']
+
+    def form_valid(self, form):
+        if User.objects.filter(username=form.instance.username).exists():
+            form.add_error(None, 'Username already in use')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+    
+
 
 class ProjectListView(ListView):
     model = Project
@@ -324,6 +339,4 @@ class LabelDeleteView(DeleteView):
     model = Label
     template_name = 'label_delete.html'
     success_url = '../..'
-
-# ========================
 
