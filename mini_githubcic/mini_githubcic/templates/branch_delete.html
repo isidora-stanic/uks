@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Delete branch</h1>
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <h2>Are you sure you want to delete the {{branch.name}} branch?</h2>
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-danger" type="submit">Yes</button>
+            <a class="btn btn-primary" href="{% url 'project_branches' branch.project.id %}">No</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}

@@ -49,3 +49,11 @@ ul {
     left: 0;
     width: 100vw !important;
 }
+
+.d-flex{
+    display: flex !important;
+}
+
+.p-r-5{
+    padding-right: 5px;
+}

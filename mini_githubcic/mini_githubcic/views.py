@@ -9,7 +9,11 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-from .models import Project, User, Milestone, Issue, Label, Visibility, Commit, Branch
+
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility
+
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
 from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
@@ -86,6 +90,20 @@ class IssueListView(ListView):
         return context
 
 
+class BranchListView(ListView):
+    model = Branch
+    template_name = 'list_branches.html'
+    context_object_name = 'issues'
+    ordering = ['id']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(BranchListView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=context['project_id']).first()
+        context['branches'] = Branch.objects.filter(project__id=context['project_id'])
+        return context
+
+
 class ProjectCreateView(CreateView):
     model = Project
     template_name = 'new_project.html'
@@ -125,6 +143,36 @@ class IssueCreateView(CreateView):
         return context
 
 
+class BranchCreateView(CreateView):
+    model = Branch
+    template_name = 'new_branch.html'
+    fields = ['name', 'parent_branch']
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        form.instance.project = context['project']
+        if Branch.objects.filter(project_id=form.instance.project.id, name=form.instance.name).exists():
+            form.add_error(None, 'Name already in use')
+            return super().form_invalid(form)
+
+        f = Commit.objects.filter(branches__id__in=[form.instance.parent_branch.id])
+        self.object = form.save()
+        for c in f:
+            c.branches.add(self.object)
+            c.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(BranchCreateView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        context['branches'] = Branch.objects.filter(project__id=context['project_id'])
+        #self.fields['sel1'].choices = [(b.id, b.name, b) for b in context['branches']] TODO filter select vals
+
+        return context
+
+
 class ProjectUpdateView(UpdateView):
     model = Project
     template_name = 'project_update.html'
@@ -154,14 +202,59 @@ class IssueUpdateView(UpdateView):
         return super().form_valid(form)
 
 
+class BranchUpdateView(UpdateView):
+    model = Branch
+    template_name = 'branch_update.html'
+    fields = ['name']
+
+    def form_valid(self, form):
+        proj = Project.objects.filter(id=int(form.instance.project.id)).first()
+        if Branch.objects.filter(project=proj,name=form.instance.name).exists():
+            form.add_error(None, 'Name already in use')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(BranchUpdateView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        return context
+
+
 class ProjectDetailView(DetailView):
     model = Project
     template_name = 'project_detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(ProjectDetailView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['main_branch'] = Branch.objects.filter(project__id=context['project_id'], name='main').first()
+        if context['main_branch'] is None:
+            b = Branch(name="main", project=Project.objects.filter(id=int(context['project_id'])).first())
+            b.save()
+            context['main_branch'] = b
+
+        return context
 
 
 class IssueDetailView(DetailView):
     model = Issue
     template_name = 'issue_detail.html'
+
+
+class BranchDetailView(DetailView):
+    model = Branch
+    template_name = 'branch_detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(BranchDetailView, self).get_context_data(*args, **kwargs)
+        context['branch_id'] = self.request.resolver_match.kwargs['pk']
+        context['branch'] = Branch.objects.filter(id=int(context['branch_id'])).first()
+        context['branches'] = Branch.objects.filter(project__id=context['branch'].project.id)
+        context['commits'] = Commit.objects.filter(branches__id__in=[context['branch_id']])
+
+        return context
 
 
 class ProjectDeleteView(DeleteView):
@@ -172,6 +265,18 @@ class ProjectDeleteView(DeleteView):
     def test_func(self):
         # TODO check if request sender is project lead
         return True
+
+
+class BranchDeleteView(DeleteView):
+    model = Branch
+    template_name = 'branch_delete.html'
+
+    def test_func(self):
+        # TODO check if request sender is developer on the project
+        return True
+
+    def get_success_url(self):
+        return reverse_lazy('project_branches', kwargs={'pk': self.object.project.id})
 
 
 class MilestoneListView(ListView):

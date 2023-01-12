@@ -85,9 +85,6 @@ class Command(BaseCommand):
         l1.save()
 
     def _insert_commits_and_branches(self):
-        Branch.objects.all().delete()
-        Commit.objects.all().delete()
-
         p1 = Project.objects.get(description="d1")
         u1 = User.objects.get(username="U1")
 
@@ -118,6 +115,49 @@ class Command(BaseCommand):
         c4.parents.add(c2, c3)
         c4.save()
         print(c4.parents.all())
+        
+    def _insert_branches(self):
+        Branch.objects.all().delete()
+
+        p1 = Project.objects.get(description="d1")
+        p2 = Project.objects.get(description="d2")
+        p3 = Project.objects.get(description="d3")
+
+        b1 = Branch(name="main", project=p1)
+        b2 = Branch(name="develop", project=p1)
+        b3 = Branch(name="feature-login", project=p1)
+        b4 = Branch(name="main", project=p2)
+        b5 = Branch(name="main", project=p3)
+        b6 = Branch(name="develop", project=p3)
+        b1.save()
+        b2.save()
+        b3.save()
+        b4.save()
+        b5.save()
+        b6.save()
+
+
+    def _insert_commits(self):
+        Commit.objects.all().delete()
+
+        u1 = User.objects.get(username="U1")
+
+        p1 = Project.objects.get(description="d1")
+        p2 = Project.objects.get(description="d2")
+
+        b1 = Branch.objects.get(name="main", project=p1)
+        b2 = Branch.objects.get(name="develop", project=p1)
+
+        c1 = Commit(log_message="initial commit", hash="asd", author=u1)
+        c1.save()
+        c1.branches.add(b1)
+        c1.branches.add(b2)
+        c1.save()
+
+        c2 = Commit(log_message="second commit", hash="asd", author=u1)
+        c2.save()
+        c2.branches.add(b2)
+        c2.save()
 
     def handle(self, *args, **options):
         self._insert_users()
@@ -125,4 +165,6 @@ class Command(BaseCommand):
         self._insert_issues()
         self._insert_milestones()
         self._insert_labels()
+        self._insert_branches()
+        self._insert_commits()
         self._insert_commits_and_branches()

@@ -46,7 +46,11 @@ urlpatterns = [
     path('labels/<int:pk>', LabelDetailView.as_view(), name='label_detail'),
     path('labels/<int:pk>/update', LabelUpdateView.as_view(), name='label_update'),
     path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete'),
-
+    path('projects/<int:pk>/branches/', BranchListView.as_view(), name='project_branches'),
+    path('projects/<int:pk>/branches/add', BranchCreateView.as_view(), name='add_branch'),
+    path('branches/<int:pk>', BranchDetailView.as_view(), name='branch_detail'),
+    path('branches/<int:pk>/update', BranchUpdateView.as_view(), name='branch_update'),
+    path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/', CommitListView.as_view(), name='list_commits'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),

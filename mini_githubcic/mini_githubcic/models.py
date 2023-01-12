@@ -130,8 +130,15 @@ class Comment(Event):
 
 
 class Branch(models.Model):
-    name = models.CharField(max_length=15)
+    name = models.CharField(max_length=50)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)  # ManyToOne
+    parent_branch = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)
+
+    def get_absolute_url(self):
+        return reverse('branch_detail', kwargs={'pk': self.pk})
+
+    def __str__(self):
+        return "#%s - %s" % (self.id, self.name)
 
 
 class Commit(models.Model):
@@ -139,7 +146,7 @@ class Commit(models.Model):
     log_message = models.CharField(max_length=40)
     hash = models.CharField(max_length=30)
     author = models.ForeignKey(User, blank=False, on_delete=models.CASCADE)
-    branch = models.ForeignKey(Branch, blank=False, on_delete=models.CASCADE)
+    branches = models.ManyToManyField(Branch, related_name='branches', blank=False, default=None)
 
     parents = models.ManyToManyField("self", symmetrical=False, blank=True)
 
