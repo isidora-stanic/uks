@@ -1,0 +1,40 @@
+{% extends "list_branches.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1 class="title">Code</h1>
+<div class="container d-flex ">
+    <br/>
+    <div class="dropdown p-r-5">
+      <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {{object.name}}
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          {% for b in branches %}
+                <a class="dropdown-item" href="{% url 'branch_detail' b.id %}">{{ b.name }}</a>
+          {% endfor %}
+      </div>
+    </div>
+    <a class="btn btn-secondary p-r-5" href="{% url 'project_branches' object.project.id %}">Branches</a>
+</div>
+<div class="container">
+    <br/>
+    {% if commits %}
+    <div class="container">
+        <div class="tab-content">
+            <div class="tab-pane container active" >
+                {% for c in commits %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="card-text"><b>{{ c.author.username }} </b>{{ c.log_message }} <i class="col-auto"> {{ c.date_time }}</i></p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    There are no added commits.
+    {% endif %}
+</div>
+
+{% endblock content %}
