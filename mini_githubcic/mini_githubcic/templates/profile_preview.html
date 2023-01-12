@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1 class="title">Profile overview</h1>
+
+    <div class="row">
+        <div class="col-auto">
+            <label><b>Username</b></label>
+        </div>
+        <div class="col-auto">
+            <p>{{user.username}}</p>
+        </div>
+    </div>
+
+    <h1 class="title">User's repositories</h1>
+    {% if projects %}
+    {% for project in projects %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ project }} </p>
+            <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    This user has no repositories.
+    {% endif %}
+    <h1 class="title">User's contributions</h1>
+    {% if commits %}
+    {% for commit in commits %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-auto">
+                    <label><b>Commited on</b></label>
+                </div>
+                <div class="col-auto">
+                    <p class="card-text">{{ date_time }} </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-auto">
+                    <label><b>Message</b></label>
+                </div>
+                <div class="col-auto">
+                    <p class="card-text">{{ log_message }} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    This user has no commits.
+    {% endif %}
+
+{% endblock content %}

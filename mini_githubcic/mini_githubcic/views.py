@@ -8,7 +8,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-from .models import Project, User, Milestone, Issue, Label, Visibility
+from .models import Commit, Project, User, Milestone, Issue, Label, Visibility
 from django.contrib.auth import login, logout
 from django.db.models import Q
 
@@ -340,3 +340,16 @@ class LabelDeleteView(DeleteView):
     template_name = 'label_delete.html'
     success_url = '../..'
 
+
+class ProfilePreview(DetailView):
+    model = User
+    template_name = 'profile_preview.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
+        context['projects'] = Project.objects.filter(lead=context['user']).all()
+        context['commits'] = Commit.objects.filter(author=context['user']).all()
+        return context

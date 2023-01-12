@@ -45,6 +45,7 @@ urlpatterns = [
     path('projects/<int:pk>/labels/add', LabelCreateView.as_view(), name='add_label'),
     path('labels/<int:pk>', LabelDetailView.as_view(), name='label_detail'),
     path('labels/<int:pk>/update', LabelUpdateView.as_view(), name='label_update'),
-    path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete')
+    path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete'),
+    path('user/<slug:username>', ProfilePreview.as_view(), name='profile_preview')
 
 ]
