@@ -17,6 +17,8 @@ class Command(BaseCommand):
 
         u3 = User(username="U3", password="123")
         u3.save()
+        
+        User.objects.create_superuser("admin", "root")
 
     def _insert_projects(self):
         Project.objects.all().delete()

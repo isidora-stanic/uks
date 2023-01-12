@@ -14,16 +14,23 @@
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back</a>
-        <a class="btn btn-primary" href="{% url 'issue_update' object.id %}">Update</a>
-        <a class="btn btn-warning" href="{% url 'issue_state_toggle' object.id %}">
-            {% if object.is_open %}
-                Close
-            {% else %}
-                Reopen
-            {% endif %}
-        </a>
-
-        <a class="btn btn-danger" href="{% url 'issue_delete' object.id %}">Delete</a>
+        {%if request.user in object.project.developers.all %}
+            <a class="btn btn-primary" href="{% url 'issue_update' object.id %}">Update</a>  
+        {%endif%}
+        
+        {%if request.user in object.project.developers.all %}
+            <a class="btn btn-warning" href="{% url 'issue_state_toggle' object.id %}">
+                {% if object.is_open %}
+                    Close
+                {% else %}
+                    Reopen
+                {% endif %}
+            </a>
+        {%endif%}
+        
+        {%if request.user in object.project.developers.all %}
+            <a class="btn btn-danger" href="{% url 'issue_delete' object.id %}">Delete</a>
+        {%endif%}
     </div>
 </article>
 {% endblock content %}

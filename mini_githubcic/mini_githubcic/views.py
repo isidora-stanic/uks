@@ -9,34 +9,55 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-from .models import Project, User, Milestone, Issue, Label, Commit, Branch
+from .models import Project, User, Milestone, Issue, Label, Visibility, Commit, Branch
+from django.contrib.auth import login, logout
+from django.db.models import Q
 import uuid
-
 
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
     return render(request, 'index.html', {"title": title})
 
 
-def login(request, id=None):
+def sign_in(request, id=None):
     if request.method == 'GET':
         return render(request, "login.html")
     if request.method == 'POST':
 
         username = request.POST['username']
         password = request.POST['password']
-
         try:
             user = User.objects.get(username=username)
             if user.password != password:
                 return render(request, "login.html",
                               {"users_error": "User with this username and password does not exist"})
 
+            login(request, user)
             return render(request, "index.html", {"title": "first page"})
 
         except:
             return render(request, "login.html",
                           {"users_error": "User with this username and password does not exist"})
+
+
+
+def sign_out(request):
+    logout(request)
+    request.session.flush()
+    return redirect("login")
+
+class Register(CreateView):
+    model = User
+    template_name = 'registration.html'
+    fields = ['username', 'password']
+
+    def form_valid(self, form):
+        if User.objects.filter(username=form.instance.username).exists():
+            form.add_error(None, 'Username already in use')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+    
 
 
 class ProjectListView(ListView):
@@ -46,7 +67,9 @@ class ProjectListView(ListView):
     ordering = ['title']
 
     def get_queryset(self):
-        return Project.objects.all()
+        if(self.request.user.is_authenticated):
+            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC))
+        else: return Project.objects.filter(visibility=Visibility.PUBLIC)
 
 
 class IssueListView(ListView):
