@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if project_id %}
+    <h1 class="title">Branches for <b>{{ project.title }}</b></h1>
+{% endif %}
+
+<div class="container">
+    <a class="btn btn-primary default-button" href="{% url 'add_branch' project_id %}">New branch</a>
+    <br/>
+    {% if branches %}
+    <div class="container">
+        <div class="tab-content">
+            <div class="tab-pane container active" >
+                {% for branch in branches %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="card-text">{{ branch.name }} </p>
+                            {% if branch.name != 'main' %}
+                            <a class="btn btn-secondary" href="{% url 'branch_update' branch.id %}">Rename</a>
+                            <a class="btn btn-danger" href="{% url 'branch_delete' branch.id %}">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-primary" href="{% url 'branch_detail' branch.id %}">View</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    There are no added branches.
+    {% endif %}
+</div>
+{% endblock %}

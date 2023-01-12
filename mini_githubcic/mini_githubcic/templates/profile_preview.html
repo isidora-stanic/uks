@@ -12,7 +12,7 @@
         </div>
     </div>
 
-    <h1 class="title">User's repositories</h1>
+    <h1 class="title">User's public repositories</h1>
     {% if projects %}
     {% for project in projects %}
     <div class="card mb-3">
@@ -27,28 +27,21 @@
     {% endif %}
     <h1 class="title">User's contributions</h1>
     {% if commits %}
-    {% for commit in commits %}
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-auto">
-                    <label><b>Commited on</b></label>
-                </div>
-                <div class="col-auto">
-                    <p class="card-text">{{ date_time }} </p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-auto">
-                    <label><b>Message</b></label>
-                </div>
-                <div class="col-auto">
-                    <p class="card-text">{{ log_message }} </p>
-                </div>
+    
+        <div class="tab-content">
+            <div class="tab-pane  active" >
+                {% for c in commits %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="card-text h5"><span class="text-muted">[{{ c }}]</span> <b>{{ c.log_message }}</b></p>
+                            <p class="card-text h6"><b>{{ c.author.username }}</b> <span class="text-muted">committed on {{ c.date_time }}</span></p>
+                            <a href="{% url 'commit_detail' c.id %}">View</a>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
-    </div>
-    {% endfor %}
+    
     {% else %}
     This user has no commits.
     {% endif %}

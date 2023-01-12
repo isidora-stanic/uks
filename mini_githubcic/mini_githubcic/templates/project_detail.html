@@ -12,6 +12,7 @@
         <p> Developers - {{ object.developers.all }}</p>
     </div>
     <div>
+        <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
         {% if request.user == project.lead %}
