@@ -1,4 +1,5 @@
 from django.apps.registry import apps
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views.generic import (
@@ -15,6 +16,7 @@ from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login, logout
 from django.db.models import Q
+import uuid
 
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
@@ -130,8 +132,7 @@ class IssueCreateView(CreateView):
 
         context = self.get_context_data()
         form.instance.project = context['project']
-        form.instance.creator = User.objects.get(username="U1")
-        # todo treba ulogovani korisnik self.request.user
+        form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
         return super().form_valid(form)
 
@@ -295,6 +296,7 @@ class MilestoneListView(ListView):
     def get_queryset(self):
         return Milestone.objects.all()
 
+
 class MilestoneCreateView(CreateView):
     model = Milestone
     template_name = 'new_milestone.html'
@@ -354,8 +356,11 @@ class IssueDeleteView(DeleteView):
     success_url = '/projects'
 
     def test_func(self):
-        # TODO check if request sender is developer on the project
-        return True
+        # TODO redirect?
+        if self.request.user in self.issue.developers.all():
+            return True
+        else:
+            return False
 
 
 def issue_state_toggle(request, pk=None):
@@ -378,6 +383,7 @@ def milestone_close(request, pk=None):
 
 class LabelListView(ListView):
     model = Label
+    template_name = 'list_labels.html'
     template_name = 'list_labels.html'
     context_object_name = 'labels'
     ordering = ['name']
@@ -445,3 +451,55 @@ class LabelDeleteView(DeleteView):
     template_name = 'label_delete.html'
     success_url = '../..'
 
+# todo: filter by project
+# class CommitForm(forms.ModelForm):
+#     class Meta:
+#        model = Commit
+#        fields = ['log_message', 'branches', 'parents']
+#
+#     def __init__(self, *args, **kwargs):
+#        project_id = kwargs.pop('project_id')
+#        super(CommitForm, self).__init__(*args, **kwargs)
+#        self.fields['branches'].queryset = Branch.objects.filter(project__id=project_id)
+#        self.fields['parents'].queryset = Commit.objects.filter(id__in=self.fields['branches'].queryset)
+
+class CommitCreateView(CreateView):
+    model = Commit
+    template_name = 'new_commit.html'
+    fields = ['log_message', 'branches', 'parents']
+
+    def get_form(self, form_class=None):
+        form = super(CommitCreateView, self).get_form(form_class)
+        form.fields['log_message'].required = True
+        return form
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        form.instance.author = self.request.user
+        form.instance.date_time = timezone.now()
+        form.instance.hash = str(uuid.uuid4().hex) #todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
+        if form.is_valid:
+            new_commit = form.save()
+            if len(form.instance.parents.all()) > 2:
+                form.add_error(None, 'Commit cannot have more than 2 parent commits')
+                new_commit.delete()
+                return super().form_invalid(form)
+            # else:
+                # new_commit.parents.add(context['previous_commit'])
+        return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CommitCreateView, self).get_context_data(*args, **kwargs)
+        context['branch_id'] = self.request.resolver_match.kwargs['pk']
+        return context
+
+
+class CommitDetailView(DetailView):
+    model = Commit
+    template_name = 'commit_detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CommitDetailView, self).get_context_data(*args, **kwargs)
+        context['parents'] = self.get_object().parents.all()
+        context['branches'] = self.get_object().branches.all()
+        return context
