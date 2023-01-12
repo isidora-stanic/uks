@@ -114,8 +114,7 @@ class IssueCreateView(CreateView):
 
         context = self.get_context_data()
         form.instance.project = context['project']
-        form.instance.creator = User.objects.get(username="U1")
-        # todo treba ulogovani korisnik self.request.user
+        form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
         return super().form_valid(form)
 
@@ -192,6 +191,7 @@ class MilestoneListView(ListView):
     def get_queryset(self):
         return Milestone.objects.all()
 
+
 class MilestoneCreateView(CreateView):
     model = Milestone
     template_name = 'new_milestone.html'
@@ -251,8 +251,11 @@ class IssueDeleteView(DeleteView):
     success_url = '/projects'
 
     def test_func(self):
-        # TODO check if request sender is developer on the project
-        return True
+        # TODO redirect?
+        if self.request.user in self.issue.developers.all():
+            return True
+        else:
+            return False
 
 
 def issue_state_toggle(request, pk=None):
@@ -371,8 +374,7 @@ class CommitCreateView(CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         form.instance.branch = context['branch']
-        # TODO link to logged in user
-        form.instance.author = User.objects.get(username="U1")
+        form.instance.author = self.request.user
         form.instance.date_time = timezone.now()
         form.instance.hash = str(uuid.uuid4().hex) #todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
         if form.is_valid:
