@@ -8,9 +8,10 @@ from django.views.generic import (
     UpdateView,
     DeleteView
 )
-from .models import Project, User, Milestone, Issue, Label, Branch
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit
 
 from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
 
 
 def index(request):
@@ -133,7 +134,7 @@ class IssueCreateView(CreateView):
 class BranchCreateView(CreateView):
     model = Branch
     template_name = 'new_branch.html'
-    fields = ['name']
+    fields = ['name', 'parent_branch']
 
     def form_valid(self, form):
         context = self.get_context_data()
@@ -142,13 +143,21 @@ class BranchCreateView(CreateView):
             form.add_error(None, 'Name already in use')
             return super().form_invalid(form)
 
-        return super().form_valid(form)
+        f = Commit.objects.filter(branches__id__in=[form.instance.parent_branch.id])
+        self.object = form.save()
+        for c in f:
+            c.branches.add(self.object)
+            c.save()
+
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, *args, **kwargs):
         context = super(BranchCreateView, self).get_context_data(*args, **kwargs)
         context['project_id'] = self.request.resolver_match.kwargs['pk']
         context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
         context['branches'] = Branch.objects.filter(project__id=context['project_id'])
+        #self.fields['sel1'].choices = [(b.id, b.name, b) for b in context['branches']] TODO filter select vals
+
         return context
 
 
@@ -187,8 +196,8 @@ class BranchUpdateView(UpdateView):
     fields = ['name']
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        if Branch.objects.filter(project_id=context['project'].id, name=form.instance.name).exists():
+        proj = Project.objects.filter(id=int(form.instance.project.id)).first()
+        if Branch.objects.filter(project=proj,name=form.instance.name).exists():
             form.add_error(None, 'Name already in use')
             return super().form_invalid(form)
 
@@ -231,6 +240,7 @@ class BranchDetailView(DetailView):
         context['branch_id'] = self.request.resolver_match.kwargs['pk']
         context['branch'] = Branch.objects.filter(id=int(context['branch_id'])).first()
         context['branches'] = Branch.objects.filter(project__id=context['branch'].project.id)
+        context['commits'] = Commit.objects.filter(branches__id__in=[context['branch_id']])
 
         return context
 

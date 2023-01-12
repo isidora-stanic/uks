@@ -16,5 +16,25 @@
     </div>
     <a class="btn btn-secondary p-r-5" href="{% url 'project_branches' object.project.id %}">Branches</a>
 </div>
+<div class="container">
+    <br/>
+    {% if commits %}
+    <div class="container">
+        <div class="tab-content">
+            <div class="tab-pane container active" >
+                {% for c in commits %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="card-text"><b>{{ c.author.username }} </b>{{ c.log_message }} <i class="col-auto"> {{ c.date_time }}</i></p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    There are no added commits.
+    {% endif %}
+</div>
 
 {% endblock content %}

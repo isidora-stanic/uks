@@ -103,6 +103,29 @@ class Command(BaseCommand):
         b6.save()
 
 
+    def _insert_commits(self):
+        Commit.objects.all().delete()
+
+        u1 = User.objects.get(username="U1")
+
+        p1 = Project.objects.get(description="d1")
+        p2 = Project.objects.get(description="d2")
+
+        b1 = Branch.objects.get(name="main", project=p1)
+        b2 = Branch.objects.get(name="develop", project=p1)
+
+        c1 = Commit(log_message="initial commit", hash="asd", author=u1)
+        c1.save()
+        c1.branches.add(b1)
+        c1.branches.add(b2)
+        c1.save()
+
+        c2 = Commit(log_message="second commit", hash="asd", author=u1)
+        c2.save()
+        c2.branches.add(b2)
+        c2.save()
+
+
     def handle(self, *args, **options):
         self._insert_users()
         self._insert_projects()
@@ -110,4 +133,4 @@ class Command(BaseCommand):
         self._insert_milestones()
         self._insert_labels()
         self._insert_branches()
-
+        self._insert_commits()
