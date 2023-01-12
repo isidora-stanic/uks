@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="title">Starred projects</h1>
+
+<div class="container">
+    <br/>
+    {% if projects %}
+    {% for project in projects %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ project }} </p>
+            <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
+            <a class="btn btn-danger" href="{% url 'unstar_project' project.id %}">Unstar</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no starred projects.
+    {% endif %}
+</div>
+{% endblock %}

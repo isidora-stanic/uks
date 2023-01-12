@@ -4,6 +4,9 @@
 
 <div class="container">
     <a class="btn btn-primary default-button" href="{% url 'add_project' %}">New repository</a>
+    <a class="btn btn-primary default-button" href="{% url 'list_starred_projects' 31 %}">Starred projects</a>
+    <a class="btn btn-primary default-button" href="{% url 'list_watched_projects' 31 %}">Watched projects</a>
+<!--    user id todo-->
     <br/>
     {% if projects %}
     {% for project in projects %}

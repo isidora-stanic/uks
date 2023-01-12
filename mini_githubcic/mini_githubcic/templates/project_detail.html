@@ -14,6 +14,8 @@
     <div>
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
+        <a class="btn btn-primary" href="{% url 'star_project' object.id %}">Star project</a>
+         <a class="btn btn-primary" href="{% url 'watch_project' object.id %}">Watch project</a>
         <a class="btn btn-primary" href="{% url 'project_update' object.id %}">Update</a>
         <a class="btn btn-danger" href="{% url 'project_delete' object.id %}">Delete</a>
     </div>

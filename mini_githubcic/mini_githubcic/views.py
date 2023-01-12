@@ -318,3 +318,62 @@ class LabelDeleteView(DeleteView):
 
 # ========================
 
+class StarredProjectListView(ListView): # nemam blage da li ce ovo raditi
+    model = Project
+    template_name = 'list_starred_project.html'
+    context_object_name = 'projects'
+    ordering = ['title']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(StarredProjectListView, self).get_context_data(*args, **kwargs)
+        context['user_id'] = self.request.resolver_match.kwargs['pk']
+        context['user'] = User.objects.filter(id=context['user_id']).first()
+        context['projects'] = Project.objects.filter(starred=context['user'])
+        print(context['projects'])
+        return context
+
+def starr_project(request, pk=None):
+    if request.method == 'GET': #Post
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username="U1") #todo get real user
+        project.starred.add(user)
+        project.save()
+        return redirect(project)
+
+def unstarr_project(request, pk=None):
+    if request.method == 'GET': #Post
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username="U1") #todo get real user
+        project.starred.remove(user)
+        project.save()
+        return redirect('../projects')
+
+def watch_project(request, pk=None):
+    if request.method == 'GET': #Post
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username="U1") #todo get real user
+        project.watched.add(user)
+        project.save()
+        return redirect(project)
+
+def unwatch_project(request, pk=None):
+    if request.method == 'GET': #Post
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username="U1") #todo get real user
+        project.watched.remove(user)
+        project.save()
+        return redirect('../projects')
+
+class WatchedProjectListView(ListView):  # nemam blage da li ce ovo raditi
+    model = Project
+    template_name = 'list_watched_project.html'
+    context_object_name = 'projects'
+    ordering = ['title']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(WatchedProjectListView, self).get_context_data(*args, **kwargs)
+        context['user_id'] = self.request.resolver_match.kwargs['pk']
+        context['user'] = User.objects.filter(id=context['user_id']).first()
+        context['projects'] = Project.objects.filter(watched=context['user'])
+        print(context['projects'])
+        return context

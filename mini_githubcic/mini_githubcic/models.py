@@ -37,6 +37,7 @@ class Project(models.Model):
     lead = models.ForeignKey(User, on_delete=models.CASCADE)
     developers = models.ManyToManyField(to=User, blank=True, related_name="developers")
     starred = models.ManyToManyField(User, related_name="starred")
+    watched = models.ManyToManyField(User, related_name="watched")
 
     def __str__(self):
         return "%s/%s" % (self.lead, self.title)

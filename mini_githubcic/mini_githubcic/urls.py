@@ -43,6 +43,11 @@ urlpatterns = [
     path('projects/<int:pk>/labels/add', LabelCreateView.as_view(), name='add_label'),
     path('labels/<int:pk>', LabelDetailView.as_view(), name='label_detail'),
     path('labels/<int:pk>/update', LabelUpdateView.as_view(), name='label_update'),
-    path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete')
-
+    path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete'),
+    path('starredProjects/<int:pk>', StarredProjectListView.as_view(), name='list_starred_projects'),
+    path('starProject/<int:pk>', starr_project, name='star_project'),
+    path('unstarProject/<int:pk>', unstarr_project, name='unstar_project'),
+    path('watchedProjects/<int:pk>', WatchedProjectListView.as_view(), name='list_watched_projects'),
+    path('watchProject/<int:pk>', watch_project, name='watch_project'),
+    path('unwatchProject/<int:pk>', unwatch_project, name='unwatch_project')
 ]
