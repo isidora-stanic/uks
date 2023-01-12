@@ -1,22 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Edit commit</h1>
+<h1 class="title">Commit details</h1>
 <article class="container">
     <div>
-        <h2> Hash - {{ object.hash }}</h2>
-        <p> Log message - {{ object.log_message }}</p>
-        <p> Branch - {{ object.branch }}</p>
-        <p> Date Created - {{ object.date_time }}</p>
-        <p> Author - {{ object.author }}</p>
-        {% if parents %}
-            <p>Parent commits</p>
-            {% for parent in parents %}
-                <a href="{% url 'commit_detail' parent.id %}">{{ parent }}</a>
-                <br>
-            {% endfor %}
-        {% else %}
-            <p>There are no parent commits</p>
-        {% endif %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>{{ object.log_message }}</h4>
+                {% if branches %}
+                    <a class="text-muted">{{ branches|length}} branch{{ branches|length|pluralize:"es" }}</a>
+                    {% for branch in branches %}
+                        <a href="{% url 'branch_detail' branch.id %}">{{ branch }}</a>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">There are no branches</p>
+                {% endif %}
+
+            </div>
+            <div class="card-body">
+            <p class="card-text"><b>{{ object.author }}</b> committed on {{ object.date_time }}</p>
+                {% if parents %}
+                    <a class="card-text text-muted">{{ parents|length }} parent{{ parents|length|pluralize }}</a>
+                    {% for parent in parents %}
+                        <a class="card-text" href="{% url 'commit_detail' parent.id %}">{{ parent }}</a>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">There are no parent commits</p>
+                {% endif %}
+
+            <p><span class="text-muted">commit</span> {{ object.hash }}</p>
+            </div>
+        </div>
     </div>
     <div>
 {#        <a class="btn btn-primary" href="{% url 'commit_update' object.id %}">Update</a>#}

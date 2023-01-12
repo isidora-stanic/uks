@@ -85,36 +85,44 @@ class Command(BaseCommand):
         l1.save()
 
     def _insert_commits_and_branches(self):
-        p1 = Project.objects.get(description="d1")
-        u1 = User.objects.get(username="U1")
+        p3 = Project.objects.get(description="d3")
+        u1 = User.objects.get(username="U3")
 
-        b1 = Branch(name="main", project=p1)
-        b1.save()
+        b1 = Branch.objects.get(name="main", project=p3)
+        b2 = Branch.objects.get(name="develop", project=p3)
 
-        b2 = Branch(name="develop", project=p1)
-        b2.save()
-
-        c1 = Commit(branch=b1, author=u1, hash=str(uuid.uuid4().hex), log_message="root commit (no parent)")
+        c1 = Commit(author=u1, hash=str(uuid.uuid4().hex), log_message="root commit (no parent)")
+        c1.save()
+        c1.branches.add(b1)
         c1.save()
 
-        c2 = Commit(branch=b1, author=u1, hash=str(uuid.uuid4().hex), log_message="first after root (root is a parent)")
+        c2 = Commit(author=u1, hash=str(uuid.uuid4().hex),
+                    log_message="first after root (root is a parent)")
         c2.save()
         c2.parents.add(c1)
+        c2.branches.add(b1)
         c2.save()
         print(c2.parents.all())
 
-        c3 = Commit(branch=b2, author=u1, hash=str(uuid.uuid4().hex), log_message="first on new branch after root (root is a parent)")
+        c3 = Commit(author=u1, hash=str(uuid.uuid4().hex),
+                    log_message="first on new branch after root (root is a parent)")
         c3.save()
         c3.parents.add(c1)
+        c3.branches.add(b2)
         c3.save()
-        print(c3.parents.all())
+        c1.branches.add(b2)
+        c1.save()
+        print(c3.branches.all())
 
-        c4 = Commit(branch=b1, author=u1, hash=str(uuid.uuid4().hex),
+        c4 = Commit(author=u1, hash=str(uuid.uuid4().hex),
                     log_message="merging two branches (2 parent commits)")
         c4.save()
         c4.parents.add(c2, c3)
+        c4.branches.add(b1)
+        c4.branches.add(b2)
         c4.save()
-        print(c4.parents.all())
+        c3.branches.add(b1)
+        c3.save()
         
     def _insert_branches(self):
         Branch.objects.all().delete()
@@ -136,7 +144,6 @@ class Command(BaseCommand):
         b5.save()
         b6.save()
 
-
     def _insert_commits(self):
         Commit.objects.all().delete()
 
@@ -148,13 +155,13 @@ class Command(BaseCommand):
         b1 = Branch.objects.get(name="main", project=p1)
         b2 = Branch.objects.get(name="develop", project=p1)
 
-        c1 = Commit(log_message="initial commit", hash="asd", author=u1)
+        c1 = Commit(log_message="initial commit", hash=str(uuid.uuid4().hex), author=u1)
         c1.save()
         c1.branches.add(b1)
         c1.branches.add(b2)
         c1.save()
 
-        c2 = Commit(log_message="second commit", hash="asd", author=u1)
+        c2 = Commit(log_message="second commit", hash=str(uuid.uuid4().hex), author=u1)
         c2.save()
         c2.branches.add(b2)
         c2.save()

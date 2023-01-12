@@ -138,7 +138,7 @@ class Branch(models.Model):
         return reverse('branch_detail', kwargs={'pk': self.pk})
 
     def __str__(self):
-        return "#%s - %s" % (self.id, self.name)
+        return "%s" % (self.name)
 
 
 class Commit(models.Model):
@@ -148,13 +148,13 @@ class Commit(models.Model):
     author = models.ForeignKey(User, blank=False, on_delete=models.CASCADE)
     branches = models.ManyToManyField(Branch, related_name='branches', blank=False, default=None)
 
-    parents = models.ManyToManyField("self", symmetrical=False, blank=True)
+    parents = models.ManyToManyField("self", symmetrical=False, blank=True, verbose_name=('Parent commits'))
 
     def get_absolute_url(self):
         return reverse('commit_detail', kwargs={'pk': self.pk})
 
     def __str__(self):
-        return "[%s] %s" % (self.hash[0:7], self.log_message)
+        return "%s" % (self.hash[0:7])
 
 
 

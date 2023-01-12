@@ -451,25 +451,22 @@ class LabelDeleteView(DeleteView):
     template_name = 'label_delete.html'
     success_url = '../..'
 
-
-class CommitListView(ListView):
-    model = Commit
-    template_name = 'list_commits.html'
-    context_object_name = 'commits'
-    ordering = ['id']
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(CommitListView, self).get_context_data(*args, **kwargs)
-        context['branch_id'] = self.request.resolver_match.kwargs['pk']
-        context['branch'] = Branch.objects.filter(id=context['branch_id']).first()
-        context['commits'] = Commit.objects.filter(branch__id=context['branch_id'])
-        return context
-
+# todo: filter by project
+# class CommitForm(forms.ModelForm):
+#     class Meta:
+#        model = Commit
+#        fields = ['log_message', 'branches', 'parents']
+#
+#     def __init__(self, *args, **kwargs):
+#        project_id = kwargs.pop('project_id')
+#        super(CommitForm, self).__init__(*args, **kwargs)
+#        self.fields['branches'].queryset = Branch.objects.filter(project__id=project_id)
+#        self.fields['parents'].queryset = Commit.objects.filter(id__in=self.fields['branches'].queryset)
 
 class CommitCreateView(CreateView):
     model = Commit
     template_name = 'new_commit.html'
-    fields = ['log_message']
+    fields = ['log_message', 'branches', 'parents']
 
     def get_form(self, form_class=None):
         form = super(CommitCreateView, self).get_form(form_class)
@@ -478,20 +475,22 @@ class CommitCreateView(CreateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
-        form.instance.branch = context['branch']
         form.instance.author = self.request.user
         form.instance.date_time = timezone.now()
         form.instance.hash = str(uuid.uuid4().hex) #todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
         if form.is_valid:
             new_commit = form.save()
-            new_commit.parents.add(context['previous_commit'])
+            if len(form.instance.parents.all()) > 2:
+                form.add_error(None, 'Commit cannot have more than 2 parent commits')
+                new_commit.delete()
+                return super().form_invalid(form)
+            # else:
+                # new_commit.parents.add(context['previous_commit'])
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
         context = super(CommitCreateView, self).get_context_data(*args, **kwargs)
         context['branch_id'] = self.request.resolver_match.kwargs['pk']
-        context['branch'] = Branch.objects.filter(id=context['branch_id']).first()
-        context['previous_commit'] = Commit.objects.filter(branch__id=context['branch_id']).latest("date_time")
         return context
 
 
@@ -501,23 +500,6 @@ class CommitDetailView(DetailView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(CommitDetailView, self).get_context_data(*args, **kwargs)
-        if len(self.get_object().parents.all()) == 1:
-            context['parent_id1'] = self.get_object().parents.all()[0]
-            print("PARENT IS:", context['parent_id1'])
-            context['parents'] = Commit.objects.filter(id=context['parent_id1'].id)
-        elif len(self.get_object().parents.all()) == 2:
-            context['parent_id1'] = self.get_object().parents.all()[0]
-            context['parent_id2'] = self.get_object().parents.all()[1]
-            print("PARENTS ARE:", context['parent_id1'], context['parent_id2'])
-            context['parents'] = Commit.objects.filter(Q(id=context['parent_id1'].id) | Q(id=context['parent_id2'].id))
-        else:
-            context['parents'] = context['parent_id1'] = context['parent_id2'] = None
+        context['parents'] = self.get_object().parents.all()
+        context['branches'] = self.get_object().branches.all()
         return context
-
-
-#
-# class CommitDeleteView(DeleteView):
-#     model = Commit
-#     template_name = 'commit_delete.html'
-#     success_url = '../..'
-
