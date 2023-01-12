@@ -9,13 +9,17 @@
         <p> Visibility - {{ object.visibility | title }}</p>
         <p> Link - {{ object.link }}</p>
         <p> Lead - {{ object.lead }}</p>
-        <p> Developers - {{ object.developers }}</p>
+        <p> Developers - {{ object.developers.all }}</p>
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
+        {% if request.user == project.lead %}
         <a class="btn btn-primary" href="{% url 'project_update' object.id %}">Update</a>
+        {% endif %}
+        {% if request.user == project.lead %}
         <a class="btn btn-danger" href="{% url 'project_delete' object.id %}">Delete</a>
+        {% endif %}
     </div>
 </article>
 {% endblock content %}

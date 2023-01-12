@@ -1,7 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import UserManager
 from colorfield.fields import ColorField
+from mini_githubcic.managers import GitUserManager
 
 class State(models.TextChoices):
     OPEN = 'OPEN'
@@ -18,14 +21,33 @@ class ReactionType(models.TextChoices):
     LIKE = 'LIKE'
     HEART = 'HEART'
     SMILEY = 'SMILEY'
-
-
-class User(models.Model):
+    
+    
+class User(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True, blank=False)
     password = models.CharField(max_length=20)
+    
+    is_superuser = models.BooleanField(default=False)
 
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
+
+    @property
+    def is_staff(self):
+        return self.is_superuser
+        
+    USERNAME_FIELD = 'username'
+
+    objects = GitUserManager()
+    
     def __str__(self):
         return self.username
+    
+    class Meta:
+        db_table = u'users'
 
     def get_absolute_url(self):
         return reverse('login') #TODO user_detail

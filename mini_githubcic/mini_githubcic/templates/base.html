@@ -17,21 +17,26 @@
 <body>
 <header class=" custom-header">Mini GitHub-cic
     <nav class="container">
-        <div class="row">
-          <div class="col-auto mr-auto">
-              <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
-          </div>
-          <div class="col-auto">
-                <div class="row">
-                    <div class="col mb-0">
-                        <a class="nav-links" href="{% url 'register'  %}">Sign up</a>
-                    </div>
-                    <div class="col mb-0">
-                        <a  class="nav-links"  href="{% url 'login' %}">Login</a>
-                    </div>
-                </div>
-          </div>
-        </div>
+        <ul>
+            <li>
+                <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
+            </li>
+           
+                {% if not request.user.is_authenticated %}
+                  <li>
+                    <a href="{% url 'login' %}">login</a>
+                  </li>
+                   <li>
+                    <a class="nav-links" href="{% url 'register'  %}">Sign up</a>
+                   </li>
+                {% else %}
+                  <li>
+                    <a href="{% url 'logout' %}">logout</a>
+                  </li>
+                {% endif %}
+          
+
+        </ul>
         {% block links %}{% endblock %}
     </nav>
 </header>
