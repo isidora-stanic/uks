@@ -21,17 +21,25 @@
           <div class="col-auto mr-auto">
               <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
           </div>
+
           <div class="col-auto">
                 <div class="row">
+                	{% if not request.user.is_authenticated %}
                     <div class="col mb-0">
                         <a class="nav-links" href="{% url 'register'  %}">SignUp</a>
                     </div>
                     <div class="col mb-0">
                         <a  class="nav-links"  href="{% url 'login' %}">Login</a>
                     </div>
+                    {% else %}
+                    <div class="col mb-0">
+                        <a  class="nav-links"  href="{% url 'logout' %}">Logout</a>
+                    </div>
+                    {% endif %}
                 </div>
           </div>
         </div>
+
         {% block links %}{% endblock %}
     </nav>
 </header>
