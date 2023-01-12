@@ -451,6 +451,18 @@ class LabelDeleteView(DeleteView):
     template_name = 'label_delete.html'
     success_url = '../..'
 
+class ProfilePreview(DetailView):
+    model = User
+    template_name = 'profile_preview.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
+        context['projects'] = Project.objects.filter(Q(lead=context['user']) | Q(visibility=Visibility.PUBLIC)).all()
+        context['commits'] = Commit.objects.filter(author=context['user']).filter(branches__project__visibility=Visibility.PUBLIC).all()
+        return context
 # todo: filter by project
 # class CommitForm(forms.ModelForm):
 #     class Meta:
