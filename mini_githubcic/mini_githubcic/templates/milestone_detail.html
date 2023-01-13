@@ -9,6 +9,7 @@
         <p> Is open - {{ object.is_open }}</p>
     </div>
     <div>
+        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>
         <a class="btn btn-primary" href="{% url 'milestone_update' object.id %}">Update</a>
          {% if milestone.is_open %}
             <a class="btn btn-primary" href="{% url 'milestone_close' object.id %}">Close</a>
