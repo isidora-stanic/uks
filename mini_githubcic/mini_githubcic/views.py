@@ -343,7 +343,9 @@ class MilestoneDetailView(DetailView):
 class MilestoneDeleteView(DeleteView):
     model = Milestone
     template_name = 'milestone_delete.html'
-    success_url = '/projects'
+
+    def get_success_url(self):
+        return reverse_lazy('list_milestones', kwargs={'pk': self.object.project.id})
 
     def test_func(self):
         # TODO check if request sender is project lead
@@ -353,7 +355,9 @@ class MilestoneDeleteView(DeleteView):
 class IssueDeleteView(DeleteView):
     model = Issue
     template_name = 'issue_delete.html'
-    success_url = '/projects'
+
+    def get_success_url(self):
+        return reverse_lazy('project_issues', kwargs={'pk': self.object.project.id})
 
     def test_func(self):
         # TODO redirect?
@@ -449,7 +453,10 @@ class LabelDetailView(DetailView):
 class LabelDeleteView(DeleteView):
     model = Label
     template_name = 'label_delete.html'
-    success_url = '../..'
+
+    def get_success_url(self):
+        return reverse_lazy('list_labels', kwargs={'pk': self.object.project.id})
+
 
 class ProfilePreview(DetailView):
     model = User
