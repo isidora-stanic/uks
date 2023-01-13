@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1 class="title">Create new branch for {{project.title}}</h1>
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            {{ form | crispy }}
+        </fieldset>
+        <!--<div class="form-group">
+          <label for="sel1">Source branch:</label>
+          <select class="form-control" id="sel1" name="sel1">
+            {% for object in branches %}
+                <option value="{{ object.id }}" >{{ object.name }}</option>
+            {% endfor %}
+          </select>
+        </div>-->
+        <div class="form-group">
+            <a class="btn btn-secondary" href="{% url 'project_branches' project.id %}">Cancel</a>
+            <button class="btn btn-primary" type="submit" >Save</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

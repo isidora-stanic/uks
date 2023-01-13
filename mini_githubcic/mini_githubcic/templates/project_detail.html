@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Project details</h1>
+<article class="container">
+    <div>
+        <h2> Title - {{ object.title }}</h2>
+        <p> Description - {{ object.description }}</p>
+        <p> Licence - {{ object.licence }}</p>
+        <p> Visibility - {{ object.visibility | title }}</p>
+        <p> Link - {{ object.link }}</p>
+        <p> Lead - <a href="{% url 'profile_preview' object.lead.username %}">{{ object.lead }}</a></p>
+        <p> Developers:</p>
+        {% for dev in object.developers.all %}
+            <a href="{% url 'profile_preview' dev.username %}">{{ dev.username }}</a>
+        {% endfor %}
+    <hr>
+    </div>
+    <div>
+        <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>
+        <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
+        <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
+        <a class="btn btn-primary" href="{% url 'list_labels' object.id %}">Labels</a>
+        {% if request.user == project.lead %}
+        <a class="btn btn-primary" href="{% url 'project_update' object.id %}">Update</a>
+        {% endif %}
+        {% if request.user == project.lead %}
+        <a class="btn btn-danger" href="{% url 'project_delete' object.id %}">Delete</a>
+        {% endif %}
+    </div>
+</article>
+{% endblock content %}

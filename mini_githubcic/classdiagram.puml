@@ -1,0 +1,112 @@
+@startuml
+enum Visibility {
+ PUBLIC
+ PRIVATE 
+}
+
+class User
+
+class Label {
+  name: string
+}
+
+class Task {
+}
+
+enum State {
+  OPEN
+  CLOSE
+  MERGED
+}
+
+class Project {
+  title: string
+  description: string
+  licence: string
+  visibility: Visibility
+  link: string
+}
+
+class Milestone {
+  title: string
+  description: string
+  due_date: Date
+  state: State
+}
+
+class Event {
+  date_time: DateTime
+}
+
+class Issue {
+  title: string
+  description: string
+  date_created: Date
+}
+
+class Comment {
+  content: string
+  date_created: Date
+}
+
+class StateChange {
+  new_state: State
+}
+class Branch {
+  name: string
+}
+class Commit {
+  date_time: DateTime
+  log_message: string
+  hash: string
+}
+
+' class GitRepository {
+'   link: string
+' }
+
+class UpdateEvent {
+  filed_name: string
+  old_content: string
+  new_content: string
+}
+
+enum ReactionType {
+  LIKE
+  HEART
+  SMILEY
+}
+
+class Reaction {
+  type: ReactionType
+}
+
+User "creator" <-- Task
+' PullRequest -- "0..*" Issue
+PullRequest --|> Task
+PullRequest "0..*" --* "target" Branch
+PullRequest "0..*" --* "source" Branch
+' Project *--> GitRepository
+' GitRepository *-- "1..*" Branch
+Project *-- "1..*" Branch
+Branch *-- "0..*" Commit
+Commit -- "author" User
+Commit -- "0..2 parents" Commit
+Project *-- "0..*" Milestone
+Project -- "1..* developers" User
+Project --> "lead" User
+Milestone -- "0..*" Task
+Issue --|> Task
+Task -- "0..*" Event
+Event <|-- Comment
+Event <|-- LabelApplication
+Event <|-- StateChange
+Event <|-- UpdateEvent
+LabelApplication --> "1..*" Label
+Project -- "0..*" Label
+Issue -- "0..*" Label
+User "assigned_to 0..*" -- Task
+User "0..*" -- "0..* starred" Project
+User "0.." -- "0.." Comment
+(User, Comment) .. Reaction
+@enduml

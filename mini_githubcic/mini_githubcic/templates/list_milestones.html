@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% if project_id %}
+        <h1 class="title">Milestones for <b>{{ project.title }}</b></h1>
+    {% endif %}
+
+<div class="container">
+{%if request.user in project.developers.all or request.user == project.lead %}
+    <a class="btn default-button" href="{% url 'add_milestone' project_id %}">New milestone</a>
+{% endif %}
+    <br/>
+    {% if milestones %}
+    {% for milestone in milestones %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ milestone }} </p>
+            {%if request.user in project.developers.all or request.user == project.lead %}
+            <a class="btn btn-danger" href="{% url 'milestone_delete' milestone.id %}">Delete</a>
+            {% endif %}
+            <a class="btn btn-primary" href="{% url 'milestone_detail' milestone.id %}">View</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no added milestones.
+    {% endif %}
+</div>
+{% endblock %}
