@@ -463,8 +463,7 @@ class ProfilePreview(DetailView):
         context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
         context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
         context['projects'] = Project.objects.filter(Q(lead=context['user']) | Q(visibility=Visibility.PUBLIC)).all()
-        context['commits'] = Commit.objects.filter(author=context['user'])\
-            .filter(branches__project__visibility=Visibility.PUBLIC).all() # todo: filter branches and commits by project
+        context['commits'] = Commit.objects.filter(author=context['user']).filter(branches__project__visibility=Visibility.PUBLIC).distinct()
         return context
 
 
@@ -472,6 +471,7 @@ class CommitCreateView(CreateView):
     model = Commit
     template_name = 'new_commit.html'
     fields = ['log_message', 'branches', 'parents']
+    # todo: filter branches and commits by project
 
     def get_form(self, form_class=None):
         form = super(CommitCreateView, self).get_form(form_class)
