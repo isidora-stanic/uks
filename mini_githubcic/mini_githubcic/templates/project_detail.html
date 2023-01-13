@@ -8,8 +8,12 @@
         <p> Licence - {{ object.licence }}</p>
         <p> Visibility - {{ object.visibility | title }}</p>
         <p> Link - {{ object.link }}</p>
-        <p> Lead - {{ object.lead }}</p>
-        <p> Developers - {{ object.developers.all }}</p>
+        <p> Lead - <a href="{% url 'profile_preview' object.lead.username %}">{{ object.lead }}</a></p>
+        <p> Developers:</p>
+        {% for dev in object.developers.all %}
+            <a href="{% url 'profile_preview' dev.username %}">{{ dev.username }}</a>
+        {% endfor %}
+    <hr>
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>

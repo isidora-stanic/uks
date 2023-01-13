@@ -10,11 +10,13 @@
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>
+    {%if request.user in object.project.developers.all or request.user == object.project.lead %}
         <a class="btn btn-primary" href="{% url 'milestone_update' object.id %}">Update</a>
          {% if milestone.is_open %}
             <a class="btn btn-primary" href="{% url 'milestone_close' object.id %}">Close</a>
          {%endif%}
         <a class="btn btn-danger" href="{% url 'milestone_delete' object.id %}">Delete</a>
     </div>
+{% endif %}
 </article>
 {% endblock content %}

@@ -72,7 +72,7 @@ class ProjectListView(ListView):
 
     def get_queryset(self):
         if(self.request.user.is_authenticated):
-            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC))
+            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC) | Q(developers__contains=self.request.user))
         else: return Project.objects.filter(visibility=Visibility.PUBLIC)
 
 

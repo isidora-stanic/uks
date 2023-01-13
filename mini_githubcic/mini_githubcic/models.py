@@ -72,7 +72,7 @@ class Project(models.Model):
 
 class Label(models.Model):
     name = models.CharField(max_length=100)
-    color = ColorField(default="#FFFFFF")
+    color = ColorField(default="#00000")
     description = models.TextField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
 

@@ -81,7 +81,7 @@ class Command(BaseCommand):
         Label.objects.all().delete()
 
         p1 = Project.objects.get(description="d1")
-        l1 = Label(name="l1", description="d2", color="#FFFFFF", project=p1)
+        l1 = Label(name="l1", description="d2", color="#00000", project=p1)
         l1.save()
 
     def _insert_commits_and_branches(self):
@@ -102,7 +102,6 @@ class Command(BaseCommand):
         c2.parents.add(c1)
         c2.branches.add(b1)
         c2.save()
-        print(c2.parents.all())
 
         c3 = Commit(author=u1, hash=str(uuid.uuid4().hex),
                     log_message="first on new branch after root (root is a parent)")
@@ -112,7 +111,6 @@ class Command(BaseCommand):
         c3.save()
         c1.branches.add(b2)
         c1.save()
-        print(c3.branches.all())
 
         c4 = Commit(author=u1, hash=str(uuid.uuid4().hex),
                     log_message="merging two branches (2 parent commits)")
