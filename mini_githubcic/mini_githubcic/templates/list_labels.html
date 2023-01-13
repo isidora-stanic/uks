@@ -15,7 +15,9 @@
         <div class="card-body">
 {#            <span class="badge badge-primary" style="background-color: {{label.color}}; margin:10px;"> Color - {{ label.color }}</span>#}
             <h4 class="card-text"><span class="btn btn-outlined-primary" style="border-color: {{label.color}}; color:{{ label.color }}; margin-bottom:10px;">{{ label.name }}</span></h4>
+            {%if request.user in object.project.developers.all or request.user == object.project.lead %}
             <a class="btn btn-danger" href="{% url 'label_delete'  label.id %}">Delete</a>
+            {% endif %}
             <a class="btn btn-primary" href="{% url 'label_detail' label.id %}">View</a>
         </div>
     </div>
