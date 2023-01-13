@@ -5,7 +5,9 @@
 {% endif %}
 
 <div class="container">
+{%if request.user in project.developers.all or request.user == project.lead %}
     <a class="btn default-button" href="{% url 'add_label' project.id%}">New label</a>
+{% endif %}
     <br/>
     {% if labels %}
     {% for label in labels %}
