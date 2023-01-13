@@ -72,7 +72,7 @@ class ProjectListView(ListView):
 
     def get_queryset(self):
         if(self.request.user.is_authenticated):
-            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC) | Q(developers__contains=self.request.user))
+            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC) | Q(developers=self.request.user)).distinct()
         else: return Project.objects.filter(visibility=Visibility.PUBLIC)
 
 
@@ -175,12 +175,12 @@ class BranchCreateView(CreateView):
 class ProjectUpdateView(UpdateView):
     model = Project
     template_name = 'project_update.html'
-    fields = ['title', 'description']
+    fields = ['title', 'description', 'developers', 'visibility', 'link', 'licence']
 
     def form_valid(self, form):
 
         if Project.objects.filter(title=form.instance.title).exists():
-            if self.get_object().name != form.instance.name:
+            if self.get_object().id != form.instance.id:
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
         return super().form_valid(form)
@@ -462,7 +462,7 @@ class ProfilePreview(DetailView):
     def get_context_data(self, *args, **kwargs):
         context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
         context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
-        context['projects'] = Project.objects.filter(Q(lead=context['user']) | Q(visibility=Visibility.PUBLIC)).all()
+        context['projects'] = Project.objects.filter(Q(lead=context['user']) & Q(visibility=Visibility.PUBLIC)).all()
         context['commits'] = Commit.objects.filter(author=context['user']).filter(branches__project__visibility=Visibility.PUBLIC).distinct()
         return context
 
