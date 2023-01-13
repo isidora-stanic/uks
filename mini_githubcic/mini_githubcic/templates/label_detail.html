@@ -1,16 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Edit label</h1>
+<h1 class="title">Label details</h1>
 <article class="container">
     <div>
         <h2> Name - {{ object.name }}</h2>
         <p> Description - {{ object.description }}</p>
-        <span class="badge badge-primary" style="background-color: {{object.color}}; margin:10px;"> Color - {{ object.color }}</span>
+        <h4><span class="badge badge-primary" style="background-color: {{object.color}}; margin-bottom: 10px"> Color - {{ object.color }}</span></h4>
 
     </div>
     <div>
+        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>
+        {%if request.user in object.project.developers.all or request.user == object.project.lead %}
         <a class="btn btn-primary" href="{% url 'label_update' object.id %}">Update</a>
         <a class="btn btn-danger" href="{% url 'label_delete' object.id %}">Delete</a>
+        {% endif %}
     </div>
 </article>
 {% endblock content %}

@@ -13,7 +13,7 @@
         <p> Open - {{ object.is_open }}</p>
     </div>
     <div>
-        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back</a>
+        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>
         {%if request.user in object.project.developers.all %}
             <a class="btn btn-primary" href="{% url 'issue_update' object.id %}">Update</a>  
         {%endif%}

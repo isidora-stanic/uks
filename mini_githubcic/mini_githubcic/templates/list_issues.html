@@ -7,7 +7,7 @@
 
 <div class="container">
     {%if request.user in project.developers.all or request.user == project.lead %}
-        <a class="btn btn-primary default-button" href="{% url 'add_issue' project_id %}">New issue</a>
+        <a class="btn default-button" href="{% url 'add_issue' project_id %}">New issue</a>
     {%endif%}
     <br/>
 
@@ -36,7 +36,7 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <p class="card-text">{{ issue }} </p>
-                    {%if request.user in project.developers.all %}
+                    {%if request.user in project.developers.all or request.user == project.lead %}
                     <a class="btn btn-danger" href="{% url 'issue_delete' issue.id %}">Delete</a>
                     {%endif%}
                     <a class="btn btn-primary" href="{% url 'issue_detail' issue.id %}">View</a>

@@ -72,7 +72,7 @@ class ProjectListView(ListView):
 
     def get_queryset(self):
         if(self.request.user.is_authenticated):
-            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC))
+            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC) | Q(developers=self.request.user)).distinct()
         else: return Project.objects.filter(visibility=Visibility.PUBLIC)
 
 
@@ -110,8 +110,7 @@ class ProjectCreateView(CreateView):
     fields = ['title', 'description', 'licence', 'visibility']
 
     def form_valid(self, form):
-        # TODO link to logged in user
-        form.instance.lead = User.objects.get(username="U1")
+        form.instance.lead = self.request.user
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if Project.objects.filter(title=form.instance.title).exists():
             form.add_error(None, 'Title already in use')
@@ -176,12 +175,12 @@ class BranchCreateView(CreateView):
 class ProjectUpdateView(UpdateView):
     model = Project
     template_name = 'project_update.html'
-    fields = ['title', 'description']
+    fields = ['title', 'description', 'developers', 'visibility', 'link', 'licence']
 
     def form_valid(self, form):
 
         if Project.objects.filter(title=form.instance.title).exists():
-            if self.get_object().name != form.instance.name:
+            if self.get_object().id != form.instance.id:
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
         return super().form_valid(form)
@@ -303,10 +302,9 @@ class MilestoneCreateView(CreateView):
     fields = ['title', 'description', 'due_date', 'is_open']
 
     def form_valid(self, form):
-        # TODO link to logged in user
         context = self.get_context_data()
         form.instance.project = context['project']
-        form.instance.lead = User.objects.get(username="U1")
+        form.instance.lead = self.request.user
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if len(Milestone.objects.filter(title=form.instance.title)) != 0:
             form.add_error(None, 'Title already in use')
@@ -343,7 +341,9 @@ class MilestoneDetailView(DetailView):
 class MilestoneDeleteView(DeleteView):
     model = Milestone
     template_name = 'milestone_delete.html'
-    success_url = '/projects'
+
+    def get_success_url(self):
+        return reverse_lazy('list_milestones', kwargs={'pk': self.object.project.id})
 
     def test_func(self):
         # TODO check if request sender is project lead
@@ -353,14 +353,13 @@ class MilestoneDeleteView(DeleteView):
 class IssueDeleteView(DeleteView):
     model = Issue
     template_name = 'issue_delete.html'
-    success_url = '/projects'
+
+    def get_success_url(self):
+        return reverse_lazy('project_issues', kwargs={'pk': self.object.project.id})
 
     def test_func(self):
-        # TODO redirect?
-        if self.request.user in self.issue.developers.all():
-            return True
-        else:
-            return False
+        # TODO check if request sender is project lead
+        return True
 
 
 def issue_state_toggle(request, pk=None):
@@ -449,7 +448,10 @@ class LabelDetailView(DetailView):
 class LabelDeleteView(DeleteView):
     model = Label
     template_name = 'label_delete.html'
-    success_url = '../..'
+
+    def get_success_url(self):
+        return reverse_lazy('list_labels', kwargs={'pk': self.object.project.id})
+
 
 class ProfilePreview(DetailView):
     model = User
@@ -460,25 +462,16 @@ class ProfilePreview(DetailView):
     def get_context_data(self, *args, **kwargs):
         context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
         context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
-        context['projects'] = Project.objects.filter(Q(lead=context['user']) | Q(visibility=Visibility.PUBLIC)).all()
-        context['commits'] = Commit.objects.filter(author=context['user']).filter(branches__project__visibility=Visibility.PUBLIC).all()
+        context['projects'] = Project.objects.filter(Q(lead=context['user']) & Q(visibility=Visibility.PUBLIC)).all()
+        context['commits'] = Commit.objects.filter(author=context['user']).filter(branches__project__visibility=Visibility.PUBLIC).distinct()
         return context
-# todo: filter by project
-# class CommitForm(forms.ModelForm):
-#     class Meta:
-#        model = Commit
-#        fields = ['log_message', 'branches', 'parents']
-#
-#     def __init__(self, *args, **kwargs):
-#        project_id = kwargs.pop('project_id')
-#        super(CommitForm, self).__init__(*args, **kwargs)
-#        self.fields['branches'].queryset = Branch.objects.filter(project__id=project_id)
-#        self.fields['parents'].queryset = Commit.objects.filter(id__in=self.fields['branches'].queryset)
+
 
 class CommitCreateView(CreateView):
     model = Commit
     template_name = 'new_commit.html'
     fields = ['log_message', 'branches', 'parents']
+    # todo: filter branches and commits by project
 
     def get_form(self, form_class=None):
         form = super(CommitCreateView, self).get_form(form_class)
@@ -489,15 +482,13 @@ class CommitCreateView(CreateView):
         context = self.get_context_data()
         form.instance.author = self.request.user
         form.instance.date_time = timezone.now()
-        form.instance.hash = str(uuid.uuid4().hex) #todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
+        form.instance.hash = str(uuid.uuid4().hex) # todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
         if form.is_valid:
             new_commit = form.save()
             if len(form.instance.parents.all()) > 2:
                 form.add_error(None, 'Commit cannot have more than 2 parent commits')
                 new_commit.delete()
                 return super().form_invalid(form)
-            # else:
-                # new_commit.parents.add(context['previous_commit'])
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):

@@ -7,7 +7,7 @@ import django.utils.timezone
 
 
 class Migration(migrations.Migration):
-
+    atomic = False
     dependencies = [
         ('mini_githubcic', '0002_issue_is_open_issue_project_pullrequest_state_and_more'),
     ]
