@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1 class="title">Repositories</h1>
+<h1 class="title">Projects</h1>
 
 <div class="container">
     {% if request.user.is_authenticated %}
-        <a class="btn btn-primary default-button" href="{% url 'add_project' %}">New repository</a>
+        <a class="btn default-button" href="{% url 'add_project' %}">New repository</a>
     {% endif %}
     <br/>
     {% if projects %}

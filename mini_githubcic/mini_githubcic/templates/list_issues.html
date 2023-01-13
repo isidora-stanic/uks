@@ -7,7 +7,7 @@
 
 <div class="container">
     {%if request.user in project.developers.all or request.user == project.lead %}
-        <a class="btn btn-primary default-button" href="{% url 'add_issue' project_id %}">New issue</a>
+        <a class="btn default-button" href="{% url 'add_issue' project_id %}">New issue</a>
     {%endif%}
     <br/>
 

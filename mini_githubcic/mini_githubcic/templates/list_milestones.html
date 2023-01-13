@@ -5,7 +5,7 @@
     {% endif %}
 
 <div class="container">
-    <a class="btn btn-primary default-button" href="{% url 'add_milestone' project_id %}">New milestone</a>
+    <a class="btn default-button" href="{% url 'add_milestone' project_id %}">New milestone</a>
     <br/>
     {% if milestones %}
     {% for milestone in milestones %}

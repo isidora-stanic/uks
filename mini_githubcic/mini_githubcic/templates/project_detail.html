@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Edit repository</h1>
+<h1 class="title">Project details</h1>
 <article class="container">
     <div>
         <h2> Title - {{ object.title }}</h2>
@@ -15,6 +15,7 @@
         <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
+        <a class="btn btn-primary" href="{% url 'list_labels' object.id %}">Labels</a>
         {% if request.user == project.lead %}
         <a class="btn btn-primary" href="{% url 'project_update' object.id %}">Update</a>
         {% endif %}

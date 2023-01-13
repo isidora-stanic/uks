@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Edit label</h1>
+<h1 class="title">Label details</h1>
 <article class="container">
     <div>
         <h2> Name - {{ object.name }}</h2>
         <p> Description - {{ object.description }}</p>
-        <span class="badge badge-primary" style="background-color: {{object.color}}; margin:10px;"> Color - {{ object.color }}</span>
+        <h4><span class="badge badge-primary" style="background-color: {{object.color}}; margin-bottom: 10px"> Color - {{ object.color }}</span></h4>
 
     </div>
     <div>
