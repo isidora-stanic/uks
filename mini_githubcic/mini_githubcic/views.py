@@ -10,7 +10,7 @@ from django.views.generic import (
     DeleteView
 )
 
-from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, Notification
 
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
@@ -133,6 +133,7 @@ class IssueCreateView(CreateView):
         form.instance.project = context['project']
         form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
+        # make_notification(project, "issue") # ovo nisam sigurna, jer nisam sigurna da li ovde sigurno cuva ili ne
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -485,6 +486,7 @@ class CommitCreateView(CreateView):
         form.instance.hash = str(uuid.uuid4().hex) # todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
         if form.is_valid:
             new_commit = form.save()
+            #make_notification(project, "commit")
             if len(form.instance.parents.all()) > 2:
                 form.add_error(None, 'Commit cannot have more than 2 parent commits')
                 new_commit.delete()
@@ -504,43 +506,42 @@ class StarredProjectListView(ListView): # nemam blage da li ce ovo raditi
 
     def get_context_data(self, *args, **kwargs):
         context = super(StarredProjectListView, self).get_context_data(*args, **kwargs)
-        context['user_id'] = self.request.resolver_match.kwargs['pk']
-        context['user'] = User.objects.filter(id=context['user_id']).first()
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
         context['projects'] = Project.objects.filter(starred=context['user'])
         print(context['projects'])
         return context
 
-def starr_project(request, pk=None):
+def starr_project(request, pk=None, username=None):
     if request.method == 'GET': #Post
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username="U1") #todo get real user
+        user = User.objects.get(username=username) #todo get real user
         project.starred.add(user)
         project.save()
         return redirect(project)
 
-def unstarr_project(request, pk=None):
+def unstarr_project(request, pk=None, username=None):
     if request.method == 'GET': #Post
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username="U1") #todo get real user
+        user = User.objects.get(username=username) #todo get real user
         project.starred.remove(user)
         project.save()
-        return redirect('../projects')
+        return redirect('../../projects')
 
-def watch_project(request, pk=None):
+def watch_project(request, pk=None, username=None):
     if request.method == 'GET': #Post
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username="U1") #todo get real user
+        user = User.objects.get(username=username) #todo get real user
         project.watched.add(user)
         project.save()
         return redirect(project)
 
-def unwatch_project(request, pk=None):
+def unwatch_project(request, pk=None, username=None):
     if request.method == 'GET': #Post
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username="U1") #todo get real user
+        user = User.objects.get(username=username) #todo get real user
         project.watched.remove(user)
         project.save()
-        return redirect('../projects')
+        return redirect('../../projects')
 
 class WatchedProjectListView(ListView):  # nemam blage da li ce ovo raditi
     model = Project
@@ -550,8 +551,7 @@ class WatchedProjectListView(ListView):  # nemam blage da li ce ovo raditi
 
     def get_context_data(self, *args, **kwargs):
         context = super(WatchedProjectListView, self).get_context_data(*args, **kwargs)
-        context['user_id'] = self.request.resolver_match.kwargs['pk']
-        context['user'] = User.objects.filter(id=context['user_id']).first()
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
         context['projects'] = Project.objects.filter(watched=context['user'])
         print(context['projects'])
         return context
@@ -565,3 +565,22 @@ class CommitDetailView(DetailView):
         context['parents'] = self.get_object().parents.all()
         context['branches'] = self.get_object().branches.all()
         return context
+
+class MyNotificationsListView(ListView):
+    model = Notification
+    template_name = 'list_notifications.html'
+    context_object_name = 'notifications'
+    ordering = ['project_id']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(MyNotificationsListView, self).get_context_data(*args, **kwargs)
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
+        context['notifications'] = Notification.objects.filter(user=context['user'])
+        return context
+
+def make_notification(project, type_notification):
+    users = project.watched
+    for user in users:
+        message = f"New {type_notification} is made on project {project.title}"
+        notification = Notification(project=project, user=user, is_reded=False, message=message)
+        notification.save()

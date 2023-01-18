@@ -10,7 +10,7 @@
         <div class="card-body">
             <p class="card-text">{{ project }} </p>
             <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
-            <a class="btn btn-danger" href="{% url 'unstar_project' project.id %}">Unstar</a>
+            <a class="btn btn-danger" href="{% url 'unstar_project' project.id  request.user.username %}">Unstar</a>
         </div>
     </div>
     {% endfor %}

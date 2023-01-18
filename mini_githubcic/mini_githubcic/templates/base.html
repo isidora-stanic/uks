@@ -33,6 +33,9 @@
                     </div>
                     {% else %}
                     <div class="col mb-0">
+                        <a  class="nav-links"  href="{% url 'list_notifications' request.user.username %}">My notifications</a>
+                    </div>
+                    <div class="col mb-0">
                         <a  class="nav-links"  href="{% url 'profile_preview' request.user.username %}">My profile</a>
                     </div>
                     <div class="col mb-0">

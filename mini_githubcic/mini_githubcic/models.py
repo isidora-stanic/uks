@@ -182,3 +182,10 @@ class Reaction(models.Model):
     type = ReactionType.choices
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+
+class Notification(models.Model): #razmisli o referenci na comit bukvalno
+    user = models.OneToOneField(User, blank=True, null=True, on_delete=models.CASCADE)  # OneToOne
+    project = models.OneToOneField(Project, null=True, on_delete=models.CASCADE)
+    is_reded = models.BooleanField(default=False)
+    message = models.CharField(max_length=50, unique=False, blank=True)
+    #object_id = models. mozda id od toga sto je
