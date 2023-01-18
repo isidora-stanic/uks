@@ -1,0 +1,21 @@
+{% extends "list_branches.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1 class="title">Rename this branch</h1>
+<div class="content">
+    <div class="container">
+        <h2>Rename branch:</h2>
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                {{ form | crispy }}
+            </fieldset>
+            <div class="form-group">
+                <a class="btn btn-secondary" href="{% url 'project_branches' branch.project.id %}">Cancel</a>
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock content %}

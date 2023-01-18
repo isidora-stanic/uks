@@ -1,19 +1,25 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1 class="title">Repositories</h1>
+<h1 class="title">Projects</h1>
 
 <div class="container">
+
     <a class="btn btn-primary default-button" href="{% url 'add_project' %}">New repository</a>
     <a class="btn btn-primary default-button" href="{% url 'list_starred_projects' 31 %}">Starred projects</a>
     <a class="btn btn-primary default-button" href="{% url 'list_watched_projects' 31 %}">Watched projects</a>
-<!--    user id todo-->
+    {% if request.user.is_authenticated %}
+        <a class="btn default-button" href="{% url 'add_project' %}">New project</a>
+    {% endif %}
+
     <br/>
     {% if projects %}
     {% for project in projects %}
     <div class="card mb-3">
         <div class="card-body">
             <p class="card-text">{{ project }} </p>
-            <a class="btn btn-danger" href="{% url 'project_delete' project.id %}">Delete</a>
+            {% if project.lead == request.user %}
+                <a class="btn btn-danger" href="{% url 'project_delete' project.id %}">Delete</a>
+            {% endif %}
             <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
         </div>
     </div>

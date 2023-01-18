@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-<h1 class="title">Edit project</h1>
-<div class="content-section">
+<h1 class="title">Add new commit</h1>
+<div class="content">
     <form method="POST">
         {% csrf_token %}
         <fieldset class="form-group">
             {{ form | crispy }}
         </fieldset>
         <div class="form-group">
-            <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">Cancel</a>
+            {% if branch_id %}
+            <a class="btn btn-danger" href="{% url 'branch_detail' branch_id %}">Cancel</a>
+            {% endif %}
             <button class="btn btn-primary" type="submit">Save</button>
         </div>
     </form>

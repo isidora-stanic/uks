@@ -56,6 +56,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'mini_githubcic.urls'
 
 # TODO https://django-crispy-forms.readthedocs.io/en/latest/layouts.html#overriding-project-templates
+
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 TEMPLATES = [
@@ -90,6 +91,8 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+
+AUTH_USER_MODEL = 'mini_githubcic.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {

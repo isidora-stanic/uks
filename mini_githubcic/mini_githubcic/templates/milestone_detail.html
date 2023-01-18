@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Detail milestone</h1>
+<h1 class="title">Milestone details</h1>
 <article class="container">
     <div>
         <h2> Title - {{ object.title }}</h2>
@@ -9,11 +9,14 @@
         <p> Is open - {{ object.is_open }}</p>
     </div>
     <div>
+        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>
+    {%if request.user in object.project.developers.all or request.user == object.project.lead %}
         <a class="btn btn-primary" href="{% url 'milestone_update' object.id %}">Update</a>
          {% if milestone.is_open %}
             <a class="btn btn-primary" href="{% url 'milestone_close' object.id %}">Close</a>
          {%endif%}
         <a class="btn btn-danger" href="{% url 'milestone_delete' object.id %}">Delete</a>
     </div>
+{% endif %}
 </article>
 {% endblock content %}

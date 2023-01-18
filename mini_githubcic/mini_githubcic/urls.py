@@ -14,14 +14,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-
+from django.urls import include, path
 from .views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index'),
-    path('login/', login, name='login'),
+    path('login/', sign_in, name='login'),
+    path('logout/', sign_out, name='logout'),
+    path('register/', Register.as_view(), name='register'),
     path('projects/', ProjectListView.as_view(), name='list_projects'),
     path('projects/add', ProjectCreateView.as_view(), name='add_project'),
     path('projects/<int:pk>', ProjectDetailView.as_view(), name='project_detail'),
@@ -49,5 +50,13 @@ urlpatterns = [
     path('unstarProject/<int:pk>', unstarr_project, name='unstar_project'),
     path('watchedProjects/<int:pk>', WatchedProjectListView.as_view(), name='list_watched_projects'),
     path('watchProject/<int:pk>', watch_project, name='watch_project'),
-    path('unwatchProject/<int:pk>', unwatch_project, name='unwatch_project')
+    path('unwatchProject/<int:pk>', unwatch_project, name='unwatch_project'),
+    path('user/<slug:username>', ProfilePreview.as_view(), name='profile_preview'),
+    path('projects/<int:pk>/branches/', BranchListView.as_view(), name='project_branches'),
+    path('projects/<int:pk>/branches/add', BranchCreateView.as_view(), name='add_branch'),
+    path('branches/<int:pk>', BranchDetailView.as_view(), name='branch_detail'),
+    path('branches/<int:pk>/update', BranchUpdateView.as_view(), name='branch_update'),
+    path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
+    path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
+    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail')
 ]
