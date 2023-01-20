@@ -13,6 +13,7 @@
         {% for dev in object.developers.all %}
             <a href="{% url 'profile_preview' dev.username %}">{{ dev.username }}</a>
         {% endfor %}
+        <p>Number of times this project has been forked {{ object.number_of_forked_project }}</p>
     <hr>
     </div>
     <div>
@@ -23,6 +24,7 @@
         {% if request.user.is_authenticated %}
             <a class="btn btn-primary" href="{% url 'star_project' object.id request.user.username %}">Star project</a>
             <a class="btn btn-primary" href="{% url 'watch_project' object.id request.user.username %}">Watch project</a>
+            <a class="btn btn-primary" href="{% url 'fork_project' object.id request.user.username %}">Fork project</a>
         {% endif %}
         {% if request.user == project.lead %}
 

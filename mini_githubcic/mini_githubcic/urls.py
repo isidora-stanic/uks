@@ -60,4 +60,5 @@ urlpatterns = [
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
     path('myNotifications/<slug:username>', MyNotificationsListView.as_view(), name='list_notifications'),
+    path('forkproject/<int:pk>/<slug:username>', fork_project, name='fork_project'),
 ]

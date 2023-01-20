@@ -53,7 +53,7 @@ class User(AbstractBaseUser):
         return reverse('login') #TODO user_detail
 
 
-class Project(models.Model):
+class Project(models.Model): #todo pazi kod pull req, treba se ponuditi da se postavi na roditelja ako ima roditelja forkovanog
     title = models.CharField(max_length=20)
     description = models.CharField(max_length=160)
     licence = models.CharField(max_length=20)
@@ -63,6 +63,8 @@ class Project(models.Model):
     developers = models.ManyToManyField(to=User, blank=True, related_name="developers")
     starred = models.ManyToManyField(User, related_name="starred")
     watched = models.ManyToManyField(User, related_name="watched")
+    fork_parent = models.ForeignKey('self', on_delete=models.CASCADE,  null=True) #mislim da ne treba da se kaskadira
+    number_of_forked_project = models.DecimalField( max_digits=5, decimal_places=0, null=True)
 
     def __str__(self):
         return "%s/%s" % (self.lead, self.title)
@@ -70,6 +72,10 @@ class Project(models.Model):
     def get_absolute_url(self):
         return reverse('project_detail', kwargs={'pk': self.pk})
 
+# class Repository(models.Model):
+#     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True)  # mislim da ne treba da se kaskadira
+#     fork_parent = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, related_name="forked_project")  # mislim da ne treba da se kaskadira
+#     number_of_forked_project = models.DecimalField(max_digits=5, decimal_places=0, null=True)
 
 class Label(models.Model):
     name = models.CharField(max_length=100)

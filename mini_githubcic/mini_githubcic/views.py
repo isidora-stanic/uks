@@ -584,3 +584,24 @@ def make_notification(project, type_notification):
         message = f"New {type_notification} is made on project {project.title}"
         notification = Notification(project=project, user=user, is_reded=False, message=message)
         notification.save()
+
+def fork_project(request, pk=None, username=None): #pazi na  link
+    #todo pitaj da li treba da kopiram i commitove, posto na sajtu pise da se moze kopirati samo main grana, ili vise njih, da li treba i to ostalo da kopiram posto mi nemamo konkretan tekst programa koji pamtimo
+    # tj koliko u dublinu da kopiram
+    project = Project.objects.filter(id=pk)[0]
+    if project.visibility == 'PUBLIC':
+        if project.number_of_forked_project is None:
+            project.number_of_forked_project = 0
+        project.number_of_forked_project +=1
+        project.save()
+        user = User.objects.filter(username=username)[0]
+        new_project = Project(title = project.title,
+                              licence = project.licence,
+                              description = project.description,
+                              visibility = project.visibility,
+                              link= project.link,
+                              lead = user, fork_parent= project)
+        new_project.save()
+        saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
+        return redirect('../../projects/'+str(saved_project.id))
+        #neki redirect
