@@ -126,7 +126,7 @@ class StateChange(Event):
 
 class Comment(Event):
     content = models.CharField(max_length=2000)
-    date_created = models.DateTimeField(default=timezone.now)
+    writer = models.ForeignKey(User, blank=False, related_name='writer', on_delete=models.CASCADE)
 
 
 class Branch(models.Model):

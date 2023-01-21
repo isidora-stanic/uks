@@ -164,6 +164,19 @@ class Command(BaseCommand):
         c2.branches.add(b2)
         c2.save()
 
+    def _insert_comments(self):
+        Comment.objects.all().delete()
+
+        u1 = User.objects.get(username="U1")
+        i1 = Issue.objects.get(title="issue1")
+
+        c1 = Comment(content="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", writer=u1, task=i1)
+        c2 = Comment(content="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", writer=u1, task=i1)
+
+        c1.save()
+        c2.save()
+
+
     def handle(self, *args, **options):
         self._insert_users()
         self._insert_projects()
@@ -173,3 +186,4 @@ class Command(BaseCommand):
         self._insert_branches()
         self._insert_commits()
         self._insert_commits_and_branches()
+        self._insert_comments()

@@ -47,10 +47,11 @@ urlpatterns = [
     path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete'),
     path('user/<slug:username>', ProfilePreview.as_view(), name='profile_preview'),
     path('projects/<int:pk>/branches/', BranchListView.as_view(), name='project_branches'),
-    path('projects/<int:pk>/branches/add', BranchCreateView.as_view(), name='add_branch'),
+    path('projects/<int:pk>/branches/add', new_branch, name='add_branch'),
     path('branches/<int:pk>', BranchDetailView.as_view(), name='branch_detail'),
     path('branches/<int:pk>/update', BranchUpdateView.as_view(), name='branch_update'),
     path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
-    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail')
+    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
+    # path('issues/<int:pk>/comments/', CommentListView.as_view(), name='list_comments'),
 ]

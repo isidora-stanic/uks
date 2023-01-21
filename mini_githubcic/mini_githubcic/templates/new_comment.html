@@ -1,0 +1,125 @@
+{% load crispy_forms_tags %}
+
+{% block comment_content1 %}
+
+<div >
+  {% block comment_list_content %}
+  {% include "list_comments.html" %}
+{% endblock %}
+  <div >
+    <br />
+    <div class="comment-block" >
+      <form method="post">
+
+        <fieldset class="min-width-0">
+            <div class="d-flex comment-block" >
+              <div class="col-auto mr-auto mt-md-2">
+                <ul class="nav nav-tabs">
+                  <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#write">Write</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#preview">Preview</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-auto">
+                <markdown-toolbar
+                  class="d-flex px-2 mt-lg-2">
+
+                  <div class="flex-nowrap d-none d-md-inline-block mr-md-0 mr-3">
+                    <md-header aria-label="Heading" id="md-heading-new_comment_field-1" role="button" tabindex="-1"
+                      class="toolbar-item btn-octicon" data-ga-click="Markdown Toolbar, click, header"
+                      aria-describedby="tooltip-1674227111007-1285">
+                      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
+                        data-view-component="true" class="octicon octicon-heading">
+                        <path fill-rule="evenodd"
+                          d="M3.75 2a.75.75 0 01.75.75V7h7V2.75a.75.75 0 011.5 0v10.5a.75.75 0 01-1.5 0V8.5h-7v4.75a.75.75 0 01-1.5 0V2.75A.75.75 0 013.75 2z">
+                        </path>
+                      </svg>
+                    </md-header>
+                    <tool-tip for="md-heading-new_comment_field-1" data-direction="sw" data-type="description"
+                      data-view-component="true" class="js-modifier-label-key sr-only position-absolute"
+                      id="tooltip-1674227111007-1285" role="tooltip">Add heading text</tool-tip>
+
+                    <md-bold aria-label="Bold" id="md-bold-new_comment_field-1" role="button" tabindex="-1"
+                      class="toolbar-item btn-octicon" data-hotkey-scope="new_comment_field" data-hotkey="Control+b"
+                      data-ga-click="Markdown Toolbar, click, bold" aria-describedby="tooltip-1674227111007-6553">
+                      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
+                        data-view-component="true" class="octicon octicon-bold">
+                        <path fill-rule="evenodd"
+                          d="M4 2a1 1 0 00-1 1v10a1 1 0 001 1h5.5a3.5 3.5 0 001.852-6.47A3.5 3.5 0 008.5 2H4zm4.5 5a1.5 1.5 0 100-3H5v3h3.5zM5 9v3h4.5a1.5 1.5 0 000-3H5z">
+                        </path>
+                      </svg>
+                    </md-bold>
+                    <tool-tip for="md-bold-new_comment_field-1" data-direction="sw" data-type="description"
+                      data-view-component="true" class="js-modifier-label-key sr-only position-absolute"
+                      id="tooltip-1674227111007-6553" role="tooltip">Add bold text, &lt;Ctrl+b&gt;</tool-tip>
+
+                    <md-italic aria-label="Italic" id="md-italic-new_comment_field-1" role="button" tabindex="-1"
+                      class="toolbar-item btn-octicon" data-hotkey-scope="new_comment_field" data-hotkey="Control+i"
+                      data-ga-click="Markdown Toolbar, click, italic" aria-describedby="tooltip-1674227111007-9230">
+                      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
+                        data-view-component="true" class="octicon octicon-italic">
+                        <path fill-rule="evenodd"
+                          d="M6 2.75A.75.75 0 016.75 2h6.5a.75.75 0 010 1.5h-2.505l-3.858 9H9.25a.75.75 0 010 1.5h-6.5a.75.75 0 010-1.5h2.505l3.858-9H6.75A.75.75 0 016 2.75z">
+                        </path>
+                      </svg>
+                    </md-italic>
+                    <tool-tip for="md-italic-new_comment_field-1" data-direction="sw" data-type="description"
+                      data-view-component="true" class="js-modifier-label-key position-absolute sr-only"
+                      id="tooltip-1674227111007-9230" role="tooltip" style="left: 321.094px; top: 49.5px;">Add italic
+                      text, &lt;Ctrl+i&gt;</tool-tip>
+                  </div>
+
+
+
+
+
+                </markdown-toolbar>
+              </div>
+            </div>
+
+              <div
+                class="mx-0 mt-2 mb-2 mx-md-2 "
+                >
+                <div class="tab-content">
+                  <div class="tab-pane container active" id="write">
+                      <text-expander keys=": @ #">
+
+                        <textarea placeholder="Leave a comment" aria-label="Comment body"
+                          data-required-trimmed="Text field is empty"
+                          class="form-control"
+                          dir="auto" required=""></textarea>
+
+                      </text-expander>
+                  </div>
+                  <div class="tab-pane container fade" id="preview">
+                    <text-expander keys=": @ #">
+
+                      <textarea disabled="true" aria-label="Comment preview"
+                        data-required-trimmed="Text field is empty"
+                        class="form-control"
+                        dir="auto"></textarea>
+
+                    </text-expander>
+                  </div>
+                </div>
+
+              </div>
+        </fieldset>
+        <div class="m-0 mx-md-2 my-md-2 p-0">
+          <div class="row">
+            <div class="col-auto">
+              <div class="color-bg-subtle ml-1">
+                <button data-disable-with="" data-disable-invalid="" type="submit" data-view-component="true"
+                  class="btn-primary btn" disabled="">Comment</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock comment_content1 %}

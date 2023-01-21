@@ -10,13 +10,17 @@ from django.views.generic import (
     DeleteView
 )
 
-from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, Comment
 
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
+from .forms import BranchForm
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
@@ -104,6 +108,20 @@ class BranchListView(ListView):
         return context
 
 
+# class CommentListView(ListView):
+#     model = Comment
+#     template_name = 'list_comments.html'
+#     context_object_name = 'comments'
+#     ordering = ['date_time']
+#
+#     def get_context_data(self, *args, **kwargs):
+#         context = super(CommentListView, self).get_context_data(*args, **kwargs)
+#         context['issue_id'] = self.request.resolver_match.kwargs['pk']
+#         context['issue'] = Issue.objects.filter(id=context['issue_id']).first()
+#         context['comments'] = Comment.objects.filter(task__id=context['issue_id'])
+#         return context
+
+
 class ProjectCreateView(CreateView):
     model = Project
     template_name = 'new_project.html'
@@ -142,34 +160,39 @@ class IssueCreateView(CreateView):
         return context
 
 
-class BranchCreateView(CreateView):
-    model = Branch
-    template_name = 'new_branch.html'
-    fields = ['name', 'parent_branch']
+def new_branch(request, pk):
+    project = Project.objects.filter(id=int(pk)).first()
+    if not project:
+        return redirect('/projects')
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        form.instance.project = context['project']
-        if Branch.objects.filter(project_id=form.instance.project.id, name=form.instance.name).exists():
-            form.add_error(None, 'Name already in use')
-            return super().form_invalid(form)
+    branches = Branch.objects.filter(project=project)
+    form = BranchForm(pk)
+    obj_dict = {
+        'form': form,
+        'project': project,
+        'branches': branches,
+    }
 
-        f = Commit.objects.filter(branches__id__in=[form.instance.parent_branch.id])
-        self.object = form.save()
-        for c in f:
-            c.branches.add(self.object)
-            c.save()
+    if request.method == 'POST':
+        form_data = BranchForm(pk, request.POST)
 
-        return HttpResponseRedirect(self.get_success_url())
+        if form_data.is_valid():
+            branch = Branch(**form_data.cleaned_data)
+            branch.project = project
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(BranchCreateView, self).get_context_data(*args, **kwargs)
-        context['project_id'] = self.request.resolver_match.kwargs['pk']
-        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
-        context['branches'] = Branch.objects.filter(project__id=context['project_id'])
-        #self.fields['sel1'].choices = [(b.id, b.name, b) for b in context['branches']] TODO filter select vals
+            if Branch.objects.filter(project_id=branch.project.id, name=branch.name).exists():
+                obj_dict['error_add'] = 'Name already in use'
+                return render(request, 'new_branch.html', obj_dict)
+            else:
+                f = Commit.objects.filter(branches__id__in=[branch.parent_branch.id])
+                branch.save()
+                for c in f:
+                    c.branches.add(branch)
+                    c.save()
 
-        return context
+                return redirect('/branches/{}'.format(str(branch.id)))
+
+    return render(request, 'new_branch.html', obj_dict)
 
 
 class ProjectUpdateView(UpdateView):
@@ -240,6 +263,13 @@ class ProjectDetailView(DetailView):
 class IssueDetailView(DetailView):
     model = Issue
     template_name = 'issue_detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(IssueDetailView, self).get_context_data(*args, **kwargs)
+        context['issue_id'] = self.request.resolver_match.kwargs['pk']
+        context['issue'] = Issue.objects.filter(id=context['issue_id']).first()
+        context['comments'] = Comment.objects.filter(task__id=context['issue_id'])
+        return context
 
 
 class BranchDetailView(DetailView):

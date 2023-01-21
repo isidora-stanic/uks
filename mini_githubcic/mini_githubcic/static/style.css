@@ -47,5 +47,38 @@ ul {
     background: #44B78B;
     padding: 0;
     left: 0;
-    width: 100vw !important;
+    width: -webkit-fill-available;
+}
+
+.comment-block {
+    background-color: #f6f8fa;
+    border-width: thin;
+    border-color: #d0d7de;
+    border-style: solid;
+    border-bottom-color: #d0d7de !important;
+    border-bottom-width: thin !important;
+    border-bottom-style: solid !important;
+    border-radius: 6px;
+}
+
+.item1 {
+  grid-area: myArea;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-areas: 'myArea myArea myArea .';
+  grid-gap: 10px;
+  padding: 10px;
+}
+
+.grid-container > div {
+  text-align: center;
+}
+
+.m-b-i{
+    margin-block-start: 10px;
+    margin-inline-start: 10px;
+    word-break: break-all;
+    white-space: normal;
 }
