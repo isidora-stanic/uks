@@ -52,5 +52,9 @@ urlpatterns = [
     path('branches/<int:pk>/update', BranchUpdateView.as_view(), name='branch_update'),
     path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
-    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail')
+    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
+
+    path('test_github_auth', github_auth_test, name='github_auth_test'),
+    path('login/oauth2/code/github', after_auth, name='after_auth'),
+
 ]
