@@ -8,7 +8,8 @@
     {% for notif in notifications %}
     <div class="card mb-3">
         <div class="card-body">
-            <p class="card-text">{{ notif }} </p>
+             <p class="card-text">{{ notif.project.title }} </p>
+            <p class="card-text">{{ notif.message }} </p>
             <a class="btn btn-primary" href="{% url 'project_detail' notif.project.id %}">View project</a>
         </div>
     </div>

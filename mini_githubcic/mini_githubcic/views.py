@@ -133,7 +133,7 @@ class IssueCreateView(CreateView):
         form.instance.project = context['project']
         form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
-        # make_notification(project, "issue") # ovo nisam sigurna, jer nisam sigurna da li ovde sigurno cuva ili ne
+        make_notification(context['project'], "issue")
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -486,11 +486,12 @@ class CommitCreateView(CreateView):
         form.instance.hash = str(uuid.uuid4().hex) # todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
         if form.is_valid:
             new_commit = form.save()
-            #make_notification(project, "commit")
+
             if len(form.instance.parents.all()) > 2:
                 form.add_error(None, 'Commit cannot have more than 2 parent commits')
                 new_commit.delete()
                 return super().form_invalid(form)
+            make_notification(new_commit.branches.all()[0].project, "commit")
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -498,7 +499,7 @@ class CommitCreateView(CreateView):
         context['branch_id'] = self.request.resolver_match.kwargs['pk']
         return context
 
-class StarredProjectListView(ListView): # nemam blage da li ce ovo raditi
+class StarredProjectListView(ListView):
     model = Project
     template_name = 'list_starred_project.html'
     context_object_name = 'projects'
@@ -512,38 +513,38 @@ class StarredProjectListView(ListView): # nemam blage da li ce ovo raditi
         return context
 
 def starr_project(request, pk=None, username=None):
-    if request.method == 'GET': #Post
+    if request.method == 'GET':
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username=username) #todo get real user
+        user = User.objects.get(username=username)
         project.starred.add(user)
         project.save()
         return redirect(project)
 
 def unstarr_project(request, pk=None, username=None):
-    if request.method == 'GET': #Post
+    if request.method == 'GET':
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username=username) #todo get real user
+        user = User.objects.get(username=username)
         project.starred.remove(user)
         project.save()
         return redirect('../../projects')
 
 def watch_project(request, pk=None, username=None):
-    if request.method == 'GET': #Post
+    if request.method == 'GET':
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username=username) #todo get real user
+        user = User.objects.get(username=username)
         project.watched.add(user)
         project.save()
         return redirect(project)
 
 def unwatch_project(request, pk=None, username=None):
-    if request.method == 'GET': #Post
+    if request.method == 'GET':
         project = Project.objects.get(id=pk)
-        user = User.objects.get(username=username) #todo get real user
+        user = User.objects.get(username=username)
         project.watched.remove(user)
         project.save()
         return redirect('../../projects')
 
-class WatchedProjectListView(ListView):  # nemam blage da li ce ovo raditi
+class WatchedProjectListView(ListView):
     model = Project
     template_name = 'list_watched_project.html'
     context_object_name = 'projects'
@@ -580,13 +581,12 @@ class MyNotificationsListView(ListView):
 
 def make_notification(project, type_notification):
     users = project.watched
-    for user in users:
+    for user in users.all():
         message = f"New {type_notification} is made on project {project.title}"
         notification = Notification(project=project, user=user, is_reded=False, message=message)
         notification.save()
 
-def fork_project(request, pk=None, username=None): #pazi na  link
-    #todo pitaj da li treba da kopiram i commitove, posto na sajtu pise da se moze kopirati samo main grana, ili vise njih, da li treba i to ostalo da kopiram posto mi nemamo konkretan tekst programa koji pamtimo
+def fork_project(request, pk=None, username=None):
     # tj koliko u dublinu da kopiram
     project = Project.objects.filter(id=pk)[0]
     if project.visibility == 'PUBLIC':
@@ -604,4 +604,3 @@ def fork_project(request, pk=None, username=None): #pazi na  link
         new_project.save()
         saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
         return redirect('../../projects/'+str(saved_project.id))
-        #neki redirect

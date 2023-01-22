@@ -190,7 +190,7 @@ class Reaction(models.Model):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
 
 class Notification(models.Model): #razmisli o referenci na comit bukvalno
-    user = models.OneToOneField(User, blank=True, null=True, on_delete=models.CASCADE)  # OneToOne
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, unique=False)  # OneToOne
     project = models.OneToOneField(Project, null=True, on_delete=models.CASCADE)
     is_reded = models.BooleanField(default=False)
     message = models.CharField(max_length=50, unique=False, blank=True)
