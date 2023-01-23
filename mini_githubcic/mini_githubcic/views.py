@@ -531,9 +531,9 @@ class CommitDetailView(DetailView):
 
 def github_auth_test(request, username):
     # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
-    repo_info = get_all_visible_repositories_by_user(request, username)
+    repo_info = get_all_visible_repositories_by_user(request)
     # repo_info = get_specific_repository(request, username, "uks")
-    context = {'repo_info': repo_info}
+    context = {'repo_info': repo_info, 'username': username}
     return render(request, 'test_github_auth.html', context)
 
 
@@ -587,4 +587,6 @@ def after_auth(request):
     response = get_access_token(request_token)
     # insert access token into session
     request.session['access_token'] = response.json()['access_token']
+    print("MAJMUN--------------------------------------------------------------")
+    print(response.json()['access_token'])
     return redirect('/')

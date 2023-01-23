@@ -1,22 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-{#<p>{{ repo_info.total_count }} results</p>#}
-<hr>
-{#{% for item in repo_info.items %}#}
-{%  for item in repo_info %}
-<h3>{{ item.name }}</h3>
-<h5>{{ item.full_name }}</h5>
-    {% if item.private %}
-        <p>Private</p>
-    {% else %}
-        <p>Public</p>
-    {% endif %}
-    <p>Owner: {{ item.owner.login }}</p>
-    <a href="{{ item.html_url }}">See on Github</a>
-    <p>{{ item.description }}</p>
-    <p>There is more...</p>
-    <hr>
-{% endfor %}
-<hr><hr>
-{{ repo_info }}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h4 style="color : lime;">Owned repositories</h4>
+            <hr>
+            {%  for item in repo_info %}
+            {%if item.owner.login|lower == username|lower %}
+            <h3>{{ item.name }}</h3>
+            <h5>{{ item.full_name }}</h5>
+                {% if item.private %}
+                    <p>Private</p>
+                {% else %}
+                    <p>Public</p>
+                {% endif %}
+                <p>Owner: {{ item.owner.login }}</p>
+                <a href="{{ item.html_url }}">See on Github</a>
+                <p>{{ item.description }}</p>
+                <p>There is more...</p>
+                <hr>
+            {%endif%}
+            {% endfor %}
+        </div>
+        <div class="col">
+            <h4>Contributed in repositories</h4>
+            <hr>
+            {%  for item in repo_info %}
+            {%if item.owner.login|lower != username|lower %}
+            <h3>{{ item.name }}</h3>
+            <h5>{{ item.full_name }}</h5>
+                {% if item.private %}
+                    <p>Private</p>
+                {% else %}
+                    <p>Public</p>
+                {% endif %}
+                <p>Owner: {{ item.owner.login }}</p>
+                <a href="{{ item.html_url }}">See on Github</a>
+                <p>{{ item.description }}</p>
+                <p>There is more...</p>
+                <hr>
+            {%endif%}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<br>
+
 {% endblock %}
