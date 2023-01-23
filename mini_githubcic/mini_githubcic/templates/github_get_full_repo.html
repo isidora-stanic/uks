@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+    {%  load issue_extras %}
+{#<p>{{ repo_info.total_count }} results</p>#}
+<div class="container">
+{#{% for item in repo_info.items %}#}
+{#{%  for item in repo_info %}#}
+<h3>{{ repo_info.name }}</h3>
+<h5>{{ repo_info.full_name }}</h5>
+    {% if repo_info.private %}
+        <p>Private</p>
+    {% else %}
+        <p>Public</p>
+    {% endif %}
+    <p>Owner: {{ repo_info.owner.login }}</p>
+    <a href="{{ repo_info.html_url }}">See on Github</a>
+    <p>{{ repo_info.description }}</p>
+    <a>{{ repo_info.contents_url }}</a>
+<hr>
+{% for file in tree.tree %}
+    {% if file.type == 'blob' %}
+        <a href="../blob/{{ file.path|urlencode }}">{{ file.path }}</a>
+    {% else %}
+        <a href="./{{ file.path|urlencode }}">{{ file.path }}</a>
+    {% endif %}
+    <br>
+{% endfor %}
+    {{ tree }}
+    </div>
+{% endblock %}

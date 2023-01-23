@@ -52,5 +52,15 @@ urlpatterns = [
     path('branches/<int:pk>/update', BranchUpdateView.as_view(), name='branch_update'),
     path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
-    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail')
+    path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
+
+    path('github_repos/<slug:username>', github_auth_test, name='github_auth_test'),
+    path('github_repos/<slug:username>/<slug:repo>', github_get_specific_repo, name='github_get_specific_repo'),
+    path('github_repos/<slug:username>/<slug:repo>/tree/branches/<str:branch>', github_get_repo_tree_branch, name='github_get_repo_tree_branch'),
+    path('github_repos/<slug:username>/<slug:repo>/tree/blob/<path:path>', github_get_repo_tree_branch_fof, name='github_get_repo_tree_branch_fof'),
+    path('github_repos/<slug:username>/<slug:repo>/tree/<path:path>', github_get_repo_subtree, name='github_get_repo_subtree'),
+    path('github_repos/<slug:username>/<slug:repo>/full_tree/<slug:branch>', get_full_tree, name='get_full_tree'),
+
+    path('login/oauth2/code/github', after_auth, name='after_auth'),
+
 ]
