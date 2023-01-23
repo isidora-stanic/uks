@@ -82,3 +82,9 @@ ul {
     word-break: break-all;
     white-space: normal;
 }
+
+.nb{
+    font-size: 30px !important;
+    border: none !important;
+    background: none !important;
+}

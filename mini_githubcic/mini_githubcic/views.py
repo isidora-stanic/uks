@@ -13,13 +13,10 @@ from django.views.generic import (
 from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, Comment
 
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect
 from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
 from .forms import BranchForm, CommentForm
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 def index(request):
@@ -65,7 +62,6 @@ class Register(CreateView):
             return super().form_invalid(form)
 
         return super().form_valid(form)
-    
 
 
 class ProjectListView(ListView):
@@ -106,38 +102,6 @@ class BranchListView(ListView):
         context['project'] = Project.objects.filter(id=context['project_id']).first()
         context['branches'] = Branch.objects.filter(project__id=context['project_id'])
         return context
-
-
-def new_comment(request, pk):
-    issue = Issue.objects.filter(id=int(pk)).first()
-    if not issue:
-        return redirect('/projects')
-
-    form = CommentForm()
-    obj_dict = {
-        'comment_form': form,
-        'issue': issue,
-        'comments': Comment.objects.filter(task__id=int(pk)),
-        'temp_preview': ""
-    }
-
-    if request.method == 'POST':
-        form_data = CommentForm(request.POST)
-
-        if form_data.is_valid():
-            comment = Comment(**form_data.cleaned_data)
-            comment.task = issue
-
-            if not request.user.is_authenticated:
-                obj_dict['error_add'] = 'User not authenticated'
-                return render(request, 'issue_detail.html', obj_dict)
-            else:
-                comment.writer = request.user
-                comment.date_time = timezone.now()
-                comment.save()
-                return redirect('/issues/{}'.format(pk))
-
-    return render(request, 'issue_detail.html', obj_dict)
 
 
 class ProjectCreateView(CreateView):
@@ -213,6 +177,37 @@ def new_branch(request, pk):
     return render(request, 'new_branch.html', obj_dict)
 
 
+def new_comment(request, pk):
+    issue = Issue.objects.filter(id=int(pk)).first()
+    if not issue:
+        return redirect('/projects')
+
+    form = CommentForm()
+    obj_dict = {
+        'comment_form': form,
+        'issue': issue,
+        'comments': Comment.objects.filter(task__id=int(pk)),
+    }
+
+    if request.method == 'POST':
+        form_data = CommentForm(request.POST)
+
+        if form_data.is_valid():
+            comment = Comment(**form_data.cleaned_data)
+            comment.task = issue
+
+            if not request.user.is_authenticated:
+                obj_dict['error_add'] = 'User not authenticated'
+                return render(request, 'issue_detail.html', obj_dict)
+            else:
+                comment.writer = request.user
+                comment.date_time = timezone.now()
+                comment.save()
+                return redirect('/issues/{}'.format(pk))
+
+    return render(request, 'issue_detail.html', obj_dict)
+
+
 class ProjectUpdateView(UpdateView):
     model = Project
     template_name = 'project_update.html'
@@ -260,6 +255,22 @@ class BranchUpdateView(UpdateView):
         context['project_id'] = self.request.resolver_match.kwargs['pk']
         context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
         return context
+
+
+class CommentUpdateView(UpdateView):
+    model = Comment
+    template_name = 'comment_update.html'
+    fields = ['content']
+
+    def form_valid(self, form):
+        if form.instance.content in [None, "", []]:
+            form.add_error(None, 'Comment must have content')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('issue_detail', kwargs={'pk': self.object.task.id})
 
 
 class ProjectDetailView(DetailView):

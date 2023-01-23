@@ -53,4 +53,5 @@ urlpatterns = [
     path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
+    path('comments/<int:pk>/update', CommentUpdateView.as_view(), name='comment_update'),
 ]

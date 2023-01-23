@@ -6,10 +6,10 @@
     <a class="btn btn-outline-primary my-3" href="{% url 'add_commit' branch_id %}">New Commit</a>
 </div>
 <div class="container d-flex">
-    <br />
+    <br/>
     <div class="dropdown p-r-5">
         <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
-            aria-haspopup="true" aria-expanded="false">
+                aria-haspopup="true" aria-expanded="false">
             {{object.name}}
         </button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -21,7 +21,7 @@
     <a class="btn btn-secondary p-r-5 ml-3" href="{% url 'project_branches' object.project.id %}">Branches</a>
 </div>
 <div class="container">
-    <br />
+    <br/>
     {% if commits %}
     <div class="container">
         <div class="tab-content">

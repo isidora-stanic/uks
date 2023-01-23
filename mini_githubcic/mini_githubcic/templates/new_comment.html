@@ -3,65 +3,65 @@
 {% block comment_content1 %}
 
 <div>
-  {% block comment_list_content %}
-  {% include "list_comments.html" %}
-  {% endblock %}
-  {% if request.user.is_authenticated %}
-  <div>
-    <br />
-    <div class="comment-block">
-      <form method="post">
+    {% block comment_list_content %}
+    {% include "list_comments.html" %}
+    {% endblock %}
+    {% if request.user.is_authenticated %}
+    <div>
+        <br/>
+        <div class="comment-block">
+            <form method="post">
 
-        <fieldset class="min-width-0">
-          <div class="d-flex comment-block">
-            <div class="mx-0 mt-2 mb-2 mx-md-2 ">
-              <div class="tab-content">
-                <div class="tab-pane container active" id="write">
-                  {% csrf_token %}
-                  {{comment_form.media}}
-                  {{comment_form.as_p}}
+                <fieldset class="min-width-0">
+                    <div class="d-flex comment-block">
+                        <div class="mx-0 mt-2 mb-2 mx-md-2 ">
+                            <div class="tab-content">
+                                <div class="tab-pane container active" id="write">
+                                    {% csrf_token %}
+                                    {{comment_form.media}}
+                                    {{comment_form.as_p}}
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="m-0 mx-md-2 my-md-2 p-0">
+
+                    <div class="row">
+                        <div class="col-auto mr-auto mt-md-2">
+                            <ul class="nav nav-tabs">
+                                <li class="nav-item">
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-auto">
+                            <div class="color-bg-subtle ml-1">
+                                <button type="submit" class="btn-primary btn">Comment</button>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Quote comment
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                {% for b in comments %}
+                                <a class="dropdown-item">{{ b.content | slice_and_dot | safe}}</a>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
-
-              </div>
-
-            </div>
-          </div>
-        </fieldset>
-        <div class="m-0 mx-md-2 my-md-2 p-0">
-
-          <div class="row">
-            <div class="col-auto mr-auto mt-md-2">
-              <ul class="nav nav-tabs">
-                <li class="nav-item">
-                </li>
-              </ul>
-            </div>
-            <div class="col-auto">
-              <div class="color-bg-subtle ml-1">
-                <button type="submit" class="btn-primary btn">Comment</button>
-              </div>
-            </div>
-            <div class="col-auto">
-
-              <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
-                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Quote comment
-              </button>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                {% for b in comments %}
-                <a class="dropdown-item">{{ b.content | slice:8}}</a>
-                {% endfor %}
-              </div>
-
-            </div>
-          </div>
+            </form>
         </div>
-    </form>
-  </div>
-</div>
-{% if error_add %}
-<div class="alert alert-danger" role="alert">{{error_add}}</div>
-{% endif %}
-{% endif %}
+    </div>
+    {% if error_add %}
+    <div class="alert alert-danger" role="alert">{{error_add}}</div>
+    {% endif %}
+    {% endif %}
 </div>
 {% endblock comment_content1 %}
