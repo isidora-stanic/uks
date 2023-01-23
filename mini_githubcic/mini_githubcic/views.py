@@ -16,7 +16,7 @@ from django.views.generic import (
     DeleteView
 )
 
-from .github_api.service import search_repositories_by_user, get_all_visible_repositories_by_user, \
+from .github_api.service import get_user_info, search_repositories_by_user, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
 from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest
@@ -37,9 +37,7 @@ def index(request):
 
 def sign_in(request, id=None):
     if request.method == 'GET':
-        context = {
-            "github_oauth_url": "https://github.com/login/oauth/authorize?client_id=" + settings.GITHUB_CLIENT_ID + "&scope=repo%2Cuser"}
-        return render(request, "login.html", context)
+        return render(request, "login.html")
     if request.method == 'POST':
 
         username = request.POST['username']
@@ -479,10 +477,14 @@ class ProfilePreview(DetailView):
     def get_context_data(self, *args, **kwargs):
         context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
         context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
+        context['github_oauth_url'] = "https://github.com/login/oauth/authorize?client_id=" + settings.GITHUB_CLIENT_ID + "&scope=repo%2Cuser"
+        context['authorized_account'] = get_user_info(self.request).json()
         context['projects'] = Project.objects.filter(Q(lead=context['user']) & Q(visibility=Visibility.PUBLIC)).all()
         context['commits'] = Commit.objects.filter(author=context['user']).filter(
             branches__project__visibility=Visibility.PUBLIC).distinct()
         return context
+    
+
 
 
 class CommitCreateView(CreateView):
@@ -525,6 +527,7 @@ class CommitDetailView(DetailView):
         context['parents'] = self.get_object().parents.all()
         context['branches'] = self.get_object().branches.all()
         return context
+
 
 
 class PullRequestListView(ListView):
@@ -601,12 +604,17 @@ class PullRequestDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('list_pull_requests', kwargs={'pk': self.object.project.id})
-def github_auth_test(request, username):
+        
+def list_repositories_auth(request):
     # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
-    repo_info = get_all_visible_repositories_by_user(request, username)
+    repo_info = get_all_visible_repositories_by_user(request)
+    account_resp = get_user_info(request)
     # repo_info = get_specific_repository(request, username, "uks")
-    context = {'repo_info': repo_info}
-    return render(request, 'test_github_auth.html', context)
+    if(account_resp.status_code == 200):
+        context = {'repo_info': repo_info, 'github_account': account_resp.json()}
+        return render(request, 'list_repositories_auth.html', context)
+    else:
+        return redirect('/user/'+request.user.username, {})
 
 
 def github_get_specific_repo(request, username, repo):
@@ -658,5 +666,7 @@ def after_auth(request):
     request_token = request.GET.get('code')
     response = get_access_token(request_token)
     # insert access token into session
-    request.session['access_token'] = response.json()['access_token']
-    return redirect('/')
+    # request.session['access_token'] = response.json()['access_token']
+    request.user.access_token = response.json()['access_token']
+    request.user.save()
+    return redirect('/user/'+request.user.username, {})

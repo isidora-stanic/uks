@@ -32,9 +32,9 @@ def get_github_auth_header(request):
     header : dict
         Authorization header
     """
-    if 'access_token' in request.session:
+    if request.user.access_token:
         header = {
-            'Authorization': 'Bearer ' + request.session['access_token'],
+            'Authorization': 'Bearer ' + request.user.access_token,
             'Content-Type': 'application/json'
         }
     else:
@@ -63,14 +63,15 @@ def send_github_req(url, request):
     Send GET request to Github API without access token
     Returns response in json format
     """
-    if 'access_token' in request.session:
+    if request.user.access_token:
         # if there is access token
         response = send_github_req_with_auth(url, request)
         if response.status_code == 401:
             # if access is revoked or expired
             # deletes invalid access token
-            del request.session['access_token']
-            request.session.modified = True
+            # del request.session['access_token']
+            # request.session.modified = True
+            
             response = send_github_req_without_auth(url)
             # to indicate that user needs to give access to github account
             # if he wants to make any changes and see his private repositories
