@@ -604,3 +604,7 @@ def fork_project(request, pk=None, username=None):
         new_project.save()
         saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
         return redirect('../../projects/'+str(saved_project.id))
+
+def changes(request, id=None):
+    if request.method == 'GET':
+        return render(request, "file_changes.html")
