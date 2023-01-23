@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+    {%  load issue_extras %}
+{#<p>{{ repo_info.total_count }} results</p>#}
+<div class="container">
+{#{% for item in repo_info.items %}#}
+{#{%  for item in repo_info %}#}
+{#<h3>{{ repo_info.name }}</h3>#}
+<h5>{{ repo_info.full_name }}</h5>
+{#    {% if repo_info.private %}#}
+{#        <p>Private</p>#}
+{#    {% else %}#}
+{#        <p>Public</p>#}
+{#    {% endif %}#}
+{#    <p>Owner: {{ repo_info.owner.login }}</p>#}
+{#    <a href="{{ repo_info.html_url }}">See on Github</a>#}
+{#    <p class="text-muted">{{ repo_info.description }}</p>#}
+{#    <a>{{ repo_info.contents_url }}</a>#}
+{#    <p>There is more...</p>#}
+    <hr>
+{#{% endfor %}#}
+{#<hr><hr>#}
+{#{{ readme }}#}
+{#{{ readme_content }}#}
+{#<article>{{ readme_content|safe }}</article>#}
+{#<div class="card">#}
+{#    <p class="card-title">{{ readme.name }}</p>#}
+{#{{ tree }}   |get_our_url#}
+{% for file in tree.tree %}
+    {% if file.type == 'blob' %}
+        <a href="../blob/{{ file.path|urlencode }}">{{ file.path }}</a>
+    {% else %}
+        <a href="../{{ file.path|urlencode }}">{{ file.path }}</a>
+    {% endif %}
+    <br>
+{% endfor %}
+{#    </div>#}
+{#    {{ tree }}#}
+
+{#    <div class="container">#}
+    {% if tree.type == 'file' %}
+        <div class="card">
+            <h6 class="card-title">{{ tree.path }}</h6>
+        {{ content | safe }}
+    {% endif %}
+        </div>
+{% endblock %}

@@ -1,4 +1,10 @@
+import inspect
+import json
+
+import markdown
+import requests
 from django.apps.registry import apps
+from django.core import serializers
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -10,13 +16,19 @@ from django.views.generic import (
     DeleteView
 )
 
+from .github_api.service import search_repositories_by_user, get_all_visible_repositories_by_user, \
+    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
+from .github_api.utils import send_github_req, get_access_token, decode_base64_file
 from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest
 
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
+
+from django.conf import settings
+
 
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
@@ -25,7 +37,9 @@ def index(request):
 
 def sign_in(request, id=None):
     if request.method == 'GET':
-        return render(request, "login.html")
+        context = {
+            "github_oauth_url": "https://github.com/login/oauth/authorize?client_id=" + settings.GITHUB_CLIENT_ID + "&scope=repo%2Cuser"}
+        return render(request, "login.html", context)
     if request.method == 'POST':
 
         username = request.POST['username']
@@ -44,11 +58,11 @@ def sign_in(request, id=None):
                           {"users_error": "User with this username and password does not exist"})
 
 
-
 def sign_out(request):
     logout(request)
     request.session.flush()
     return redirect("login")
+
 
 class Register(CreateView):
     model = User
@@ -61,7 +75,6 @@ class Register(CreateView):
             return super().form_invalid(form)
 
         return super().form_valid(form)
-    
 
 
 class ProjectListView(ListView):
@@ -168,7 +181,7 @@ class BranchCreateView(CreateView):
         context['project_id'] = self.request.resolver_match.kwargs['pk']
         context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
         context['branches'] = Branch.objects.filter(project__id=context['project_id'])
-        #self.fields['sel1'].choices = [(b.id, b.name, b) for b in context['branches']] TODO filter select vals
+        # self.fields['sel1'].choices = [(b.id, b.name, b) for b in context['branches']] TODO filter select vals
 
         return context
 
@@ -209,7 +222,7 @@ class BranchUpdateView(UpdateView):
 
     def form_valid(self, form):
         proj = Project.objects.filter(id=int(form.instance.project.id)).first()
-        if Branch.objects.filter(project=proj,name=form.instance.name).exists():
+        if Branch.objects.filter(project=proj, name=form.instance.name).exists():
             form.add_error(None, 'Name already in use')
             return super().form_invalid(form)
 
@@ -280,7 +293,6 @@ class BranchDeleteView(DeleteView):
 
 
 class MilestoneListView(ListView):
-
     model = Milestone
     template_name = 'list_milestones.html'
     context_object_name = 'milestones'
@@ -319,6 +331,7 @@ class MilestoneCreateView(CreateView):
         context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
         return context
 
+
 class MilestoneUpdateView(UpdateView):
     model = Milestone
     template_name = 'milestone_update.html'
@@ -326,7 +339,7 @@ class MilestoneUpdateView(UpdateView):
     fields = ['title', 'description', 'due_date', 'is_open']
 
     def form_valid(self, form):
-        if len(Milestone.objects.filter(title=form.instance.title)) != 0: 
+        if len(Milestone.objects.filter(title=form.instance.title)) != 0:
             if self.get_object().title != form.instance.title:
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
@@ -381,6 +394,7 @@ def milestone_close(request, pk=None):
         milestone.save()
         return redirect(milestone)
 
+
 class LabelListView(ListView):
     model = Label
     template_name = 'list_labels.html'
@@ -395,6 +409,7 @@ class LabelListView(ListView):
 
     def get_queryset(self):
         return Label.objects.all()
+
 
 class LabelCreateView(CreateView):
     model = Label
@@ -422,6 +437,7 @@ class LabelCreateView(CreateView):
         context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
         return context
 
+
 class LabelUpdateView(UpdateView):
     model = Label
     template_name = 'label_update.html'
@@ -439,6 +455,7 @@ class LabelUpdateView(UpdateView):
                 return super().form_invalid(form)
 
         return super().form_valid(form)
+
 
 class LabelDetailView(DetailView):
     model = Label
@@ -458,12 +475,13 @@ class ProfilePreview(DetailView):
     template_name = 'profile_preview.html'
     slug_field = 'username'
     slug_url_kwarg = 'username'
-    
+
     def get_context_data(self, *args, **kwargs):
         context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
         context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
         context['projects'] = Project.objects.filter(Q(lead=context['user']) & Q(visibility=Visibility.PUBLIC)).all()
-        context['commits'] = Commit.objects.filter(author=context['user']).filter(branches__project__visibility=Visibility.PUBLIC).distinct()
+        context['commits'] = Commit.objects.filter(author=context['user']).filter(
+            branches__project__visibility=Visibility.PUBLIC).distinct()
         return context
 
 
@@ -471,6 +489,7 @@ class CommitCreateView(CreateView):
     model = Commit
     template_name = 'new_commit.html'
     fields = ['log_message', 'branches', 'parents']
+
     # todo: filter branches and commits by project
 
     def get_form(self, form_class=None):
@@ -482,7 +501,7 @@ class CommitCreateView(CreateView):
         context = self.get_context_data()
         form.instance.author = self.request.user
         form.instance.date_time = timezone.now()
-        form.instance.hash = str(uuid.uuid4().hex) # todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
+        form.instance.hash = str(uuid.uuid4().hex)  # todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
         if form.is_valid:
             new_commit = form.save()
             if len(form.instance.parents.all()) > 2:
@@ -582,3 +601,62 @@ class PullRequestDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('list_pull_requests', kwargs={'pk': self.object.project.id})
+def github_auth_test(request, username):
+    # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
+    repo_info = get_all_visible_repositories_by_user(request, username)
+    # repo_info = get_specific_repository(request, username, "uks")
+    context = {'repo_info': repo_info}
+    return render(request, 'test_github_auth.html', context)
+
+
+def github_get_specific_repo(request, username, repo):
+    # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
+    # repo_info = get_all_visible_repositories_by_user(request, username)
+    repo_info = get_specific_repository(request, username, repo)
+    readme = get_specific_repository_readme(request, username, repo)
+    readme_content = markdown.markdown(decode_base64_file(readme['content']))
+
+    tree = get_repository_tree(request, username, repo)
+
+    context = {'repo_info': repo_info, 'readme': readme, 'readme_content': readme_content, 'tree': tree}
+    return render(request, 'github_get_specific_repo.html', context)
+
+
+def github_get_repo_tree_branch(request, username, repo, branch):
+    repo_info = get_specific_repository(request, username, repo)
+    tree = get_repository_tree(request, username, repo, branch)
+    context = {'repo_info': repo_info, 'tree': tree}
+    return render(request, 'github_get_specific_repo.html', context)
+
+
+def github_get_repo_subtree(request, username, repo, path):
+    repo_info = get_specific_repository(request, username, repo)
+    tree = get_file_content(request, username, repo, path)
+    context = {'repo_info': repo_info, 'tree': tree}
+    return render(request, 'github_get_specific_repo.html', context)
+
+
+def github_get_repo_tree_branch_fof(request, username, repo, path):
+    repo_info = get_specific_repository(request, username, repo)
+    content = get_file_content(request, username, repo, path)
+    context = {'repo_info': repo_info, 'tree': content, 'content': markdown.markdown(decode_base64_file(content['content']))}
+    return render(request, 'github_get_specific_file.html', context)
+
+
+def get_full_tree(request, username, repo, branch):
+    repo_info = get_specific_repository(request, username, repo)
+    tree = get_tree_recursively(request, username, repo, branch)
+    context = {'repo_info': repo_info, 'tree': tree}
+    return render(request, 'github_get_full_repo.html', context)
+
+
+
+def after_auth(request):
+    """
+    This view runs when the user authorizes this app to use all the account and repository info
+    """
+    request_token = request.GET.get('code')
+    response = get_access_token(request_token)
+    # insert access token into session
+    request.session['access_token'] = response.json()['access_token']
+    return redirect('/')
