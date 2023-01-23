@@ -62,4 +62,12 @@ urlpatterns = [
     path('myNotifications/<slug:username>', MyNotificationsListView.as_view(), name='list_notifications'),
     path('forkproject/<int:pk>/<slug:username>', fork_project, name='fork_project'),
     path('changes/', changes, name='changes'),
+    path('github_repos/<slug:username>', github_auth_test, name='github_auth_test'),
+    path('github_repos/<slug:username>/<slug:repo>', github_get_specific_repo, name='github_get_specific_repo'),
+    path('github_repos/<slug:username>/<slug:repo>/tree/branches/<str:branch>', github_get_repo_tree_branch, name='github_get_repo_tree_branch'),
+    path('github_repos/<slug:username>/<slug:repo>/tree/blob/<path:path>', github_get_repo_tree_branch_fof, name='github_get_repo_tree_branch_fof'),
+    path('github_repos/<slug:username>/<slug:repo>/tree/<path:path>', github_get_repo_subtree, name='github_get_repo_subtree'),
+    path('github_repos/<slug:username>/<slug:repo>/full_tree/<slug:branch>', get_full_tree, name='get_full_tree'),
+    path('login/oauth2/code/github', after_auth, name='after_auth'),
+
 ]
