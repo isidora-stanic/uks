@@ -53,6 +53,11 @@ urlpatterns = [
     path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
+    path('projects/<int:pk>/pull/requests/', PullRequestListView.as_view(), name='list_pull_requests'),
+    path('projects/<int:pk>/pull/requests/add', PullRequestCreateView.as_view(), name='add_pull_request'),
+    path('pull/requests/<int:pk>', PullRequestDetailView.as_view(), name='pull_request_detail'),
+    path('pull/requests/<int:pk>/update', PullRequestUpdateView.as_view(), name='pull_request_update'),
+    path('pull/requests/<int:pk>/delete', PullRequestDeleteView.as_view(), name='pull_request_delete'),
 
     path('github_repos', list_repositories_auth, name='list_repo_auth'),
     path('github_repos/<slug:username>/<slug:repo>', github_get_specific_repo, name='github_get_specific_repo'),
