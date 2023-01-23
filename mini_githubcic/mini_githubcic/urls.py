@@ -54,7 +54,7 @@ urlpatterns = [
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
 
-    path('github_repos/<slug:username>', github_auth_test, name='github_auth_test'),
+    path('github_repos', list_repositories_auth, name='list_repo_auth'),
     path('github_repos/<slug:username>/<slug:repo>', github_get_specific_repo, name='github_get_specific_repo'),
     path('github_repos/<slug:username>/<slug:repo>/tree/branches/<str:branch>', github_get_repo_tree_branch, name='github_get_repo_tree_branch'),
     path('github_repos/<slug:username>/<slug:repo>/tree/blob/<path:path>', github_get_repo_tree_branch_fof, name='github_get_repo_tree_branch_fof'),

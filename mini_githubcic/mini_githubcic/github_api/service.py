@@ -1,5 +1,12 @@
-from mini_githubcic.github_api.utils import send_github_req
+from mini_githubcic.github_api.utils import send_github_req, send_github_req_with_auth
 
+
+def get_user_info(request):
+    user_info_resp = send_github_req_with_auth('https://api.github.com/user', request)
+    if(user_info_resp.status_code == 401):
+        request.user.access_token = ""
+        request.user.save()
+    return user_info_resp
 
 def search_repositories_by_user(request, username):
     return send_github_req(
@@ -9,7 +16,7 @@ def search_repositories_by_user(request, username):
 
 
 def get_all_visible_repositories_by_user(request):
-    return send_github_req('https://api.github.com/user/repos', request)
+    return send_github_req_with_auth('https://api.github.com/user/repos', request)
 
 
 def get_specific_repository(request, username, repo):

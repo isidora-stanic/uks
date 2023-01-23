@@ -27,6 +27,8 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True, blank=False)
     password = models.CharField(max_length=20)
     
+    access_token = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    
     is_superuser = models.BooleanField(default=False)
 
     def has_perm(self, perm, obj=None):
