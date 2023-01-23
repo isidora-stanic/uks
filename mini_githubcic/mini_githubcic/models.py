@@ -101,6 +101,7 @@ class Task(models.Model):
     title = models.CharField(max_length=50)
     description = models.TextField()
     date_created = models.DateTimeField(default=timezone.now)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     assigned_to = models.ForeignKey(User, blank=True, null=True, related_name='assigned_to', on_delete=models.CASCADE)
     creator = models.ForeignKey(User, blank=False, related_name='creator', on_delete=models.CASCADE)
 
@@ -161,7 +162,6 @@ class Commit(models.Model):
 
 class Issue(Task):
     milestone = models.ForeignKey(Milestone, blank=True, null=True, on_delete=models.CASCADE)  # ManyToOne
-    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     is_open = models.BooleanField(default=True)
 
     def get_absolute_url(self):
@@ -176,6 +176,8 @@ class PullRequest(Task):
     source = models.ForeignKey(Branch, blank=False, related_name='source', on_delete=models.CASCADE)
     state = models.CharField(max_length=20, choices=State.choices, default=State.OPEN)
 
+    def get_absolute_url(self):
+        return reverse('pull_request_detail', kwargs={'pk': self.pk})
 
 class Reaction(models.Model):
     type = ReactionType.choices

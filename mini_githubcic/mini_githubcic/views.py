@@ -19,7 +19,7 @@ from django.views.generic import (
 from .github_api.service import search_repositories_by_user, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest
 
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
@@ -84,9 +84,8 @@ class ProjectListView(ListView):
     ordering = ['title']
 
     def get_queryset(self):
-        if (self.request.user.is_authenticated):
-            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC) | Q(
-                developers=self.request.user)).distinct()
+        if self.request.user.is_authenticated:
+            return Project.objects.filter(Q(lead=self.request.user) | Q(visibility=Visibility.PUBLIC) | Q(developers=self.request.user)).distinct()
         else:
             return Project.objects.filter(visibility=Visibility.PUBLIC)
 
@@ -399,7 +398,6 @@ def milestone_close(request, pk=None):
 class LabelListView(ListView):
     model = Label
     template_name = 'list_labels.html'
-    template_name = 'list_labels.html'
     context_object_name = 'labels'
     ordering = ['name']
 
@@ -529,6 +527,80 @@ class CommitDetailView(DetailView):
         return context
 
 
+class PullRequestListView(ListView):
+    model = PullRequest
+    template_name = 'list_pull_requests.html'
+    context_object_name = 'pull_requests'
+    ordering = ['id']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(PullRequestListView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=context['project_id']).first()
+        context['pull_requests'] = PullRequest.objects.filter(project__id=context['project_id'])
+        return context
+
+    def get_queryset(self):
+        return PullRequest.objects.all()
+
+class PullRequestCreateView(CreateView):
+    model = PullRequest
+    template_name = 'new_pull_request.html'
+    fields = ['title', 'description', 'assigned_to', 'source', 'target']
+
+    def get_form(self, form_class=None):
+
+        form = super(PullRequestCreateView, self).get_form(form_class)
+        form.fields['description'].required = False
+        form.fields['assigned_to'].required = False
+        return form
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        form.instance.project = context['project']
+        form.instance.creator = self.request.user
+        if PullRequest.objects.filter(title=form.instance.title, project_id=form.instance.project.id).exists():
+            form.add_error(None, 'Title already in use')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(PullRequestCreateView, self).get_context_data(*args, **kwargs)
+        context['project_id'] = self.request.resolver_match.kwargs['pk']
+        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        return context
+
+class PullRequestUpdateView(UpdateView):
+    model = PullRequest
+    template_name = 'pull_request_update.html'
+    fields = ['title', 'description', 'assigned_to']
+
+    def get_form(self, form_class=None):
+        form = super(PullRequestUpdateView, self).get_form(form_class)
+        form.fields['description'].required = False
+        form.fields['assigned_to'].required = False
+        return form
+
+    def form_valid(self, form):
+        if PullRequest.objects.filter(title=form.instance.title, project_id=form.instance.project.id).exists():
+            if self.get_object().title != form.instance.title:
+                form.add_error(None, 'Title already in use')
+                return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+class PullRequestDetailView(DetailView):
+    model = PullRequest
+    template_name = 'pull_request_detail.html'
+
+
+class PullRequestDeleteView(DeleteView):
+    model = PullRequest
+    template_name = 'pull_request_delete.html'
+
+    def get_success_url(self):
+        return reverse_lazy('list_pull_requests', kwargs={'pk': self.object.project.id})
 def github_auth_test(request, username):
     # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
     repo_info = get_all_visible_repositories_by_user(request, username)

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if project_id %}
+<h1 class="title">Pull requests for <b>{{ project.title }}</b></h1>
+{% endif %}
+
+<div class="container">
+    {%if request.user in project.developers.all or request.user == project.lead %}
+    <a class="btn default-button" href="{% url 'add_pull_request' project_id %}">New pull request</a>
+    {%endif%}
+    <br/>
+
+
+    {% if pull_requests %}
+    <div class="container">
+        <div style="padding:10px">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#open">Open</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#merged">Merged</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#closed">Closed</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#all">All</a>
+                </li>
+            </ul>
+        </div>
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div class="tab-pane container active" id="open">
+                {% for pull_request in pull_requests %}
+                {% if pull_request.state == "OPEN" %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="card-text">{{ pull_request.title }} </p>
+                        <a class="btn btn-primary" href="{% url 'pull_request_detail' pull_request.id %}">View</a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="tab-pane container active" id="merged">
+                {% for pull_request in pull_requests %}
+                {% if pull_request.state == "MERGED" %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="card-text">{{ pull_request.title }} </p>
+                        <a class="btn btn-primary" href="{% url 'pull_request_detail' pull_request.id %}">View</a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="tab-pane container fade" id="closed">
+                {% for pull_request in pull_requests %}
+                {% if pull_request.state == "CLOSED" %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="card-text">{{ pull_request.title }} </p>
+                        <a class="btn btn-primary" href="{% url 'pull_request_detail' pull_request.id %}">View</a>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="tab-pane container fade" id="all">
+                {% for pull_request in pull_requests %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="card-text">{{ pull_request.title }} </p>
+                        <a class="btn btn-primary" href="{% url 'pull_request_detail' pull_request.id %}">View</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    There are no added pull requests.
+    {% endif %}
+</div>
+{% endblock %}
