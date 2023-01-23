@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import UserManager
 from colorfield.fields import ColorField
 from mini_githubcic.managers import GitUserManager
+from ckeditor.fields import RichTextField
 
 class State(models.TextChoices):
     OPEN = 'OPEN'
@@ -50,7 +51,7 @@ class User(AbstractBaseUser):
         db_table = u'users'
 
     def get_absolute_url(self):
-        return reverse('login') #TODO user_detail
+        return reverse('login')
 
 
 class Project(models.Model):
@@ -125,7 +126,7 @@ class StateChange(Event):
 
 
 class Comment(Event):
-    content = models.CharField(max_length=2000)
+    content = RichTextField(blank=True, null=True)
     writer = models.ForeignKey(User, blank=False, related_name='writer', on_delete=models.CASCADE)
 
 

@@ -35,7 +35,7 @@ urlpatterns = [
     path('milestones/<int:pk>/delete', MilestoneDeleteView.as_view(), name='milestone_delete'),
     path('projects/<int:pk>/issues/', IssueListView.as_view(), name='project_issues'),
     path('projects/<int:pk>/issues/add', IssueCreateView.as_view(), name='add_issue'),
-    path('issues/<int:pk>', IssueDetailView.as_view(), name='issue_detail'),
+    path('issues/<int:pk>', new_comment, name='issue_detail'),
     path('issues/<int:pk>/update', IssueUpdateView.as_view(), name='issue_update'),
     path('issues/<int:pk>/delete', IssueDeleteView.as_view(), name='issue_delete'),
     path('issues/<int:pk>/state-toggle', issue_state_toggle, name='issue_state_toggle'),
@@ -53,5 +53,4 @@ urlpatterns = [
     path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
-    # path('issues/<int:pk>/comments/', CommentListView.as_view(), name='list_comments'),
 ]

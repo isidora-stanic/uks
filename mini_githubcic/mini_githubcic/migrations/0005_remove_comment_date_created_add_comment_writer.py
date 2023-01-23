@@ -1,6 +1,8 @@
 
 from django.db import migrations, models
 import django.utils.timezone
+import ckeditor.fields
+import colorfield.fields
 
 
 class Migration(migrations.Migration):
@@ -18,5 +20,15 @@ class Migration(migrations.Migration):
             model_name='comment',
             name='writer',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='writer', to='mini_githubcic.user'),
+        ),
+        migrations.AlterField(
+            model_name='comment',
+            name='content',
+            field=ckeditor.fields.RichTextField(blank=True, null=True),
+        ),
+        migrations.AlterField(
+            model_name='label',
+            name='color',
+            field=colorfield.fields.ColorField(default='#00000', image_field=None, max_length=18, samples=None),
         ),
     ]

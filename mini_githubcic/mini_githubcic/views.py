@@ -17,7 +17,7 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
-from .forms import BranchForm
+from .forms import BranchForm, CommentForm
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -108,18 +108,36 @@ class BranchListView(ListView):
         return context
 
 
-# class CommentListView(ListView):
-#     model = Comment
-#     template_name = 'list_comments.html'
-#     context_object_name = 'comments'
-#     ordering = ['date_time']
-#
-#     def get_context_data(self, *args, **kwargs):
-#         context = super(CommentListView, self).get_context_data(*args, **kwargs)
-#         context['issue_id'] = self.request.resolver_match.kwargs['pk']
-#         context['issue'] = Issue.objects.filter(id=context['issue_id']).first()
-#         context['comments'] = Comment.objects.filter(task__id=context['issue_id'])
-#         return context
+def new_comment(request, pk):
+    issue = Issue.objects.filter(id=int(pk)).first()
+    if not issue:
+        return redirect('/projects')
+
+    form = CommentForm()
+    obj_dict = {
+        'comment_form': form,
+        'issue': issue,
+        'comments': Comment.objects.filter(task__id=int(pk)),
+        'temp_preview': ""
+    }
+
+    if request.method == 'POST':
+        form_data = CommentForm(request.POST)
+
+        if form_data.is_valid():
+            comment = Comment(**form_data.cleaned_data)
+            comment.task = issue
+
+            if not request.user.is_authenticated:
+                obj_dict['error_add'] = 'User not authenticated'
+                return render(request, 'issue_detail.html', obj_dict)
+            else:
+                comment.writer = request.user
+                comment.date_time = timezone.now()
+                comment.save()
+                return redirect('/issues/{}'.format(pk))
+
+    return render(request, 'issue_detail.html', obj_dict)
 
 
 class ProjectCreateView(CreateView):
