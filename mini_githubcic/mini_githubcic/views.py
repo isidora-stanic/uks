@@ -1,6 +1,7 @@
 import inspect
 import json
 
+import markdown
 import requests
 from django.apps.registry import apps
 from django.core import serializers
@@ -15,6 +16,9 @@ from django.views.generic import (
     DeleteView
 )
 
+from .github_api.service import search_repositories_by_user, get_all_visible_repositories_by_user, \
+    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
+from .github_api.utils import send_github_req, get_access_token, decode_base64_file
 from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility
 
 from django.urls import reverse_lazy
@@ -525,79 +529,54 @@ class CommitDetailView(DetailView):
         return context
 
 
-def get_github_auth_header(request):
-    """
-    Creating authorization header for HTTP request
-
-    Format of the header is 'Authorization: Bearer <ACCESS_TOKEN>'
-    Gets access token from session if user is authenticated on Github
-    Otherwise it returns empty header
-
-    Parameters
-    ----------
-    request : HttpRequest
-        request with or without access token in its session
-
-    Returns
-    -------
-    header : dict
-        Authorization header
-    """
-    try:
-        header = {'Authorization': 'Bearer ' + request.session['access_token']}
-    except:
-        header = {}
-    return header
-
-
-def send_github_req_with_auth(url, request):
-    """
-    Send GET request to Github API with access token
-    Note: If there is no access token or if its expired or revoked, API will return 400 Bad credentials
-    In this case use send_github_req_without_auth(url)
-    """
-    return requests.get(url, headers=get_github_auth_header(request))
-
-
-def send_github_req_without_auth(url):
-    """
-    Send GET request to Github API without access token
-    """
-    return requests.get(url)
-
-
-def send_github_req(url, request):
-    """
-    Send GET request to Github API without access token
-    Returns response in json format
-    """
-    if 'access_token' in request.session:
-        # if there is access token
-        response = send_github_req_with_auth(url, request)
-        if response.status_code == 401:
-            # if access is revoked or expired
-            # deletes invalid access token
-            del request.session['access_token']
-            request.session.modified = True
-            response = send_github_req_without_auth(url)
-            # to indicate that user needs to give access to github account
-            # if he wants to make any changes and see his private repositories
-            r = response.json()
-            r['no_auth'] = True
-            return r
-    else:
-        # if there is no access token
-        response = send_github_req_without_auth(url)
-    return response.json()
-
-
-def github_auth_test(request):
-    yoko = send_github_req(
-        'https://api.github.com/search/repositories?q=user:isidora-stanic',
-        request
-    )
-    context = {'yoko': yoko}
+def github_auth_test(request, username):
+    # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
+    repo_info = get_all_visible_repositories_by_user(request, username)
+    # repo_info = get_specific_repository(request, username, "uks")
+    context = {'repo_info': repo_info}
     return render(request, 'test_github_auth.html', context)
+
+
+def github_get_specific_repo(request, username, repo):
+    # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
+    # repo_info = get_all_visible_repositories_by_user(request, username)
+    repo_info = get_specific_repository(request, username, repo)
+    readme = get_specific_repository_readme(request, username, repo)
+    readme_content = markdown.markdown(decode_base64_file(readme['content']))
+
+    tree = get_repository_tree(request, username, repo)
+
+    context = {'repo_info': repo_info, 'readme': readme, 'readme_content': readme_content, 'tree': tree}
+    return render(request, 'github_get_specific_repo.html', context)
+
+
+def github_get_repo_tree_branch(request, username, repo, branch):
+    repo_info = get_specific_repository(request, username, repo)
+    tree = get_repository_tree(request, username, repo, branch)
+    context = {'repo_info': repo_info, 'tree': tree}
+    return render(request, 'github_get_specific_repo.html', context)
+
+
+def github_get_repo_subtree(request, username, repo, path):
+    repo_info = get_specific_repository(request, username, repo)
+    tree = get_file_content(request, username, repo, path)
+    context = {'repo_info': repo_info, 'tree': tree}
+    return render(request, 'github_get_specific_repo.html', context)
+
+
+def github_get_repo_tree_branch_fof(request, username, repo, path):
+    repo_info = get_specific_repository(request, username, repo)
+    content = get_file_content(request, username, repo, path)
+    context = {'repo_info': repo_info, 'tree': content, 'content': markdown.markdown(decode_base64_file(content['content']))}
+    return render(request, 'github_get_specific_file.html', context)
+
+
+def get_full_tree(request, username, repo, branch):
+    repo_info = get_specific_repository(request, username, repo)
+    tree = get_tree_recursively(request, username, repo, branch)
+    context = {'repo_info': repo_info, 'tree': tree}
+    return render(request, 'github_get_full_repo.html', context)
+
 
 
 def after_auth(request):
@@ -605,13 +584,7 @@ def after_auth(request):
     This view runs when the user authorizes this app to use all the account and repository info
     """
     request_token = request.GET.get('code')
-
-    response = requests.post(
-        "https://github.com/login/oauth/access_token?client_id=" + settings.GITHUB_CLIENT_ID
-        + "&client_secret=" + settings.GITHUB_CLIENT_SECRET
-        + "&code=" + request_token,
-        headers={'accept': 'application/json'}
-    )
+    response = get_access_token(request_token)
     # insert access token into session
     request.session['access_token'] = response.json()['access_token']
     return redirect('/')

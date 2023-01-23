@@ -1,9 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-</head>
-<body>
-{{ yoko }}
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+{#<p>{{ repo_info.total_count }} results</p>#}
+<hr>
+{#{% for item in repo_info.items %}#}
+{%  for item in repo_info %}
+<h3>{{ item.name }}</h3>
+<h5>{{ item.full_name }}</h5>
+    {% if item.private %}
+        <p>Private</p>
+    {% else %}
+        <p>Public</p>
+    {% endif %}
+    <p>Owner: {{ item.owner.login }}</p>
+    <a href="{{ item.html_url }}">See on Github</a>
+    <p>{{ item.description }}</p>
+    <p>There is more...</p>
+    <hr>
+{% endfor %}
+<hr><hr>
+{{ repo_info }}
+{% endblock %}
