@@ -13,7 +13,17 @@
         <p> Assigned to - {{ object.assigned_to | title }}</p>
         <p> Created by - {{ object.creator }}</p>
         <p> State - {{ object.state }}</p>
-        <hr>
+        <hr/>
+        <h4>Labels</h4>
+        {% if object.labels.all %} {% for label in object.labels.all %}
+        <span
+            class="badge badge-primary"
+            style="background-color: {{label.color}}; margin-bottom: 10px; border-radius: 25px;"
+        >{{ label.name }}
+        </span>
+        {% endfor %}
+        {% else %} There are no added labels. {% endif %}
+        <hr/>
     </div>
     <div>
         {% if request.user == object.creator %}

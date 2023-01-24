@@ -11,6 +11,17 @@
         <p> Milestone - {{ object.milestone }}</p>
         <p> Project - {{ object.project }}</p>
         <p> Open - {{ object.is_open }}</p>
+        <hr/>
+        <h4>Labels</h4>
+        {% if object.labels.all %} {% for label in object.labels.all %}
+        <span
+            class="badge badge-primary"
+            style="background-color: {{label.color}}; margin-bottom: 10px; border-radius: 25px;"
+        >{{ label.name }}
+        </span>
+        {% endfor %}
+        {% else %} There are no added labels. {% endif %}
+        <hr/>
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>

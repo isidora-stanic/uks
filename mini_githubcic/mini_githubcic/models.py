@@ -6,6 +6,7 @@ from django.contrib.auth.models import UserManager
 from colorfield.fields import ColorField
 from mini_githubcic.managers import GitUserManager
 
+
 class State(models.TextChoices):
     OPEN = 'OPEN'
     CLOSED = 'CLOSED'
@@ -77,7 +78,7 @@ class Label(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name + " " + self.description
+        return self.name
 
     def get_absolute_url(self):
         return reverse('label_detail', kwargs={'pk': self.pk})
@@ -104,6 +105,7 @@ class Task(models.Model):
     project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     assigned_to = models.ForeignKey(User, blank=True, null=True, related_name='assigned_to', on_delete=models.CASCADE)
     creator = models.ForeignKey(User, blank=False, related_name='creator', on_delete=models.CASCADE)
+    labels = models.ManyToManyField(Label)
 
 
 class Event(models.Model):
