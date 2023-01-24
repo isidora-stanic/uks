@@ -33,6 +33,9 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 
 
+from django.conf import settings
+
+
 def index(request):
     title = apps.get_app_config('mini_githubcic').verbose_name
     return render(request, 'index.html', {"title": title})

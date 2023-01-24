@@ -4,3 +4,4 @@ django-colorfield
 requests~=2.28.2
 Markdown~=3.4.1
 django-ckeditor
+
