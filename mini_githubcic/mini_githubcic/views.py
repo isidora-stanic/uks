@@ -259,14 +259,14 @@ class IssueUpdateView(UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(IssueUpdateView, self).get_context_data(**kwargs)
-        issue = Issue.objects.filte(self.request.resolver_match.kwargs['pk']).first()
+        issue = Issue.objects.filter(id=int(self.request.resolver_match.kwargs['pk'])).first()
         context['project_id'] = issue.project.id
         context['project'] = issue.project
         return context
 
     def get_form_kwargs(self):
         kwargs = super(IssueUpdateView, self).get_form_kwargs()
-        issue = Issue.objects.filte(self.request.resolver_match.kwargs['pk']).first()
+        issue = Issue.objects.filter(id=int(self.request.resolver_match.kwargs['pk'])).first()
         kwargs['project'] = issue.project
         return kwargs
 
