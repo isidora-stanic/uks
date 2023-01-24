@@ -1,11 +1,5 @@
-import inspect
-import json
-
 import markdown
-import requests
 from django.apps.registry import apps
-from django.core import serializers
-from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views.generic import (
@@ -16,22 +10,17 @@ from django.views.generic import (
     DeleteView
 )
 
-from .github_api.service import get_user_info, search_repositories_by_user, get_all_visible_repositories_by_user, \
+from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
-from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest, Comment, Reaction
+from .github_api.utils import get_access_token, decode_base64_file
+from .models import User, Milestone, Commit, Visibility, Reaction
 from .forms import *
 
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect, HttpResponse
+
 from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
-from django.shortcuts import get_object_or_404
-
-
-from django.conf import settings
-
 
 from django.conf import settings
 
@@ -270,13 +259,15 @@ class IssueUpdateView(UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(IssueUpdateView, self).get_context_data(**kwargs)
-        context['project_id'] = self.request.resolver_match.kwargs['pk']
-        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
+        issue = Issue.objects.filte(self.request.resolver_match.kwargs['pk']).first()
+        context['project_id'] = issue.project.id
+        context['project'] = issue.project
         return context
 
     def get_form_kwargs(self):
         kwargs = super(IssueUpdateView, self).get_form_kwargs()
-        kwargs['project'] = Project.objects.filter(id=int(self.kwargs['pk'])).first()
+        issue = Issue.objects.filte(self.request.resolver_match.kwargs['pk']).first()
+        kwargs['project'] = issue.project
         return kwargs
 
 
@@ -711,21 +702,29 @@ class PullRequestCreateView(CreateView):
 class PullRequestUpdateView(UpdateView):
     model = PullRequest
     template_name = 'pull_request_update.html'
-    fields = ['title', 'description', 'assigned_to']
-
-    def get_form(self, form_class=None):
-        form = super(PullRequestUpdateView, self).get_form(form_class)
-        form.fields['description'].required = False
-        form.fields['assigned_to'].required = False
-        return form
+    form_class = UpdatePullRequestForm
 
     def form_valid(self, form):
-        if PullRequest.objects.filter(title=form.instance.title, project_id=form.instance.project.id).exists():
+        context = self.get_context_data()
+        if PullRequest.objects.filter(title=form.instance.title, project=context['project']).exists():
             if self.get_object().title != form.instance.title:
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
 
         return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(PullRequestUpdateView, self).get_context_data(**kwargs)
+        pull_request = PullRequest.objects.filter(id=int(self.request.resolver_match.kwargs['pk'])).first()
+        context['project_id'] = pull_request.project.id
+        context['project'] = pull_request.project
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super(PullRequestUpdateView, self).get_form_kwargs()
+        pull_request = PullRequest.objects.filter(id=int(self.request.resolver_match.kwargs['pk'])).first()
+        kwargs['project'] = pull_request.project
+        return kwargs
 
 
 class PullRequestDetailView(DetailView):

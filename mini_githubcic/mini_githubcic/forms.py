@@ -67,6 +67,10 @@ class NewPullRequestForm(ModelForm):
 
 class UpdatePullRequestForm(ModelForm):
 
+    class Meta:
+        model = PullRequest
+        fields = ['title', 'description', 'assigned_to', 'is_open', 'labels']
+
     def __init__(self, *args, **kwargs):
         self.project = kwargs.pop('project')
         super(UpdatePullRequestForm, self).__init__(*args, **kwargs)
@@ -76,8 +80,6 @@ class UpdatePullRequestForm(ModelForm):
             queryset=Label.objects.filter(project=self.project).all(),
             required=False
         )
-        self.fields['source'].queryset = Branch.objects.filter(project=self.project).all()
-        self.fields['target'].queryset = Branch.objects.filter(project=self.project).all()
         self.fields['assigned_to'].queryset = self.project.developers
         self.fields['assigned_to'].required = False
         self.fields['description'].required = False
