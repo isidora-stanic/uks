@@ -3,6 +3,7 @@ import json
 
 import markdown
 import requests
+import copy
 from django.apps.registry import apps
 from django.core import serializers
 from django.db.models import Q
@@ -17,7 +18,8 @@ from django.views.generic import (
 )
 
 from .github_api.service import search_repositories_by_user, get_all_visible_repositories_by_user, \
-    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
+    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively, \
+    get_commit_changes, get_all_commits_for_branch
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
 from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, Notification
 
@@ -627,9 +629,16 @@ def fork_project(request, pk=None, username=None):
         saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
         return redirect('../../projects/'+str(saved_project.id))
 
-def changes(request, id=None):
-    if request.method == 'GET':
-        return render(request, "file_changes.html")
+def changes(request, username=None, repo=None, commitsha=None):
+   # repo_info = get_commit_changes(request, username, repo,commitsha)
+    repo_info = get_commit_changes(request, 'isidora-stanic', 'uks', '59e3d110bf4bfd5ec22c18193421942a6a56e2ac')
+    context = {'repo_info': repo_info}
+
+    for f in repo_info["files"]:
+        if "patch" in f:
+            content = f["patch"].splitlines()
+            f["patch"] = copy.deepcopy(content)
+    return render(request, 'file_changes.html', context)
 
 
 def github_auth_test(request, username):
@@ -691,3 +700,4 @@ def after_auth(request):
     # insert access token into session
     request.session['access_token'] = response.json()['access_token']
     return redirect('/')
+

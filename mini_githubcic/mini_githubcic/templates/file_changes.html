@@ -1,71 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h1 class="title">Files changes</h1>
-<article class="container">
-    <div class="pr-toolbar commit-toolbar mt-n2 color-bg-default d-flex" data-target="diff-layout.diffToolbar">
-        <div id="toc" class="d-flex flex-items-center table-of-contents js-details-container Details flex-1" style="gap: 4px 16px;">
 
-    <div>
-      Showing
-      <strong>65 changed files</strong>
-      with
-      <strong>2,703 additions</strong>
-      and
-      <strong>0 deletions</strong>.
+{% for first in repo_info.files %}
+    <div class="card_ch">
+        {{first.filename}} +{{first.additions}} additions, -{{first.deletions}} deletions, <br/>
+        <table class="table_file">
+            {% for line in first.patch %}
+            <tr>
+                <td class="counter"> </td>
+                    {% if line.0 == '+' %}
+                        <td class="added_field">{{line}}</td>
+                    {%else%}
+                        {% if line.0 == '-' %}
+                            <td class="added_field">{{line}}</td>
+                        {%else%}
+                            <td class="nothing_field">{{line}}</td>
+                        {%endif%}
+                    {%endif%}
+            </tr>
+            {% endfor %}
+        </table>
     </div>
-
-  <div class="flex-1"></div>
-            <br/>
-
-<!--    ****************************************************************************        -->
-            <div id="diff-bc37d034bad564583790a46f19d807abfe519c5671395fd494d8cce506c42947" data-details-container-group="file"  data-file-type="dotfile" data-file-deleted="false" data-tagsearch-path=".gitignore" data-tagsearch-lang="Ignore List" data-targets="diff-file-filter.diffEntries">
-  <div  data-path=".gitignore" data-short-path="bc37d03" data-anchor="diff-bc37d034bad564583790a46f19d807abfe519c5671395fd494d8cce506c42947" data-file-type="dotfile" data-file-deleted="false">
-    <div >
-        <span  aria-label="138 changes: 138 additions &amp; 0 deletions">138 added<span class="diffstat-block-added"></span></span>
-        <span >
-          <a title=".gitignore" href="#diff-bc37d034bad564583790a46f19d807abfe519c5671395fd494d8cce506c42947">.gitignore</a>
-        </span>
-  </div>
-  <br/>
-
-  <div >
-
-        <div  style="">
-            <table background-color="#e6ffec" class="changes-table"  data-tab-size="8" data-diff-anchor="diff-bc37d034bad564583790a46f19d807abfe519c5671395fd494d8cce506c42947" data-paste-markdown-skip="">
-              <thead>
-                <tr hidden="">
-                    <th scope="col">Original file line number</th>
-                    <th scope="col">Diff line number</th>
-                    <th scope="col">Diff line change</th>
-                </tr>
-              </thead>
-              <tbody>
-
-      <tr data-position="0">
-     <td id="diff-bc37d034bad564583790a46f19d807abfe519c5671395fd494d8cce506c42947HR1" class="blob-num blob-num-hunk non-expandable" data-line-number="..."></td>
-    <td >@@ -0,0 +1,138 @@</td>
-  </tr>
-<tr data-hunk="e5cbb881b10fc83ee22d0f4332325b02a0420ae9ebef6b76266a7f1e0201dc0f" >
-    <tr data-hunk="e5cbb881b10fc83ee22d0f4332325b02a0420ae9ebef6b76266a7f1e0201dc0f" >
-
-    <td id="diff-bc37d034bad564583790a46f19d807abfe519c5671395fd494d8cce506c42947R1" data-line-number="1" class="blob"></td>
-
-  <td class="blob">
-<!--      todo pazi na - ovde je + ali pazi na - -->
-            <span class="blob" data-code-marker="+"><span class="pl-c"><span class="pl-c">#</span> Django #</span></span></td>
-</tr>
-
-              </tbody>
-            </table>
-
-        </div>
-
-  </div>
-</div></div>
-</div>
-<!--    ****************************************************************************        -->
-</div>
-
-    </div>
-</article>
+    <br>
+{% endfor %}
 {% endblock content %}
