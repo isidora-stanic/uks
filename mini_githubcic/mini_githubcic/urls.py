@@ -69,6 +69,8 @@ urlpatterns = [
     path('github_repos/<slug:username>/<slug:repo>/tree/<path:path>', github_get_repo_subtree, name='github_get_repo_subtree'),
     path('github_repos/<slug:username>/<slug:repo>/full_tree/<slug:branch>', get_full_tree, name='get_full_tree'),
 
+    path('github_repos/<slug:username>/<slug:repo>/<str:branch>/commits', github_branch_commits, name='github_branch_commits'),
+
     path('login/oauth2/code/github', after_auth, name='after_auth'),
 
 ]

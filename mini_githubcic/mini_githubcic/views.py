@@ -1,3 +1,5 @@
+import datetime
+
 import markdown
 from django.apps.registry import apps
 from django.shortcuts import render, redirect
@@ -11,7 +13,8 @@ from django.views.generic import (
 )
 
 from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
-    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
+    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, \
+    get_tree_recursively, get_all_commits_for_branch, get_all_branches
 from .github_api.utils import get_access_token, decode_base64_file
 from .models import User, Milestone, Commit, Visibility, Reaction
 from .forms import *
@@ -742,7 +745,7 @@ def pull_request_new_comment(request, pk):
     comment_list = Comment.objects.filter(task__id=int(pk))
     comments_reactions = []
     for c in comment_list:
-        comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
+        comments_reactions.append({'comment':c, 'reactions': Reaction.objects.filter(comment=c)})
 
     obj_dict = {
         'comment_form': form,
@@ -829,6 +832,14 @@ def get_full_tree(request, username, repo, branch):
     context = {'repo_info': repo_info, 'tree': tree}
     return render(request, 'github_get_full_repo.html', context)
 
+
+def github_branch_commits(request, username, repo, branch):
+    repo_info = get_specific_repository(request, username, repo)
+    branches = get_all_branches(request, username, repo)
+    commits = get_all_commits_for_branch(request, username, repo, branch)
+    # date_ = x = datetime.datetime.now() - datetime.timedelta(days=2)
+    context = {'repo_info': repo_info, 'commits': commits, 'branch': branch, 'branches': branches, 'username': username, 'repo': repo}
+    return render(request, 'github_branch_commits.html', context)
 
 
 def after_auth(request):
