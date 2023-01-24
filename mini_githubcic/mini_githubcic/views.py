@@ -17,6 +17,7 @@ from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
 from .forms import BranchForm, CommentForm
+import re
 
 
 def index(request):
@@ -342,6 +343,17 @@ class BranchDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('project_branches', kwargs={'pk': self.object.project.id})
+
+
+class CommentDeleteView(DeleteView):
+    model = Comment
+    template_name = 'comment_delete.html'
+
+    def test_func(self):
+        return True
+
+    def get_success_url(self):
+        return reverse_lazy('issue_detail', kwargs={'pk': self.object.task.id})
 
 
 class MilestoneListView(ListView):

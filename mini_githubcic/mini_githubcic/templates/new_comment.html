@@ -16,7 +16,7 @@
                     <div class="d-flex comment-block">
                         <div class="mx-0 mt-2 mb-2 mx-md-2 ">
                             <div class="tab-content">
-                                <div class="tab-pane container active" id="write">
+                                <div class="tab-pane container active" id="forms">
                                     {% csrf_token %}
                                     {{comment_form.media}}
                                     {{comment_form.as_p}}
@@ -41,19 +41,7 @@
                                 <button type="submit" class="btn-primary btn">Comment</button>
                             </div>
                         </div>
-                        <div class="col-auto">
 
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Quote comment
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                {% for b in comments %}
-                                <a class="dropdown-item">{{ b.comment.content | slice_and_dot | safe}}</a>
-                                {% endfor %}
-                            </div>
-
-                        </div>
                     </div>
                 </div>
             </form>

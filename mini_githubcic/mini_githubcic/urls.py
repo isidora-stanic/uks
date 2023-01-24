@@ -54,5 +54,6 @@ urlpatterns = [
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
     path('comments/<int:pk>/update', CommentUpdateView.as_view(), name='comment_update'),
+    path('comments/<int:pk>/delete', CommentDeleteView.as_view(), name='comment_delete'),
     path('comments/<int:pk>/reaction/<str:rid>', toggle_reaction, name='comment_reaction'),
 ]

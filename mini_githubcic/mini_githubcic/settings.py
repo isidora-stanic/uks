@@ -132,3 +132,17 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar_Basic': [
+            ['Styles', 'Format'],
+            ['Bold', 'Italic', 'Underline', 'RemoveFormat'],
+            ['Link', 'Unlink', 'Anchor'],
+            ['Image', 'Table', 'HorizontalRule', 'Smiley'],
+            ['Blockquote'],
+            ['Source'],
+        ],
+        'toolbar': 'Basic',
+    },
+}
