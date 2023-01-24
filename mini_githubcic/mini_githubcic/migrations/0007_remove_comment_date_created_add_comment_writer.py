@@ -8,7 +8,7 @@ import colorfield.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mini_githubcic', '0004_alter_commit_parents'),
+        ('mini_githubcic', '0006_merge_20230123_2154'),
     ]
 
     operations = [

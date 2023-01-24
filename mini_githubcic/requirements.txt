@@ -1,4 +1,6 @@
-django
+django~=4.1.5
 django-crispy-forms
 django-colorfield
+requests~=2.28.2
+Markdown~=3.4.1
 django-ckeditor

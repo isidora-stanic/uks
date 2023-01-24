@@ -2,48 +2,67 @@
 {% load crispy_forms_tags %}
 {% block content %}
 <h1 class="title">Profile overview</h1>
-
-    <div class="row">
-        <div class="col-auto">
-            <label><b>Username</b></label>
+    <div class="container">
+        <div class="row">
+            <div class="col-auto">
+                <label><b>Username</b></label>
+            </div>
+            <div class="col-auto">
+                <p>{{user.username}}</p>
+            </div>
+            
         </div>
-        <div class="col-auto">
-            <p>{{user.username}}</p>
-        </div>
+        <div class="row">
+            {%if authorized_account.login %}
+                <div class="col-auto">
+                    <a href="#" class="btn btn-success disabled"><span class="fa fa-github"></span>Linked to {{ authorized_account.login }}</a>
+                </div>
+            {%else %}
+                <p>{{ error_msg }}</p>
+                <div class="col-auto">
+                    <a href="{{ github_oauth_url }}" class="btn btn-danger"><span class="fa fa-github"></span>Authorize github</a>
+                </div>
+            {%endif%}
+        </div><br>
     </div>
 
-    <h1 class="title">User's public repositories</h1>
-    {% if projects %}
-    {% for project in projects %}
-    <div class="card mb-3">
-        <div class="card-body">
-            <p class="card-text">{{ project }} </p>
-            <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
-        </div>
-    </div>
-    {% endfor %}
-    {% else %}
-    This user has no repositories.
-    {% endif %}
-    <h1 class="title">User's contributions</h1>
-    {% if commits %}
-    
-        <div class="tab-content">
-            <div class="tab-pane  active" >
-                {% for c in commits %}
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <p class="card-text h5"><span class="text-muted">[{{ c }}]</span> <b>{{ c.log_message }}</b></p>
-                            <p class="card-text h6"><b>{{ c.author.username }}</b> <span class="text-muted">committed on {{ c.date_time }}</span></p>
-                            <a href="{% url 'commit_detail' c.id %}">View</a>
-                        </div>
-                    </div>
-                {% endfor %}
+    <h1 class="title">User's public projects</h1>
+    <div class="container">
+        
+        {% if projects %}
+        {% for project in projects %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <p class="card-text">{{ project }} </p>
+                <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
             </div>
         </div>
-    
-    {% else %}
-    This user has no commits.
-    {% endif %}
+        {% endfor %}
+        {% else %}
+        This user has no projects.
+        {% endif %}
+    </div>
+    <h1 class="title">User's contributions</h1>
+    <div class="container">
+        {% if commits %}
+        
+            <div class="tab-content">
+                <div class="tab-pane  active" >
+                    {% for c in commits %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <p class="card-text h5"><span class="text-muted">[{{ c }}]</span> <b>{{ c.log_message }}</b></p>
+                                <p class="card-text h6"><b>{{ c.author.username }}</b> <span class="text-muted">committed on {{ c.date_time }}</span></p>
+                                <a href="{% url 'commit_detail' c.id %}">View</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        
+        {% else %}
+        This user has no commits.
+        {% endif %}
+    </div>
 
 {% endblock content %}

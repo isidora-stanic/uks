@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <br>
+    <div class="row">
+        <div class="col-auto">
+            <a href="#" class="btn btn-success disabled"><span class="fa fa-github"></span>Linked to {{ github_account.login }}</a>
+        </div>
+    </div><br>
+    <div class="row">
+        <div class="col">
+            <h4 class="text-success">Owned repositories</h4>
+            <hr>
+            {%  for item in repo_info.json %}
+            {%if item.owner.login|lower == github_account.login|lower %}
+            <h3>{{ item.name }}</h3>
+            <h5>{{ item.full_name }}</h5>
+                {% if item.private %}
+                    <p>Private</p>
+                {% else %}
+                    <p>Public</p>
+                {% endif %}
+                <p>Owner: {{ item.owner.login }}</p>
+                <a href="{{ item.html_url }}">See on Github</a>
+                <p>{{ item.description }}</p>
+                <p>There is more...</p>
+                <hr>
+            {%endif%}
+            {% endfor %}
+        </div>
+        <div class="col">
+            <h4>Contributed in repositories</h4>
+            <hr>
+            {%  for item in repo_info.json %}
+            {%if item.owner.login|lower != github_account.login|lower %}
+            <h3>{{ item.name }}</h3>
+            <h5>{{ item.full_name }}</h5>
+                {% if item.private %}
+                    <p>Private</p>
+                {% else %}
+                    <p>Public</p>
+                {% endif %}
+                <p>Owner: {{ item.owner.login }}</p>
+                <a href="{{ item.html_url }}">See on Github</a>
+                <p>{{ item.description }}</p>
+                <p>There is more...</p>
+                <hr>
+            {%endif%}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<br>
+
+{% endblock %}

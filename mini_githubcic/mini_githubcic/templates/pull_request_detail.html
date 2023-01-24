@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Pull request details</h1>
+<article class="container">
+    <div>
+        <h2> {{ object.title }}</h2>
+        <p> {{ object.creator }} requested to merge
+            <a href="{% url 'branch_detail' object.source.id %}">{{ object.source.name }}</a> into
+            <a href="{% url 'branch_detail' object.target.id %}">{{ object.target.name }}</a>
+        </p>
+        <p> Description - {{ object.description }}</p>
+        <p> Date - {{ object.date_created }}</p>
+        <p> Assigned to - {{ object.assigned_to | title }}</p>
+        <p> Created by - {{ object.creator }}</p>
+        <p> State - {{ object.state }}</p>
+        <hr>
+    </div>
+    <div>
+        {% if request.user == object.creator %}
+        <a class="btn btn-primary" href="{% url 'pull_request_update' object.id %}">Update</a>
+        {% endif %}
+        {% if request.user == object.creator %}
+        <a class="btn btn-danger" href="{% url 'pull_request_delete' object.id %}">Delete</a>
+        {% endif %}
+    </div>
+</article>
+{% endblock content %}
