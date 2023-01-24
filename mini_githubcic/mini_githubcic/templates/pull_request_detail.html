@@ -10,8 +10,6 @@
             <a class="btn btn-secondary" href="{% url 'list_pull_requests' pr.project.id %}">Back to list</a>
             {% if request.user == pr.creator %}
             <a class="btn btn-primary" href="{% url 'pull_request_update' pr.id %}">Update</a>
-            {% endif %}
-            {% if request.user == pr.creator %}
             <a class="btn btn-danger" href="{% url 'pull_request_delete' pr.id %}">Delete</a>
             {% endif %}
         </div>
@@ -28,7 +26,16 @@
             <p> Assigned to - {{ pr.assigned_to | title }}</p>
             <p> Created by - {{ pr.creator }}</p>
             <p> State - {{ pr.state }}</p>
-            <hr>
+            <hr><h4>Labels</h4>
+            {% if pr.labels.all %} {% for label in pr.labels.all %}
+            <span
+                class="badge badge-primary"
+                style="background-color: {{label.color}}; margin-bottom: 10px; border-radius: 25px;"
+            >{{ label.name }}
+            </span>
+            {% endfor %}
+            {% else %} There are no added labels. {% endif %}
+            <hr/>
         </div>
         <div class="item1">
             {% block comment_content %}
