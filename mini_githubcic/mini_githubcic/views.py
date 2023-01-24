@@ -19,7 +19,7 @@ from django.views.generic import (
 from .github_api.service import get_user_info, search_repositories_by_user, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest, Comment, ReactionType, Reaction
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest, Comment, Reaction
 
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
@@ -27,6 +27,7 @@ from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
 from .forms import BranchForm, CommentForm
+from django.shortcuts import get_object_or_404
 
 
 from django.conf import settings
@@ -474,6 +475,11 @@ def milestone_close(request, pk=None):
 
 def toggle_reaction(request, pk=None, rid=None):
     c = Comment.objects.filter(id=pk).first()
+    link = ''
+    if Issue.objects.filter(id=c.task.id):
+        link = '/issues/{}'
+    else:
+        link = '/pull/requests/{}'
     if request.method == 'GET':
         reaction_list = Reaction.objects.filter(type=rid, comment__id=pk, user__id=request.user.id)
         if len(reaction_list) != 0:
@@ -481,7 +487,7 @@ def toggle_reaction(request, pk=None, rid=None):
         else:
             new_reaction = Reaction(type=rid, comment=c, user=request.user)
             new_reaction.save()
-        return redirect('/issues/{}'.format(c.task.id))
+        return redirect(link.format(c.task.id))
 
 
 class LabelListView(ListView):
@@ -705,6 +711,44 @@ class PullRequestUpdateView(UpdateView):
 class PullRequestDetailView(DetailView):
     model = PullRequest
     template_name = 'pull_request_detail.html'
+
+def pull_request_new_comment(request, pk):
+    reactions = add_reactions()
+
+    pullRequest = PullRequest.objects.filter(id=int(pk)).first()
+    if not pullRequest:
+        return redirect('/projects')
+
+    form = CommentForm()
+    comment_list = Comment.objects.filter(task__id=int(pk))
+    comments_reactions = []
+    for c in comment_list:
+        comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
+
+    obj_dict = {
+        'comment_form': form,
+        'pr': pullRequest,
+        'comments': comments_reactions,
+        'reactions': reactions
+    }
+
+    if request.method == 'POST':
+        form_data = CommentForm(request.POST)
+
+        if form_data.is_valid():
+            comment = Comment(**form_data.cleaned_data)
+            comment.task = pullRequest
+
+            if not request.user.is_authenticated:
+                obj_dict['error_add'] = 'User not authenticated'
+                return render(request, 'pull_request_detail.html', obj_dict)
+            else:
+                comment.writer = request.user
+                comment.date_time = timezone.now()
+                comment.save()
+                return redirect('/pull/requests/{}'.format(pk))
+
+    return render(request, 'pull_request_detail.html', obj_dict)
 
 
 class PullRequestDeleteView(DeleteView):

@@ -58,7 +58,7 @@ urlpatterns = [
     path('comments/<int:pk>/reaction/<str:rid>', toggle_reaction, name='comment_reaction'),
     path('projects/<int:pk>/pull/requests/', PullRequestListView.as_view(), name='list_pull_requests'),
     path('projects/<int:pk>/pull/requests/add', PullRequestCreateView.as_view(), name='add_pull_request'),
-    path('pull/requests/<int:pk>', PullRequestDetailView.as_view(), name='pull_request_detail'),
+    path('pull/requests/<int:pk>', pull_request_new_comment, name='pull_request_detail'),
     path('pull/requests/<int:pk>/update', PullRequestUpdateView.as_view(), name='pull_request_update'),
     path('pull/requests/<int:pk>/delete', PullRequestDeleteView.as_view(), name='pull_request_delete'),
 

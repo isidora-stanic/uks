@@ -5,12 +5,16 @@
 {% endif %}
 
 <div class="container">
-    {%if request.user in project.developers.all or request.user == project.lead %}
-    <a class="btn default-button" href="{% url 'add_pull_request' project_id %}">New pull request</a>
-    {%endif%}
-    <br/>
-
-
+    <div class="row">
+        <div class="col-auto mr-auto">
+           {%if request.user in project.developers.all or request.user == project.lead %}
+            <a class="btn default-button" href="{% url 'add_pull_request' project_id %}">New pull request</a>
+            {%endif%}
+        </div>
+        <div class="col-auto">
+            <a class="btn btn-primary" href="{% url 'project_detail' project_id %}">Back to project</a>
+        </div>
+    </div>
     {% if pull_requests %}
     <div class="container">
         <div style="padding:10px">

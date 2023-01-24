@@ -7,7 +7,7 @@
               <h2> #{{ issue.id }} - {{ issue.title }}</h2>
           </div>
         <div class="col-auto">
-            <a class="btn btn-primary" href="{% url 'project_issues' issue.project.id %}">Back to project</a>
+            <a class="btn btn-secondary" href="{% url 'project_issues' issue.project.id %}">Back to list</a>
         {%if request.user in issue.project.developers.all %}
             <a class="btn btn-primary" href="{% url 'issue_update' issue.id %}">Update</a>
         {%endif%}
