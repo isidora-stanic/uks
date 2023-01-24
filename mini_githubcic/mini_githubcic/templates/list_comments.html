@@ -1,0 +1,121 @@
+{% load crispy_forms_tags %}
+{% load comment_extras %}
+{% if comments %}
+{% for c in comments %}
+<div class="comment-block" style="background-color: white">
+    <div class="min-width-0"></div>
+    <div class="d-flex comment-block">
+        <div class="col-auto mr-auto mt-md-2">
+            <p class="card-text"><b>{{ c.comment.writer.username }} </b> commented <i class="col-auto">
+                {{ c.comment.date_time|date:"d M, Y" }}</i>
+            </p>
+        </div>
+        <div class="col-auto">
+            <div class="row">
+                {% if request.user.is_authenticated %}
+                <div class="col mb-0">
+                    <details class="dropdown ">
+                        <summary aria-label="Add or remove reactions" aria-haspopup="true" data-view-component="true"
+                                 class="p-0 mr-0 d-flex px-1 py-2">
+                            <svg height="18" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="18"
+                                 data-view-component="true"
+                                 class="octicon octicon-smiley social-button-emoji">
+                                <path fill-rule="evenodd"
+                                      d="M1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0zM8 0a8 8 0 100 16A8 8 0 008 0zM5 8a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zM5.32 9.636a.75.75 0 011.038.175l.007.009c.103.118.22.222.35.31.264.178.683.37 1.285.37.602 0 1.02-.192 1.285-.371.13-.088.247-.192.35-.31l.007-.008a.75.75 0 111.222.87l-.614-.431c.614.43.614.431.613.431v.001l-.001.002-.002.003-.005.007-.014.019a1.984 1.984 0 01-.184.213c-.16.166-.338.316-.53.445-.63.418-1.37.638-2.127.629-.946 0-1.652-.308-2.126-.63a3.32 3.32 0 01-.715-.657l-.014-.02-.005-.006-.002-.003v-.002h-.001l.613-.432-.614.43a.75.75 0 01.183-1.044h.001z">
+                                </path>
+                            </svg>
+                        </summary>
+                        <form method="post">
+                            <ul class="dropdown-menu mt-2 d-flex mb-2 " style="margin-left:-500px;">
+                                {% for reaction in reactions %}
+                                {% if reaction.type|one_more:request.user|is_selected:c.comment %}
+                                <li role="presentation">
+                                    <a type="submit" data-view-component="true" class="dropdown-item btn"
+                                       style="    background-color: #f6f8fa;"
+                                       href="{% url 'comment_reaction' c.comment.id reaction.type%}">
+                                        <g-emoji alias="{{reaction.type}}"
+                                                 fallback-src="{{reaction.link}}"
+                                                 class="d-flex">{{reaction.emoji}}
+                                        </g-emoji>
+                                    </a>
+                                </li>
+                                {%else%}
+                                <li role="presentation">
+                                    <a type="submit" data-view-component="true" class="dropdown-item btn"
+                                       href="{% url 'comment_reaction' c.comment.id reaction.type%}">
+                                        <g-emoji alias="{{reaction.type}}"
+                                                 fallback-src="{{reaction.link}}"
+                                                 class="d-flex">{{reaction.emoji}}
+                                        </g-emoji>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+
+                            </ul>
+                        </form>
+                    </details>
+                </div>
+                {%endif%}
+                {%if request.user in issue.project.developers.all %}
+                <div class="col mb-0">
+                    <a type="button"
+                       aria-haspopup="true"
+                       style="font-size: 30px !important; border: none !important;
+                            background: none !important; margin-top: -15px;"
+                       id="dropdownMenuButton" data-toggle="dropdown">
+                        &#8230;
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item"
+                           type="submit"
+                           href="{% url 'comment_update' c.comment.id %}"
+                           >Edit comment</a>
+                        <a class="dropdown-item"
+                           type="submit"
+                           href="{% url 'comment_delete' c.comment.id %}"
+                           style="color:red;"
+                           >Delete comment</a>
+                    </div>
+                </div>
+                {%endif%}
+            </div>
+        </div>
+    </div>
+    <div style="background-color: white; text-align: left;">
+        <div class="m-b-i" dir="auto">{{c.comment.content|safe}}</div>
+    </div>
+    <div class="d-flex" style="background-color: white; text-align: left;">
+        {% for reaction in reactions %}
+        {%if c.reactions|len_by_type:reaction.type != 0 %}
+        {% if request.user.is_authenticated %}
+        <a title="{{reaction.type}}"
+           type="submit"
+           class="reaction_container d-flex"
+           href="{% url 'comment_reaction' c.comment.id reaction.type%}">
+            <g-emoji alias="{{reaction.type}}"
+                     fallback-src="{{reaction.link}}"
+                     class="social-button-emoji">{{reaction.emoji}}
+            </g-emoji>
+            <span class="reaction_number">{{c.reactions|len_by_type:reaction.type}}</span>
+        </a>
+        {%else%}
+        <a title="{{reaction.type}}"
+           class="reaction_container d-flex">
+            <g-emoji alias="{{reaction.type}}"
+                     fallback-src="{{reaction.link}}"
+                     class="social-button-emoji">{{reaction.emoji}}
+            </g-emoji>
+            <span class="reaction_number">{{c.reactions|len_by_type:reaction.type}}</span>
+        </a>
+        {%endif%}
+        {%endif%}
+        {% endfor %}
+
+    </div>
+</div>
+<br/>
+{% endfor %}
+{% else %}
+There are no added comments.
+{% endif %}

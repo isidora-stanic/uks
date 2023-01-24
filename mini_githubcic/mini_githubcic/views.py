@@ -19,13 +19,19 @@ from django.views.generic import (
 from .github_api.service import get_user_info, search_repositories_by_user, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, PullRequest, Comment, Reaction
 
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import login, logout
 from django.db.models import Q
 import uuid
+from .forms import BranchForm, CommentForm
+from django.shortcuts import get_object_or_404
+
+
+from django.conf import settings
+
 
 from django.conf import settings
 
@@ -154,34 +160,78 @@ class IssueCreateView(CreateView):
         return context
 
 
-class BranchCreateView(CreateView):
-    model = Branch
-    template_name = 'new_branch.html'
-    fields = ['name', 'parent_branch']
+def new_branch(request, pk):
+    project = Project.objects.filter(id=int(pk)).first()
+    if not project:
+        return redirect('/projects')
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        form.instance.project = context['project']
-        if Branch.objects.filter(project_id=form.instance.project.id, name=form.instance.name).exists():
-            form.add_error(None, 'Name already in use')
-            return super().form_invalid(form)
+    branches = Branch.objects.filter(project=project)
+    form = BranchForm(pk)
+    obj_dict = {
+        'form': form,
+        'project': project,
+        'branches': branches,
+    }
 
-        f = Commit.objects.filter(branches__id__in=[form.instance.parent_branch.id])
-        self.object = form.save()
-        for c in f:
-            c.branches.add(self.object)
-            c.save()
+    if request.method == 'POST':
+        form_data = BranchForm(pk, request.POST)
 
-        return HttpResponseRedirect(self.get_success_url())
+        if form_data.is_valid():
+            branch = Branch(**form_data.cleaned_data)
+            branch.project = project
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(BranchCreateView, self).get_context_data(*args, **kwargs)
-        context['project_id'] = self.request.resolver_match.kwargs['pk']
-        context['project'] = Project.objects.filter(id=int(context['project_id'])).first()
-        context['branches'] = Branch.objects.filter(project__id=context['project_id'])
-        # self.fields['sel1'].choices = [(b.id, b.name, b) for b in context['branches']] TODO filter select vals
+            if Branch.objects.filter(project_id=branch.project.id, name=branch.name).exists():
+                obj_dict['error_add'] = 'Name already in use'
+                return render(request, 'new_branch.html', obj_dict)
+            else:
+                f = Commit.objects.filter(branches__id__in=[branch.parent_branch.id])
+                branch.save()
+                for c in f:
+                    c.branches.add(branch)
+                    c.save()
 
-        return context
+                return redirect('/branches/{}'.format(str(branch.id)))
+
+    return render(request, 'new_branch.html', obj_dict)
+
+
+def new_comment(request, pk):
+    reactions = add_reactions()
+
+    issue = Issue.objects.filter(id=int(pk)).first()
+    if not issue:
+        return redirect('/projects')
+
+    form = CommentForm()
+    comment_list = Comment.objects.filter(task__id=int(pk))
+    comments_reactions = []
+    for c in comment_list:
+        comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
+
+    obj_dict = {
+        'comment_form': form,
+        'issue': issue,
+        'comments': comments_reactions,
+        'reactions': reactions
+    }
+
+    if request.method == 'POST':
+        form_data = CommentForm(request.POST)
+
+        if form_data.is_valid():
+            comment = Comment(**form_data.cleaned_data)
+            comment.task = issue
+
+            if not request.user.is_authenticated:
+                obj_dict['error_add'] = 'User not authenticated'
+                return render(request, 'issue_detail.html', obj_dict)
+            else:
+                comment.writer = request.user
+                comment.date_time = timezone.now()
+                comment.save()
+                return redirect('/issues/{}'.format(pk))
+
+    return render(request, 'issue_detail.html', obj_dict)
 
 
 class ProjectUpdateView(UpdateView):
@@ -233,6 +283,22 @@ class BranchUpdateView(UpdateView):
         return context
 
 
+class CommentUpdateView(UpdateView):
+    model = Comment
+    template_name = 'comment_update.html'
+    fields = ['content']
+
+    def form_valid(self, form):
+        if form.instance.content in [None, "", []]:
+            form.add_error(None, 'Comment must have content')
+            return super().form_invalid(form)
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('issue_detail', kwargs={'pk': self.object.task.id})
+
+
 class ProjectDetailView(DetailView):
     model = Project
     template_name = 'project_detail.html'
@@ -252,6 +318,13 @@ class ProjectDetailView(DetailView):
 class IssueDetailView(DetailView):
     model = Issue
     template_name = 'issue_detail.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(IssueDetailView, self).get_context_data(*args, **kwargs)
+        context['issue_id'] = self.request.resolver_match.kwargs['pk']
+        context['issue'] = Issue.objects.filter(id=context['issue_id']).first()
+        context['comments'] = Comment.objects.filter(task__id=context['issue_id'])
+        return context
 
 
 class BranchDetailView(DetailView):
@@ -283,11 +356,21 @@ class BranchDeleteView(DeleteView):
     template_name = 'branch_delete.html'
 
     def test_func(self):
-        # TODO check if request sender is developer on the project
         return True
 
     def get_success_url(self):
         return reverse_lazy('project_branches', kwargs={'pk': self.object.project.id})
+
+
+class CommentDeleteView(DeleteView):
+    model = Comment
+    template_name = 'comment_delete.html'
+
+    def test_func(self):
+        return True
+
+    def get_success_url(self):
+        return reverse_lazy('issue_detail', kwargs={'pk': self.object.task.id})
 
 
 class MilestoneListView(ListView):
@@ -393,6 +476,23 @@ def milestone_close(request, pk=None):
         return redirect(milestone)
 
 
+def toggle_reaction(request, pk=None, rid=None):
+    c = Comment.objects.filter(id=pk).first()
+    link = ''
+    if Issue.objects.filter(id=c.task.id):
+        link = '/issues/{}'
+    else:
+        link = '/pull/requests/{}'
+    if request.method == 'GET':
+        reaction_list = Reaction.objects.filter(type=rid, comment__id=pk, user__id=request.user.id)
+        if len(reaction_list) != 0:
+            reaction_list.first().delete()
+        else:
+            new_reaction = Reaction(type=rid, comment=c, user=request.user)
+            new_reaction.save()
+        return redirect(link.format(c.task.id))
+
+
 class LabelListView(ListView):
     model = Label
     template_name = 'list_labels.html'
@@ -485,8 +585,6 @@ class ProfilePreview(DetailView):
         return context
     
 
-
-
 class CommitCreateView(CreateView):
     model = Commit
     template_name = 'new_commit.html'
@@ -528,6 +626,26 @@ class CommitDetailView(DetailView):
         context['branches'] = self.get_object().branches.all()
         return context
 
+
+def add_reactions():
+    reactions = []
+    reactions.append({'type': 'LIKE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png', 'emoji': '👍'})
+    reactions.append({'type': 'DISLIKE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f44e.png', 'emoji': '👎'})
+    reactions.append({'type': 'SMILE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f389.png', 'emoji': '😄'})
+    reactions.append({'type': 'TADA',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f604.png', 'emoji': '🎉'})
+    reactions.append({'type': 'THINKING_FACE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f604.png', 'emoji': '😕'})
+    reactions.append({'type': 'HEART',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/2764.png', 'emoji': '❤'})
+    reactions.append({'type': 'ROCKET',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f680.png', 'emoji': '🚀'})
+    reactions.append({'type': 'EYES',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f440.png', 'emoji': '👀'})
+    return reactions
 
 
 class PullRequestListView(ListView):
@@ -596,6 +714,44 @@ class PullRequestUpdateView(UpdateView):
 class PullRequestDetailView(DetailView):
     model = PullRequest
     template_name = 'pull_request_detail.html'
+
+def pull_request_new_comment(request, pk):
+    reactions = add_reactions()
+
+    pullRequest = PullRequest.objects.filter(id=int(pk)).first()
+    if not pullRequest:
+        return redirect('/projects')
+
+    form = CommentForm()
+    comment_list = Comment.objects.filter(task__id=int(pk))
+    comments_reactions = []
+    for c in comment_list:
+        comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
+
+    obj_dict = {
+        'comment_form': form,
+        'pr': pullRequest,
+        'comments': comments_reactions,
+        'reactions': reactions
+    }
+
+    if request.method == 'POST':
+        form_data = CommentForm(request.POST)
+
+        if form_data.is_valid():
+            comment = Comment(**form_data.cleaned_data)
+            comment.task = pullRequest
+
+            if not request.user.is_authenticated:
+                obj_dict['error_add'] = 'User not authenticated'
+                return render(request, 'pull_request_detail.html', obj_dict)
+            else:
+                comment.writer = request.user
+                comment.date_time = timezone.now()
+                comment.save()
+                return redirect('/pull/requests/{}'.format(pk))
+
+    return render(request, 'pull_request_detail.html', obj_dict)
 
 
 class PullRequestDeleteView(DeleteView):
