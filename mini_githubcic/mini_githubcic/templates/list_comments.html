@@ -1,11 +1,12 @@
 {% load crispy_forms_tags %}
+{% load comment_extras %}
 {% if comments %}
 {% for c in comments %}
 <div class="comment-block" style="background-color: white">
     <div class="min-width-0"></div>
     <div class="d-flex comment-block">
         <div class="col-auto mr-auto mt-md-2">
-            <p class="card-text"><b>{{ c.writer.username }} </b> commented <i class="col-auto"> {{ c.date_time }}</i>
+            <p class="card-text"><b>{{ c.comment.writer.username }} </b> commented <i class="col-auto"> {{ c.comment.date_time|date:"d M, Y" }}</i>
             </p>
         </div>
         <div class="col-auto">
@@ -24,71 +25,32 @@
                             </svg>
                         </summary>
                         <form method="post">
-                            <ul class="dropdown-menu mt-2 d-flex mb-2 ">
+                            <ul class="dropdown-menu mt-2 d-flex mb-2 " style="margin-left:-500px;">
+                                {% for reaction in reactions %}
+                                {% if reaction.type|one_more:request.user|is_selected:c.comment %}
                                 <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="+1"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png"
-                                                 class="d-flex">👍
+                                    <a type="submit" data-view-component="true" class="dropdown-item btn"
+                                       style="    background-color: #f6f8fa;"
+                                        href="{% url 'comment_reaction' c.comment.id reaction.type%}">
+                                        <g-emoji alias="{{reaction.type}}"
+                                                 fallback-src="{{reaction.link}}"
+                                                 class="d-flex">{{reaction.emoji}}
                                         </g-emoji>
-                                    </button>
+                                    </a>
                                 </li>
+                                {%else%}
                                 <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="-1"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f44e.png"
-                                                 class="d-flex">👎
+                                    <a type="submit" data-view-component="true" class="dropdown-item btn"
+                                        href="{% url 'comment_reaction' c.comment.id reaction.type%}">
+                                        <g-emoji alias="{{reaction.type}}"
+                                                 fallback-src="{{reaction.link}}"
+                                                 class="d-flex">{{reaction.emoji}}
                                         </g-emoji>
-                                    </button>
+                                    </a>
                                 </li>
-                                <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="smile"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f604.png"
-                                                 class="d-flex">😄
-                                        </g-emoji>
-                                    </button>
-                                </li>
-                                <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="tada"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f389.png"
-                                                 class="d-flex">🎉
-                                        </g-emoji>
-                                    </button>
-                                </li>
-                                <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="thinking_face"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f615.png"
-                                                 class="d-flex">😕
-                                        </g-emoji>
-                                    </button>
-                                </li>
-                                <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="heart"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/2764.png"
-                                                 class="d-flex">❤️
-                                        </g-emoji>
-                                    </button>
-                                </li>
-                                <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="rocket"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f680.png"
-                                                 class="d-flex">🚀
-                                        </g-emoji>
-                                    </button>
-                                </li>
-                                <li role="presentation">
-                                    <button type="submit" data-view-component="true" class="dropdown-item btn">
-                                        <g-emoji alias="eyes"
-                                                 fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f440.png"
-                                                 class="d-flex">👀
-                                        </g-emoji>
-                                    </button>
-                                </li>
+                                {% endif %}
+                                {% endfor %}
+
                             </ul>
                         </form>
                     </details>
@@ -97,7 +59,7 @@
                 {%if request.user in issue.project.developers.all %}
                 <div class="col mb-0">
                     <a type="submit"
-                       href="{% url 'comment_update' c.id %}"
+                       href="{% url 'comment_update' c.comment.id %}"
                        style="font-size: 30px !important; border: none !important;
                             background: none !important; margin-top: -15px;"
                        title="Edit comment">
@@ -109,7 +71,35 @@
         </div>
     </div>
     <div style="background-color: white; text-align: left;">
-        <div class="m-b-i" dir="auto">{{c.content|safe}}</div>
+        <div class="m-b-i" dir="auto">{{c.comment.content|safe}}</div>
+    </div>
+    <div class="d-flex" style="background-color: white; text-align: left;">
+        {% for reaction in reactions %}
+            {%if c.reactions|len_by_type:reaction.type != 0 %}
+                {% if request.user.is_authenticated %}
+                <a title="{{reaction.type}}"
+                        type="submit"
+                        class="reaction_container d-flex"
+                        href="{% url 'comment_reaction' c.comment.id reaction.type%}">
+                    <g-emoji alias="{{reaction.type}}"
+                             fallback-src="{{reaction.link}}"
+                             class="social-button-emoji">{{reaction.emoji}}
+                    </g-emoji>
+                    <span class="reaction_number">{{c.reactions|len_by_type:reaction.type}}</span>
+                </a>
+                {%else%}
+                <a title="{{reaction.type}}"
+                        class="reaction_container d-flex">
+                    <g-emoji alias="{{reaction.type}}"
+                             fallback-src="{{reaction.link}}"
+                             class="social-button-emoji">{{reaction.emoji}}
+                    </g-emoji>
+                    <span class="reaction_number">{{c.reactions|len_by_type:reaction.type}}</span>
+                </a>
+                {%endif%}
+            {%endif%}
+        {% endfor %}
+
     </div>
 </div>
 <br/>

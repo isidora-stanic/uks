@@ -20,8 +20,13 @@ class Visibility(models.TextChoices):
 
 class ReactionType(models.TextChoices):
     LIKE = 'LIKE'
+    DISLIKE = 'DISLIKE'
+    SMILE = 'SMILE'
+    TADA = 'TADA'
+    THINKING_FACE = 'THINKING_FACE'
     HEART = 'HEART'
-    SMILEY = 'SMILEY'
+    ROCKET = 'ROCKET'
+    EYES = 'EYES'
     
     
 class User(AbstractBaseUser):
@@ -179,6 +184,6 @@ class PullRequest(Task):
 
 
 class Reaction(models.Model):
-    type = ReactionType.choices
+    type = models.CharField(max_length=20, choices=ReactionType.choices, default=ReactionType.LIKE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)

@@ -49,7 +49,7 @@
                             </button>
                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                 {% for b in comments %}
-                                <a class="dropdown-item">{{ b.content | slice_and_dot | safe}}</a>
+                                <a class="dropdown-item">{{ b.comment.content | slice_and_dot | safe}}</a>
                                 {% endfor %}
                             </div>
 

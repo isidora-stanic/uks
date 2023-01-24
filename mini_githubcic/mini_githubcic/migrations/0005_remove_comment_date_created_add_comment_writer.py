@@ -31,4 +31,12 @@ class Migration(migrations.Migration):
             name='color',
             field=colorfield.fields.ColorField(default='#00000', image_field=None, max_length=18, samples=None),
         ),
+        migrations.AddField(
+            model_name='reaction',
+            name='type',
+            field=models.CharField(
+                choices=[('LIKE', 'Like'), ('DISLIKE', 'Dislike'), ('SMILE', 'Smile'), ('TADA', 'Tada'),
+                         ('THINKING_FACE', 'Thinking Face'), ('HEART', 'Heart'), ('ROCKET', 'Rocket'),
+                         ('EYES', 'Eyes')], default='LIKE', max_length=20),
+        ),
     ]

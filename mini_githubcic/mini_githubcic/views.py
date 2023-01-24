@@ -10,7 +10,7 @@ from django.views.generic import (
     DeleteView
 )
 
-from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, Comment
+from .models import Project, User, Milestone, Issue, Label, Branch, Commit, Visibility, Comment, ReactionType, Reaction
 
 from django.urls import reverse_lazy
 from django.contrib.auth import login, logout
@@ -178,15 +178,23 @@ def new_branch(request, pk):
 
 
 def new_comment(request, pk):
+    reactions = add_reactions()
+
     issue = Issue.objects.filter(id=int(pk)).first()
     if not issue:
         return redirect('/projects')
 
     form = CommentForm()
+    comment_list = Comment.objects.filter(task__id=int(pk))
+    comments_reactions = []
+    for c in comment_list:
+        comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
+
     obj_dict = {
         'comment_form': form,
         'issue': issue,
-        'comments': Comment.objects.filter(task__id=int(pk)),
+        'comments': comments_reactions,
+        'reactions': reactions
     }
 
     if request.method == 'POST':
@@ -330,7 +338,6 @@ class BranchDeleteView(DeleteView):
     template_name = 'branch_delete.html'
 
     def test_func(self):
-        # TODO check if request sender is developer on the project
         return True
 
     def get_success_url(self):
@@ -438,6 +445,19 @@ def milestone_close(request, pk=None):
         milestone.is_open = not milestone.is_open
         milestone.save()
         return redirect(milestone)
+
+
+def toggle_reaction(request, pk=None, rid=None):
+    c = Comment.objects.filter(id=pk).first()
+    if request.method == 'GET':
+        reaction_list = Reaction.objects.filter(type=rid, comment__id=pk, user__id=request.user.id)
+        if len(reaction_list) != 0:
+            reaction_list.first().delete()
+        else:
+            new_reaction = Reaction(type=rid, comment=c, user=request.user)
+            new_reaction.save()
+        return redirect('/issues/{}'.format(c.task.id))
+
 
 class LabelListView(ListView):
     model = Label
@@ -565,3 +585,25 @@ class CommitDetailView(DetailView):
         context['parents'] = self.get_object().parents.all()
         context['branches'] = self.get_object().branches.all()
         return context
+
+
+def add_reactions():
+    reactions = []
+    reactions.append({'type': 'LIKE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f44d.png', 'emoji': '👍'})
+    reactions.append({'type': 'DISLIKE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f44e.png', 'emoji': '👎'})
+    reactions.append({'type': 'SMILE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f389.png', 'emoji': '😄'})
+    reactions.append({'type': 'TADA',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f604.png', 'emoji': '🎉'})
+    reactions.append({'type': 'THINKING_FACE',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f604.png', 'emoji': '😕'})
+    reactions.append({'type': 'HEART',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/2764.png', 'emoji': '❤'})
+    reactions.append({'type': 'ROCKET',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f680.png', 'emoji': '🚀'})
+    reactions.append({'type': 'EYES',
+                      'link': 'https://github.githubassets.com/images/icons/emoji/unicode/1f440.png', 'emoji': '👀'})
+    return reactions
+

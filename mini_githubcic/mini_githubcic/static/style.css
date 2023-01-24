@@ -88,3 +88,24 @@ ul {
     border: none !important;
     background: none !important;
 }
+
+.reaction_container{
+    height: 26px;
+    padding: 0 4px !important;
+    margin-right: 0 !important;
+    font-size: 12px;
+    line-height: 26px;
+    background-color: transparent;
+    border: 1px solid var(--color-border-default, #d2dff0);
+    border-radius: 100px;
+    margin-left: 10px !important;
+    margin-bottom: 10px !important;
+    margin-top: 10px !important;
+}
+.reaction_number{
+    height: 24px;
+    padding: 0 4px;
+    margin-left: 2px;
+    color: #57606a !important;
+    text-decoration: none !important;
+}

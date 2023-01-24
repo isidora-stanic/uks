@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 
 from mini_githubcic.models import *
 import uuid
+from django.utils import timezone
 
 
 class Command(BaseCommand):
@@ -165,17 +166,48 @@ class Command(BaseCommand):
         c2.save()
 
     def _insert_comments(self):
+        Reaction.objects.all().delete()
         Comment.objects.all().delete()
 
         u1 = User.objects.get(username="U1")
+        u2 = User.objects.get(username="U2")
+        u3 = User.objects.get(username="U2")
+
         i1 = Issue.objects.get(title="issue1")
 
-        c1 = Comment(content="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", writer=u1, task=i1)
-        c2 = Comment(content="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", writer=u1, task=i1)
+        c1 = Comment(content="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                     writer=u1, task=i1)
+        c2 = Comment(content="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                     writer=u1, task=i1)
 
         c1.save()
         c2.save()
 
+        r1 = Reaction(type=ReactionType.LIKE, comment=c1, user=u1)
+        r2 = Reaction(type=ReactionType.LIKE, comment=c1, user=u2)
+        r3 = Reaction(type=ReactionType.LIKE, comment=c1, user=u3)
+        r4 = Reaction(type=ReactionType.ROCKET, comment=c1, user=u1)
+        r5 = Reaction(type=ReactionType.EYES, comment=c1, user=u1)
+        r6 = Reaction(type=ReactionType.THINKING_FACE, comment=c1, user=u1)
+        r7 = Reaction(type=ReactionType.SMILE, comment=c1, user=u1)
+        r8 = Reaction(type=ReactionType.HEART, comment=c1, user=u2)
+        r9 = Reaction(type=ReactionType.HEART, comment=c1, user=u3)
+        r10 = Reaction(type=ReactionType.DISLIKE, comment=c1, user=u2)
+        r11 = Reaction(type=ReactionType.DISLIKE, comment=c1, user=u3)
+        r12 = Reaction(type=ReactionType.TADA, comment=c1, user=u1)
+
+        r1.save()
+        r2.save()
+        r3.save()
+        r4.save()
+        r5.save()
+        r6.save()
+        r7.save()
+        r8.save()
+        r9.save()
+        r10.save()
+        r11.save()
+        r12.save()
 
     def handle(self, *args, **options):
         self._insert_users()
