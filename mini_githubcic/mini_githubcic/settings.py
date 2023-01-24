@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'colorfield',
+    'ckeditor'
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,20 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar_Basic': [
+            ['Styles', 'Format'],
+            ['Bold', 'Italic', 'Underline', 'RemoveFormat'],
+            ['Link', 'Unlink', 'Anchor'],
+            ['Image', 'Table', 'HorizontalRule', 'Smiley'],
+            ['Blockquote'],
+            ['Source'],
+        ],
+        'toolbar': 'Basic',
+    },
+}
 
 # Github OAuth App information - can be replaced anytime with another OAuth App's info
 # Currently Mini Github-cic from isidora-stanic

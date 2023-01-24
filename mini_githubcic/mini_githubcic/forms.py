@@ -1,5 +1,5 @@
 from django.forms import ModelForm, ModelMultipleChoiceField, CheckboxSelectMultiple
-from .models import Label, Issue, Branch, PullRequest
+from .models import Label, Issue, Branch, PullRequest, Project, Comment
 
 
 class NewIssueForm(ModelForm):
@@ -85,3 +85,25 @@ class UpdatePullRequestForm(ModelForm):
     class Meta:
         model = PullRequest
         fields = ['title', 'description', 'assigned_to', 'labels']
+
+
+class BranchForm(ModelForm):
+
+    class Meta:
+        model = Branch
+        fields = ['name', 'parent_branch']
+
+    def __init__(self, project_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        project = Project.objects.get(id=project_id)
+        self.fields['parent_branch'].queryset = Branch.objects.filter(project=project)
+
+
+class CommentForm(ModelForm):
+
+    class Meta:
+        model = Comment
+        fields = ['content']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

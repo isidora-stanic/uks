@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import UserManager
 from colorfield.fields import ColorField
 from mini_githubcic.managers import GitUserManager
+from ckeditor.fields import RichTextField
 
 
 class State(models.TextChoices):
@@ -20,13 +21,20 @@ class Visibility(models.TextChoices):
 
 class ReactionType(models.TextChoices):
     LIKE = 'LIKE'
+    DISLIKE = 'DISLIKE'
+    SMILE = 'SMILE'
+    TADA = 'TADA'
+    THINKING_FACE = 'THINKING_FACE'
     HEART = 'HEART'
-    SMILEY = 'SMILEY'
+    ROCKET = 'ROCKET'
+    EYES = 'EYES'
     
     
 class User(AbstractBaseUser):
     username = models.CharField(max_length=20, unique=True, blank=False)
     password = models.CharField(max_length=20)
+    
+    access_token = models.CharField(max_length=255, unique=False, blank=True, null=True)
     
     is_superuser = models.BooleanField(default=False)
 
@@ -51,7 +59,7 @@ class User(AbstractBaseUser):
         db_table = u'users'
 
     def get_absolute_url(self):
-        return reverse('login') #TODO user_detail
+        return reverse('login')
 
 
 class Project(models.Model):
@@ -128,8 +136,8 @@ class StateChange(Event):
 
 
 class Comment(Event):
-    content = models.CharField(max_length=2000)
-    date_created = models.DateTimeField(default=timezone.now)
+    content = RichTextField(blank=True, null=True)
+    writer = models.ForeignKey(User, blank=False, related_name='writer', on_delete=models.CASCADE)
 
 
 class Branch(models.Model):
@@ -182,6 +190,6 @@ class PullRequest(Task):
         return reverse('pull_request_detail', kwargs={'pk': self.pk})
 
 class Reaction(models.Model):
-    type = ReactionType.choices
+    type = models.CharField(max_length=20, choices=ReactionType.choices, default=ReactionType.LIKE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
