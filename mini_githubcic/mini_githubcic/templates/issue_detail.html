@@ -1,36 +1,62 @@
 {% extends "base.html" %}
 {% block content %}
 <h1 class="title">Issue details</h1>
-<article class="container">
-    <div>
-        <h2> #{{ object.id }} - {{ object.title }}</h2>
-        <p> Description - {{ object.description }}</p>
-        <p> Creator - {{ object.creator }}</p>
-        <p> Assignee - {{ object.assigned_to }}</p>
-        <p> Date Created - {{ object.date_created }}</p>
-        <p> Milestone - {{ object.milestone }}</p>
-        <p> Project - {{ object.project }}</p>
-        <p> Open - {{ object.is_open }}</p>
-    </div>
-    <div>
-        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>
-        {%if request.user in object.project.developers.all %}
-            <a class="btn btn-primary" href="{% url 'issue_update' object.id %}">Update</a>  
+<div class="container">
+    <div class="row">
+        <div class="col-auto mr-auto">
+              <h2> #{{ issue.id }} - {{ issue.title }}</h2>
+          </div>
+        <div class="col-auto">
+            <a class="btn btn-secondary" href="{% url 'project_issues' issue.project.id %}">Back to list</a>
+        {%if request.user in issue.project.developers.all %}
+            <a class="btn btn-primary" href="{% url 'issue_update' issue.id %}">Update</a>
         {%endif%}
-        
-        {%if request.user in object.project.developers.all %}
-            <a class="btn btn-warning" href="{% url 'issue_state_toggle' object.id %}">
-                {% if object.is_open %}
+
+        {%if request.user in issue.project.developers.all %}
+            <a class="btn btn-warning" href="{% url 'issue_state_toggle' issue.id %}">
+                {% if issue.is_open %}
                     Close
                 {% else %}
                     Reopen
                 {% endif %}
             </a>
         {%endif%}
-        
-        {%if request.user in object.project.developers.all %}
-            <a class="btn btn-danger" href="{% url 'issue_delete' object.id %}">Delete</a>
+
+        {%if request.user in issue.project.developers.all %}
+            <a class="btn btn-danger" href="{% url 'issue_delete' issue.id %}">Delete</a>
         {%endif%}
+        </div>
     </div>
-</article>
-{% endblock content %}
+    <div class="grid-container">
+        <div class="item1"></div>
+        <div class="item2 comment-block">
+            <p> Description - {{ issue.description }}</p>
+            <p> Creator - {{ issue.creator }}</p>
+            <p> Assignee - {{ issue.assigned_to }}</p>
+            <p> Date Created - {{ issue.date_created|date:"d M, Y" }}</p>
+            <p> Milestone - {{ issue.milestone }}</p>
+            <p> Project - {{ issue.project }}</p>
+            <p> Open - {{ issue.is_open }}</p>
+            <hr/>
+            <h4>Labels</h4>
+            {% if issue.labels.all %}
+            {% for label in issue.labels.all %}
+            <span
+                class="badge badge-primary"
+                style="background-color: {{label.color}}; margin-bottom: 10px; border-radius: 25px;"
+            >{{ label.name }}
+            </span>
+            {% endfor %}
+            {% else %} There are no added labels. {% endif %}
+            <hr/>
+        </div>
+        <div class="item1">
+        {% block comment_content %}
+           {% include "new_comment.html" %}
+        {% endblock %}
+        </div>
+    </div>
+
+    <br/>
+</div>
+{% endblock %}

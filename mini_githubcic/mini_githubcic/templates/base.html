@@ -18,10 +18,20 @@
 <header class=" custom-header">Mini GitHub-cic
     <nav class="container">
         <div class="row">
-          <div class="col-auto mr-auto">
-              <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
+          
+          {% if request.user.is_authenticated and request.user.access_token %}
+          <div class="col-auto ">
+            <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
           </div>
 
+          <div class="col-auto mr-auto">
+            <a class="nav-links" href="{% url 'list_repo_auth' %}">Repositories</a>
+          </div>
+          {%else%}
+          <div class="col-auto mr-auto">
+            <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
+          </div>
+          {%endif%}
           <div class="col-auto">
                 <div class="row">
                 	{% if not request.user.is_authenticated %}
@@ -41,7 +51,8 @@
                         <a  class="nav-links"  href="{% url 'list_notifications' request.user.username %}">My notifications</a>
                     </div>
                     <div class="col mb-0">
-                        <a  class="nav-links"  href="{% url 'profile_preview' request.user.username %}">My profile</a>
+                        <a  class="nav-links"  href="{% url 'profile_preview' request.user.username %}">Profile</a>
+
                     </div>
                     <div class="col mb-0">
                         <a  class="nav-links"  href="{% url 'logout' %}">Logout</a>

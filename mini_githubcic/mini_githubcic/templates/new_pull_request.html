@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-<h1 class="title">Edit issue</h1>
+<h1 class="title">Create new pull request</h1>
 <div class="container">
     <form method="POST">
         {% csrf_token %}
@@ -9,7 +9,7 @@
             {{ form | crispy }}
         </fieldset>
         <div class="form-group">
-            <a class="btn btn-primary" href="{% url 'issue_detail' issue.id %}">Cancel</a>
+            <a class="btn btn-danger" href="{% url 'list_pull_requests' project_id %}">Cancel</a>
             <button class="btn btn-primary" type="submit">Save</button>
         </div>
     </form>

@@ -1,43 +1,12 @@
-"""
-var axios = require('axios');
-var fs = require('fs');
-var base64 = require('base-64');
+from mini_githubcic.github_api.utils import send_github_req, send_github_req_with_auth
 
-let token = "ghp_SgpPBp7XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-let file = fs.readFileSync("abc.txt").toString();
-console.log(file);
-var content = base64.encode(file);
-console.log(content);
-uploadFileApi(token, content)
 
-function uploadFileApi(token, content) {
-
-    var data = JSON.stringify({
-        "message": "txt file",
-        "content": `${content}`
-    });
-
-    var config = {
-        method: 'put',
-        url: 'https://api.github.com/repos/sumit-s03/Test/contents/abc.txt',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        data: data
-    };
-
-    axios(config)
-        .then(function (response) {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-}
-"""
-from mini_githubcic.github_api.utils import send_github_req
-
+def get_user_info(request):
+    user_info_resp = send_github_req_with_auth('https://api.github.com/user', request)
+    if(user_info_resp.status_code == 401):
+        request.user.access_token = ""
+        request.user.save()
+    return user_info_resp
 
 def search_repositories_by_user(request, username):
     return send_github_req(
@@ -46,8 +15,8 @@ def search_repositories_by_user(request, username):
     )
 
 
-def get_all_visible_repositories_by_user(request, username):
-    return send_github_req('https://api.github.com/users/'+username+'/repos', request)
+def get_all_visible_repositories_by_user(request):
+    return send_github_req_with_auth('https://api.github.com/user/repos', request)
 
 
 def get_specific_repository(request, username, repo):
