@@ -176,9 +176,9 @@ class Command(BaseCommand):
         i1 = Issue.objects.get(title="issue1")
 
         c1 = Comment(content="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                     writer=u1, task=i1)
+                     author=u1, task=i1)
         c2 = Comment(content="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                     writer=u1, task=i1)
+                     author=u1, task=i1)
 
         c1.save()
         c2.save()
