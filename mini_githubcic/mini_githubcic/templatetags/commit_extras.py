@@ -6,7 +6,7 @@ register = template.Library()
 
 @register.filter
 def shorten_sha(sha):
-    return sha[0:8]
+    return sha[0:7]
 
 
 @register.filter

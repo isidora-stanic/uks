@@ -833,11 +833,18 @@ def get_full_tree(request, username, repo, branch):
     return render(request, 'github_get_full_repo.html', context)
 
 
+def github_branches(request, username, repo):
+    repo_info = get_specific_repository(request, username, repo)
+    branches = get_all_branches(request, username, repo)
+    context = {'repo_info': repo_info, 'branches': branches, 'username': username,
+               'repo': repo}
+    return render(request, 'github_branches.html', context)
+
+
 def github_branch_commits(request, username, repo, branch):
     repo_info = get_specific_repository(request, username, repo)
     branches = get_all_branches(request, username, repo)
     commits = get_all_commits_for_branch(request, username, repo, branch)
-    # date_ = x = datetime.datetime.now() - datetime.timedelta(days=2)
     context = {'repo_info': repo_info, 'commits': commits, 'branch': branch, 'branches': branches, 'username': username, 'repo': repo}
     return render(request, 'github_branch_commits.html', context)
 
