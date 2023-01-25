@@ -119,6 +119,11 @@ class Task(models.Model):
 class Event(models.Model):
     date_time = models.DateTimeField(default=timezone.now)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    # create message template -> create`created_entity`username_of_author
+    # update message template -> update`old_val`new_val`updated_field`username_of_author
+    # issue open message template -> open`issue`issue_id`username_of_author
+    # issue close message template -> close`issue`issue_id`username_of_author
+    event_message = models.CharField(max_length=255, default="empty_event")
 
 
 class LabelApplication(Event):

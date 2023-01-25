@@ -10,10 +10,12 @@ from django.views.generic import (
     DeleteView
 )
 
+from .util import find_differences
+
 from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
 from .github_api.utils import get_access_token, decode_base64_file
-from .models import User, Milestone, Commit, Visibility, Reaction
+from .models import Event, User, Milestone, Commit, Visibility, Reaction
 from .forms import *
 
 from django.urls import reverse_lazy
@@ -141,6 +143,8 @@ class IssueCreateView(CreateView):
         form.instance.project = context['project']
         form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
+        super().form_valid(form)
+        Event.save(Event(task=self.object, event_message="create`issue`{author}".format(author = self.request.user.username)))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -255,6 +259,13 @@ class IssueUpdateView(UpdateView):
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
 
+        old_issue = Issue.objects.filter(id=form.instance.id).first()
+        
+
+        super().form_valid(form)
+        diff = find_differences(old_issue, self.object)
+        for f in diff:
+            Event.save(Event(task=self.object, event_message="update`{old_value}`{new_value}`{field}`{author}".format(field=f[0], new_value=f[1], old_value=getattr(old_issue, f[0]),author = self.request.user.username)))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -470,8 +481,10 @@ def issue_state_toggle(request, pk=None):
         issue = Issue.objects.get(id=pk)
         if issue.is_open:
             issue.is_open = False
+            Event.save(Event(task=issue, event_message="close`issue`{issue_id}`{author}".format(author = request.user.username, issue_id=issue.id)))
         else:
             issue.is_open = True
+            Event.save(Event(task=issue, event_message="open`issue`{issue_id}`{author}".format(author = request.user.username, issue_id=issue.id)))
         issue.save()
         return redirect(issue)
 
@@ -685,6 +698,8 @@ class PullRequestCreateView(CreateView):
             return super().form_invalid(form)
         form.instance.project = context['project']
         form.instance.creator = self.request.user
+        super().form_valid(form)
+        Event.save(Event(task=self.object, event_message="create`pull_request`{author}".format(author = self.request.user.username)))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -710,6 +725,16 @@ class PullRequestUpdateView(UpdateView):
             if self.get_object().title != form.instance.title:
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
+
+
+        old_pr = PullRequest.objects.filter(id=form.instance.id).first()
+        
+
+        super().form_valid(form)
+        diff = find_differences(old_pr, self.object)
+        for f in diff:
+            Event.save(Event(task=self.object, event_message="update`{old_value}`{new_value}`{field}`{author}".format(field=f[0], new_value=f[1], old_value=getattr(old_pr, f[0]),author = self.request.user.username)))
+
 
         return super().form_valid(form)
 
