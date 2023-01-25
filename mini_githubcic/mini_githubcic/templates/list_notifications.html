@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="title">Notifications</h1>
+
+<div class="container">
+    <br/>
+    {% if notifications %}
+    {% for notif in notifications %}
+    <div class="card mb-3">
+        <div class="card-body">
+             <p class="card-text">{{ notif.project.title }} </p>
+            <p class="card-text">{{ notif.message }} </p>
+            <a class="btn btn-primary" href="{% url 'project_detail' notif.project.id %}">View project</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no notifications.
+    {% endif %}
+</div>
+{% endblock %}

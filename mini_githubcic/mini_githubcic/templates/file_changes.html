@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="title">Files changes</h1>
+
+{% for first in repo_info.files %}
+    <div class="card_ch">
+        {{first.filename}} +{{first.additions}} additions, -{{first.deletions}} deletions, <br/>
+        <table class="table_file">
+            {% for line in first.patch %}
+            <tr>
+                <td class="counter"> </td>
+                    {% if line.0 == '+' %}
+                        <td class="added_field">{{line}}</td>
+                    {%else%}
+                        {% if line.0 == '-' %}
+                            <td class="added_field">{{line}}</td>
+                        {%else%}
+                            <td class="nothing_field">{{line}}</td>
+                        {%endif%}
+                    {%endif%}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <br>
+{% endfor %}
+{% endblock content %}
