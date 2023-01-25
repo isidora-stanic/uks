@@ -62,7 +62,7 @@ class User(AbstractBaseUser):
         return reverse('login')
 
 
-class Project(models.Model):
+class Project(models.Model): #todo pazi kod pull req, treba se ponuditi da se postavi na roditelja ako ima roditelja forkovanog
     title = models.CharField(max_length=20)
     description = models.CharField(max_length=160)
     licence = models.CharField(max_length=20)
@@ -71,6 +71,9 @@ class Project(models.Model):
     lead = models.ForeignKey(User, on_delete=models.CASCADE)
     developers = models.ManyToManyField(to=User, blank=True, related_name="developers")
     starred = models.ManyToManyField(User, related_name="starred")
+    watched = models.ManyToManyField(User, related_name="watched")
+    fork_parent = models.ForeignKey('self', on_delete=models.CASCADE,  null=True) #mislim da ne treba da se kaskadira
+    number_of_forked_project = models.DecimalField( max_digits=5, decimal_places=0, null=True)
 
     def __str__(self):
         return "%s/%s" % (self.lead, self.title)
@@ -78,6 +81,10 @@ class Project(models.Model):
     def get_absolute_url(self):
         return reverse('project_detail', kwargs={'pk': self.pk})
 
+# class Repository(models.Model):
+#     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True)  # mislim da ne treba da se kaskadira
+#     fork_parent = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, related_name="forked_project")  # mislim da ne treba da se kaskadira
+#     number_of_forked_project = models.DecimalField(max_digits=5, decimal_places=0, null=True)
 
 class Label(models.Model):
     name = models.CharField(max_length=100)
@@ -209,3 +216,10 @@ class Reaction(models.Model):
     type = models.CharField(max_length=20, choices=ReactionType.choices, default=ReactionType.LIKE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+
+class Notification(models.Model): #razmisli o referenci na comit bukvalno
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, unique=False)  # OneToOne
+    project = models.OneToOneField(Project, null=True, on_delete=models.CASCADE)
+    is_reded = models.BooleanField(default=False)
+    message = models.CharField(max_length=50, unique=False, blank=True)
+    #object_id = models. mozda id od toga sto je

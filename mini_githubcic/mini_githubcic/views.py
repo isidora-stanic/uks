@@ -1,5 +1,8 @@
 from itertools import chain
 import markdown
+
+#import requests
+import copy
 from django.apps.registry import apps
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -14,9 +17,11 @@ from django.views.generic import (
 from .util import find_differences
 
 from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
-    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
-from .github_api.utils import get_access_token, decode_base64_file
-from .models import CreateEvent, Event, LabelApplication, Task, UpdateEvent, User, Milestone, Commit, Visibility, Reaction
+    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively,\
+    get_commit_changes, get_all_commits_for_branch 
+from .github_api.utils import send_github_req, get_access_token, decode_base64_file
+from .models import User, Milestone, Commit, Visibility, Reaction, Notification ,Project, Issue, Label, Branch, CreateEvent, Event, Task, UpdateEvent
+
 from .forms import *
 
 from django.urls import reverse_lazy
@@ -145,7 +150,11 @@ class IssueCreateView(CreateView):
         form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
         super().form_valid(form)
+        
         Event.save(CreateEvent(task=self.object, author=self.request.user, created_entity_type='Issue'))
+        
+        make_notification(context['project'], "issue")
+        
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -638,10 +647,12 @@ class CommitCreateView(CreateView):
         form.instance.hash = str(uuid.uuid4().hex)  # todo izbaciti i linkovati sa pravim hesom ili ne koristiti uopste
         if form.is_valid:
             new_commit = form.save()
+
             if len(form.instance.parents.all()) > 2:
                 form.add_error(None, 'Commit cannot have more than 2 parent commits')
                 new_commit.delete()
                 return super().form_invalid(form)
+            make_notification(new_commit.branches.all()[0].project, "commit")
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -649,6 +660,63 @@ class CommitCreateView(CreateView):
         context['branch_id'] = self.request.resolver_match.kwargs['pk']
         return context
 
+class StarredProjectListView(ListView):
+    model = Project
+    template_name = 'list_starred_project.html'
+    context_object_name = 'projects'
+    ordering = ['title']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(StarredProjectListView, self).get_context_data(*args, **kwargs)
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
+        context['projects'] = Project.objects.filter(starred=context['user'])
+        print(context['projects'])
+        return context
+
+def starr_project(request, pk=None, username=None):
+    if request.method == 'GET':
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username=username)
+        project.starred.add(user)
+        project.save()
+        return redirect(project)
+
+def unstarr_project(request, pk=None, username=None):
+    if request.method == 'GET':
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username=username)
+        project.starred.remove(user)
+        project.save()
+        return redirect('../../projects')
+
+def watch_project(request, pk=None, username=None):
+    if request.method == 'GET':
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username=username)
+        project.watched.add(user)
+        project.save()
+        return redirect(project)
+
+def unwatch_project(request, pk=None, username=None):
+    if request.method == 'GET':
+        project = Project.objects.get(id=pk)
+        user = User.objects.get(username=username)
+        project.watched.remove(user)
+        project.save()
+        return redirect('../../projects')
+
+class WatchedProjectListView(ListView):
+    model = Project
+    template_name = 'list_watched_project.html'
+    context_object_name = 'projects'
+    ordering = ['title']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(WatchedProjectListView, self).get_context_data(*args, **kwargs)
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
+        context['projects'] = Project.objects.filter(watched=context['user'])
+        print(context['projects'])
+        return context
 
 class CommitDetailView(DetailView):
     model = Commit
@@ -659,6 +727,58 @@ class CommitDetailView(DetailView):
         context['parents'] = self.get_object().parents.all()
         context['branches'] = self.get_object().branches.all()
         return context
+
+
+
+class MyNotificationsListView(ListView):
+    model = Notification
+    template_name = 'list_notifications.html'
+    context_object_name = 'notifications'
+    ordering = ['project_id']
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(MyNotificationsListView, self).get_context_data(*args, **kwargs)
+        context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
+        context['notifications'] = Notification.objects.filter(user=context['user'])
+        return context
+
+def make_notification(project, type_notification):
+    users = project.watched
+    for user in users.all():
+        message = f"New {type_notification} is made on project {project.title}"
+        notification = Notification(project=project, user=user, is_reded=False, message=message)
+        notification.save()
+
+def fork_project(request, pk=None, username=None):
+    # tj koliko u dublinu da kopiram
+    project = Project.objects.filter(id=pk)[0]
+    if project.visibility == 'PUBLIC':
+        if project.number_of_forked_project is None:
+            project.number_of_forked_project = 0
+        project.number_of_forked_project +=1
+        project.save()
+        user = User.objects.filter(username=username)[0]
+        new_project = Project(title = project.title,
+                              licence = project.licence,
+                              description = project.description,
+                              visibility = project.visibility,
+                              link= project.link,
+                              lead = user, fork_parent= project)
+        new_project.save()
+        saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
+        return redirect('../../projects/'+str(saved_project.id))
+
+def changes(request, username=None, repo=None, commitsha=None):
+   # repo_info = get_commit_changes(request, username, repo,commitsha)
+    repo_info = get_commit_changes(request, 'isidora-stanic', 'uks', '59e3d110bf4bfd5ec22c18193421942a6a56e2ac')
+    context = {'repo_info': repo_info}
+
+    for f in repo_info["files"]:
+        if "patch" in f:
+            content = f["patch"].splitlines()
+            f["patch"] = copy.deepcopy(content)
+    return render(request, 'file_changes.html', context)
+
 
 
 def add_reactions():
