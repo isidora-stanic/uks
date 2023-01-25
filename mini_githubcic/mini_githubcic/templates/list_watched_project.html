@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="title">Watched projects</h1>
+
+<div class="container">
+    <br/>
+    {% if projects %}
+    {% for project in projects %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ project }} </p>
+            <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
+            <a class="btn btn-danger" href="{% url 'unwatch_project' project.id request.user.username %}">Unwatch</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no watched projects.
+    {% endif %}
+</div>
+{% endblock %}

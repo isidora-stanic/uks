@@ -45,6 +45,12 @@ urlpatterns = [
     path('labels/<int:pk>', LabelDetailView.as_view(), name='label_detail'),
     path('labels/<int:pk>/update', LabelUpdateView.as_view(), name='label_update'),
     path('labels/<int:pk>/delete', LabelDeleteView.as_view(), name='label_delete'),
+    path('starredProjects/<slug:username>', StarredProjectListView.as_view(), name='list_starred_projects'),
+    path('starProject/<int:pk>/<slug:username>', starr_project, name='star_project'),
+    path('unstarProject/<int:pk>/<slug:username>', unstarr_project, name='unstar_project'),
+    path('watchedProjects/<slug:username>', WatchedProjectListView.as_view(), name='list_watched_projects'),
+    path('watchProject/<int:pk>/<slug:username>', watch_project, name='watch_project'),
+    path('unwatchProject/<int:pk>/<slug:username>', unwatch_project, name='unwatch_project'),
     path('user/<slug:username>', ProfilePreview.as_view(), name='profile_preview'),
     path('projects/<int:pk>/branches/', BranchListView.as_view(), name='project_branches'),
     path('projects/<int:pk>/branches/add', new_branch, name='add_branch'),
@@ -53,6 +59,9 @@ urlpatterns = [
     path('branches/<int:pk>/delete', BranchDeleteView.as_view(), name='branch_delete'),
     path('branches/<int:pk>/commits/add', CommitCreateView.as_view(), name='add_commit'),
     path('commits/<int:pk>', CommitDetailView.as_view(), name='commit_detail'),
+    path('myNotifications/<slug:username>', MyNotificationsListView.as_view(), name='list_notifications'),
+    path('forkproject/<int:pk>/<slug:username>', fork_project, name='fork_project'),
+    path('changes/', changes, name='changes'),#<slug:username>/<slug:repo>/<slug:commitsha>
     path('comments/<int:pk>/update', CommentUpdateView.as_view(), name='comment_update'),
     path('comments/<int:pk>/delete', CommentDeleteView.as_view(), name='comment_delete'),
     path('comments/<int:pk>/reaction/<str:rid>', toggle_reaction, name='comment_reaction'),
@@ -61,14 +70,12 @@ urlpatterns = [
     path('pull/requests/<int:pk>', pull_request_new_comment, name='pull_request_detail'),
     path('pull/requests/<int:pk>/update', PullRequestUpdateView.as_view(), name='pull_request_update'),
     path('pull/requests/<int:pk>/delete', PullRequestDeleteView.as_view(), name='pull_request_delete'),
-
     path('github_repos', list_repositories_auth, name='list_repo_auth'),
     path('github_repos/<slug:username>/<slug:repo>', github_get_specific_repo, name='github_get_specific_repo'),
     path('github_repos/<slug:username>/<slug:repo>/tree/branches/<str:branch>', github_get_repo_tree_branch, name='github_get_repo_tree_branch'),
     path('github_repos/<slug:username>/<slug:repo>/tree/blob/<path:path>', github_get_repo_tree_branch_fof, name='github_get_repo_tree_branch_fof'),
     path('github_repos/<slug:username>/<slug:repo>/tree/<path:path>', github_get_repo_subtree, name='github_get_repo_subtree'),
     path('github_repos/<slug:username>/<slug:repo>/full_tree/<slug:branch>', get_full_tree, name='get_full_tree'),
-
     path('login/oauth2/code/github', after_auth, name='after_auth'),
 
 ]
