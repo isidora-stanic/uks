@@ -20,7 +20,7 @@ from .github_api.service import get_user_info, get_all_visible_repositories_by_u
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively,\
     get_commit_changes, get_all_commits_for_branch 
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import User, Milestone, Commit, Visibility, Reaction, Notification ,Project, Issue, Label, Branch, CreateEvent, Event, Task, UpdateEvent
+from .models import LabelApplication, User, Milestone, Commit, Visibility, Reaction, Notification ,Project, Issue, Label, Branch, CreateEvent, Event, Task, UpdateEvent
 
 from .forms import *
 

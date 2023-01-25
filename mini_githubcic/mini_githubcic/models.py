@@ -134,7 +134,7 @@ class LabelApplication(Event):
     def __str__(self):
         label_names = [label.name for label in self.applied_labels.all()]
         if len(self.applied_labels.all()) > 0:
-            return "%s apllied %s at %s" % (self.author, label_names, str(self.date_time)[:-16])
+            return "%s applied labels %s at %s" % (self.author, label_names, str(self.date_time)[:-16])
         else:
             return "%s cleared all labels at %s"% (self.author, str(self.date_time)[:-16])
 
