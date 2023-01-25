@@ -773,11 +773,14 @@ def pull_request_new_comment(request, pk):
     for c in comment_list:
         comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
 
+    events = sorted(chain(CreateEvent.objects.filter(task=pullRequest).all(), UpdateEvent.objects.filter(task=pullRequest).all()), key=lambda instance: instance.date_time)
+
     obj_dict = {
         'comment_form': form,
         'pr': pullRequest,
         'comments': comments_reactions,
-        'reactions': reactions
+        'reactions': reactions,
+        'events' : events
     }
 
     if request.method == 'POST':
