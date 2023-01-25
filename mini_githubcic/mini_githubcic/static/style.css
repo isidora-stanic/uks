@@ -115,3 +115,47 @@ ul {
     color: #57606a;
     border-left: 0.25em solid #d0d7de;
 }
+
+.added_field {
+    color: black;
+    font-weight: 300;
+    font-size: 20px;
+    background: #e6ffec;
+    padding: 0;
+    left: 0;
+    width: 100vw !important;
+}
+
+.deleted_field {
+    color: black;
+    font-weight: 300;
+    font-size: 20px;
+    background: #ffebe9;
+    padding: 0;
+    left: 0;
+    width: 100vw !important;
+}
+
+.nothing_field {
+    color: black;
+    font-weight: 300;
+    font-size: 20px;
+    background: #acb3b0;
+    padding: 0;
+    left: 0;
+    width: 100vw !important;
+}
+.counter {
+    width: 3vw !important;
+    text-align: center;
+    background-color: #ccffd8;
+}
+.file_div{
+    background-color: #f6f8fa;
+    border-radius: 20px;
+    border-color: #96a59f;
+    border-width: 2px;
+}
+.card_ch{
+    margin-left: 15% !important;
+    width: 70%;}
