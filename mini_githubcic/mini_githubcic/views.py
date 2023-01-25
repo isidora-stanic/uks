@@ -279,7 +279,7 @@ class IssueUpdateView(UpdateView):
         super().form_valid(form)
         diff = find_differences(old_issue, self.object)
         for f in diff:
-            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_issue, f[0]), new_content=f[1], author=self.request.user))
+            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_issue, f[0]), new_content=str(f[1]), author=self.request.user))
         
         
         if(old_labels != list(self.object.labels.all())):
@@ -873,7 +873,7 @@ class PullRequestUpdateView(UpdateView):
             
         diff = find_differences(old_pr, self.object)
         for f in diff:
-            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_pr, f[0]), new_content=f[1], author=self.request.user))
+            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_pr, f[0]), new_content=str(f[1]), author=self.request.user))
 
         if(self.object.labels != old_pr.labels):
             Event.save(LabelApplication(task=self.object, applied_labels=self.object.labels, author=self.request.user))
