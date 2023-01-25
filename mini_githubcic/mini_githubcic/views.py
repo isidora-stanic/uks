@@ -16,7 +16,7 @@ from .util import find_differences
 from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
 from .github_api.utils import get_access_token, decode_base64_file
-from .models import CreateEvent, Event, Task, UpdateEvent, User, Milestone, Commit, Visibility, Reaction
+from .models import CreateEvent, Event, LabelApplication, Task, UpdateEvent, User, Milestone, Commit, Visibility, Reaction
 from .forms import *
 
 from django.urls import reverse_lazy
@@ -208,7 +208,8 @@ def new_comment(request, pk):
     for c in comment_list:
         comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
 
-    events = sorted(chain(CreateEvent.objects.filter(task=issue).all(), UpdateEvent.objects.filter(task=issue).all()), key=lambda instance: instance.date_time)
+    events = sorted(chain(CreateEvent.objects.filter(task=issue).all(), UpdateEvent.objects.filter(task=issue).all(), \
+        LabelApplication.objects.filter(task=issue).all()), key=lambda instance: instance.date_time)
 
     obj_dict = {
         'comment_form': form,
@@ -264,12 +265,20 @@ class IssueUpdateView(UpdateView):
                 return super().form_invalid(form)
 
         old_issue = Issue.objects.filter(id=form.instance.id).first()
-        
+        old_labels = list(old_issue.labels.all()).copy()
 
         super().form_valid(form)
         diff = find_differences(old_issue, self.object)
         for f in diff:
             Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_issue, f[0]), new_content=f[1], author=self.request.user))
+        
+        
+        if(old_labels != list(self.object.labels.all())):
+            apply_event = LabelApplication(task=self.object,  author=self.request.user)
+            Event.save(apply_event)
+            apply_event.applied_labels.set(self.object.labels.all())
+            Event.save(apply_event)
+            
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -732,14 +741,22 @@ class PullRequestUpdateView(UpdateView):
 
 
         old_pr = PullRequest.objects.filter(id=form.instance.id).first()
-        
+        old_labels = list(old_pr.labels.all()).copy()
 
         super().form_valid(form)
+        
+        if(old_labels != list(self.object.labels.all())):
+            apply_event = LabelApplication(task=self.object,  author=self.request.user)
+            Event.save(apply_event)
+            apply_event.applied_labels.set(self.object.labels.all())
+            Event.save(apply_event)
+            
         diff = find_differences(old_pr, self.object)
         for f in diff:
             Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_pr, f[0]), new_content=f[1], author=self.request.user))
 
-
+        if(self.object.labels != old_pr.labels):
+            Event.save(LabelApplication(task=self.object, applied_labels=self.object.labels, author=self.request.user))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -773,7 +790,8 @@ def pull_request_new_comment(request, pk):
     for c in comment_list:
         comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
 
-    events = sorted(chain(CreateEvent.objects.filter(task=pullRequest).all(), UpdateEvent.objects.filter(task=pullRequest).all()), key=lambda instance: instance.date_time)
+    events = sorted(chain(CreateEvent.objects.filter(task=pullRequest).all(), UpdateEvent.objects.filter(task=pullRequest).all()\
+        , LabelApplication.objects.filter(task=pullRequest).all()), key=lambda instance: instance.date_time)
 
     obj_dict = {
         'comment_form': form,

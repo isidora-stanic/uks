@@ -123,7 +123,13 @@ class Event(models.Model):
 
 
 class LabelApplication(Event):
-    label = models.ManyToManyField(Label)
+    applied_labels = models.ManyToManyField(Label)
+    def __str__(self):
+        label_names = [label.name for label in self.applied_labels.all()]
+        if len(self.applied_labels.all()) > 0:
+            return "%s apllied %s at %s" % (self.author, label_names, str(self.date_time)[:-16])
+        else:
+            return "%s cleared all labels at %s"% (self.author, str(self.date_time)[:-16])
 
 class CreateEvent(Event):
     created_entity_type = models.CharField(max_length=20)
