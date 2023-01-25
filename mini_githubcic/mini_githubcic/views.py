@@ -1,3 +1,4 @@
+from itertools import chain
 import markdown
 from django.apps.registry import apps
 from django.shortcuts import render, redirect
@@ -15,7 +16,7 @@ from .util import find_differences
 from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively
 from .github_api.utils import get_access_token, decode_base64_file
-from .models import Event, User, Milestone, Commit, Visibility, Reaction
+from .models import CreateEvent, Event, Task, UpdateEvent, User, Milestone, Commit, Visibility, Reaction
 from .forms import *
 
 from django.urls import reverse_lazy
@@ -144,7 +145,7 @@ class IssueCreateView(CreateView):
         form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
         super().form_valid(form)
-        Event.save(Event(task=self.object, event_message="create`issue`{author}".format(author = self.request.user.username)))
+        Event.save(CreateEvent(task=self.object, author=self.request.user, created_entity_type='Issue'))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -207,11 +208,14 @@ def new_comment(request, pk):
     for c in comment_list:
         comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
 
+    events = sorted(chain(CreateEvent.objects.filter(task=issue).all(), UpdateEvent.objects.filter(task=issue).all()), key=lambda instance: instance.date_time)
+
     obj_dict = {
         'comment_form': form,
         'issue': issue,
         'comments': comments_reactions,
-        'reactions': reactions
+        'reactions': reactions,
+        'events' : events
     }
 
     if request.method == 'POST':
@@ -225,7 +229,7 @@ def new_comment(request, pk):
                 obj_dict['error_add'] = 'User not authenticated'
                 return render(request, 'issue_detail.html', obj_dict)
             else:
-                comment.writer = request.user
+                comment.author = request.user
                 comment.date_time = timezone.now()
                 comment.save()
                 return redirect('/issues/{}'.format(pk))
@@ -265,7 +269,7 @@ class IssueUpdateView(UpdateView):
         super().form_valid(form)
         diff = find_differences(old_issue, self.object)
         for f in diff:
-            Event.save(Event(task=self.object, event_message="update`{old_value}`{new_value}`{field}`{author}".format(field=f[0], new_value=f[1], old_value=getattr(old_issue, f[0]),author = self.request.user.username)))
+            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_issue, f[0]), new_content=f[1], author=self.request.user))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -481,10 +485,10 @@ def issue_state_toggle(request, pk=None):
         issue = Issue.objects.get(id=pk)
         if issue.is_open:
             issue.is_open = False
-            Event.save(Event(task=issue, event_message="close`issue`{issue_id}`{author}".format(author = request.user.username, issue_id=issue.id)))
+            Event.save(UpdateEvent(task=issue, field_name='is_open', old_content='true', new_content='false', author=request.user))
         else:
             issue.is_open = True
-            Event.save(Event(task=issue, event_message="open`issue`{issue_id}`{author}".format(author = request.user.username, issue_id=issue.id)))
+            Event.save(UpdateEvent(task=issue, field_name='is_open', old_content='false', new_content='true', author=request.user))
         issue.save()
         return redirect(issue)
 
@@ -699,7 +703,7 @@ class PullRequestCreateView(CreateView):
         form.instance.project = context['project']
         form.instance.creator = self.request.user
         super().form_valid(form)
-        Event.save(Event(task=self.object, event_message="create`pull_request`{author}".format(author = self.request.user.username)))
+        Event.save(CreateEvent(task=self.object, author=self.request.user, created_entity_type='Pull request'))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -733,7 +737,7 @@ class PullRequestUpdateView(UpdateView):
         super().form_valid(form)
         diff = find_differences(old_pr, self.object)
         for f in diff:
-            Event.save(Event(task=self.object, event_message="update`{old_value}`{new_value}`{field}`{author}".format(field=f[0], new_value=f[1], old_value=getattr(old_pr, f[0]),author = self.request.user.username)))
+            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_pr, f[0]), new_content=f[1], author=self.request.user))
 
 
         return super().form_valid(form)
@@ -787,7 +791,7 @@ def pull_request_new_comment(request, pk):
                 obj_dict['error_add'] = 'User not authenticated'
                 return render(request, 'pull_request_detail.html', obj_dict)
             else:
-                comment.writer = request.user
+                comment.author = request.user
                 comment.date_time = timezone.now()
                 comment.save()
                 return redirect('/pull/requests/{}'.format(pk))

@@ -119,30 +119,35 @@ class Task(models.Model):
 class Event(models.Model):
     date_time = models.DateTimeField(default=timezone.now)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    # create message template -> create`created_entity`username_of_author
-    # update message template -> update`old_val`new_val`updated_field`username_of_author
-    # issue open message template -> open`issue`issue_id`username_of_author
-    # issue close message template -> close`issue`issue_id`username_of_author
-    event_message = models.CharField(max_length=255, default="empty_event")
+    author = models.ForeignKey(User, blank=False, null=True, related_name='author', on_delete=models.CASCADE)
 
 
 class LabelApplication(Event):
     label = models.ManyToManyField(Label)
 
+class CreateEvent(Event):
+    created_entity_type = models.CharField(max_length=20)
+    
+    def __str__(self):
+        return "%s created this %s at %s" % (self.author, self.created_entity_type, str(self.date_time)[:-16])
 
 class UpdateEvent(Event):
     field_name = models.CharField(max_length=20)
     old_content = models.CharField(max_length=100)
     new_content = models.CharField(max_length=100)
 
-
-class StateChange(Event):
-    new_state = models.CharField(max_length=20)
-
+    def __str__(self):
+        if self.field_name == 'is_open':
+            if self.new_content.lower() == 'true':
+                return "%s opened this issue at %s" % (self.author, str(self.date_time)[:-16])
+            elif self.new_content.lower() == 'false':
+                return "%s closed this issue at %s" % (self.author, str(self.date_time)[:-16])
+            
+        return "%s updated %s from %s to %s at %s" % (self.author, self.field_name, self.old_content, self.new_content, str(self.date_time)[:-16])
 
 class Comment(Event):
     content = RichTextField(blank=True, null=True)
-    writer = models.ForeignKey(User, blank=False, related_name='writer', on_delete=models.CASCADE)
+    
 
 
 class Branch(models.Model):
