@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from itertools import chain
 import markdown
 
 #import requests
@@ -17,11 +18,41 @@ from django.views.generic import (
     DeleteView
 )
 
-from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
-    get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, get_tree_recursively,\
-    get_commit_changes, get_all_commits_for_branch, get_all_branches, rename_branch, delete_branch, create_branch
+from .util import find_differences
+
+from .github_api.service import (
+    get_user_info,
+    get_all_visible_repositories_by_user,
+    get_specific_repository,
+    get_specific_repository_readme,
+    get_repository_tree, 
+    get_file_content,
+    get_tree_recursively,
+    get_commit_changes, 
+    get_all_commits_for_branch, 
+    get_all_branches, 
+    rename_branch, 
+    delete_branch, 
+    create_branch
+)
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import User, Milestone, Commit, Visibility, Reaction, Notification #Project,   Issue, Label, Branch,
+from .models import (
+    LabelApplication, 
+    User, 
+    Milestone, 
+    Commit, 
+    Visibility,
+    Reaction, 
+    Notification,
+    Project, 
+    Issue, 
+    Label, 
+    Branch, 
+    CreateEvent, 
+    Event, 
+    Task, 
+    UpdateEvent
+)
 
 from .forms import *
 
@@ -150,7 +181,12 @@ class IssueCreateView(CreateView):
         form.instance.project = context['project']
         form.instance.creator = self.request.user
         form.instance.date_created = timezone.now()
+        super().form_valid(form)
+        
+        Event.save(CreateEvent(task=self.object, author=self.request.user, created_entity_type='Issue'))
+        
         make_notification(context['project'], "issue")
+        
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -213,11 +249,15 @@ def new_comment(request, pk):
     for c in comment_list:
         comments_reactions.append({'comment':c, 'reactions':Reaction.objects.filter(comment=c)})
 
+    events = sorted(chain(CreateEvent.objects.filter(task=issue).all(), UpdateEvent.objects.filter(task=issue).all(), \
+        LabelApplication.objects.filter(task=issue).all()), key=lambda instance: instance.date_time)
+
     obj_dict = {
         'comment_form': form,
         'issue': issue,
         'comments': comments_reactions,
-        'reactions': reactions
+        'reactions': reactions,
+        'events' : events
     }
 
     if request.method == 'POST':
@@ -231,7 +271,7 @@ def new_comment(request, pk):
                 obj_dict['error_add'] = 'User not authenticated'
                 return render(request, 'issue_detail.html', obj_dict)
             else:
-                comment.writer = request.user
+                comment.author = request.user
                 comment.date_time = timezone.now()
                 comment.save()
                 return redirect('/issues/{}'.format(pk))
@@ -265,6 +305,21 @@ class IssueUpdateView(UpdateView):
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
 
+        old_issue = Issue.objects.filter(id=form.instance.id).first()
+        old_labels = list(old_issue.labels.all()).copy()
+
+        super().form_valid(form)
+        diff = find_differences(old_issue, self.object)
+        for f in diff:
+            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_issue, f[0]), new_content=str(f[1]), author=self.request.user))
+        
+        
+        if(old_labels != list(self.object.labels.all())):
+            apply_event = LabelApplication(task=self.object,  author=self.request.user)
+            Event.save(apply_event)
+            apply_event.applied_labels.set(self.object.labels.all())
+            Event.save(apply_event)
+            
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -482,8 +537,10 @@ def issue_state_toggle(request, pk=None):
         issue = Issue.objects.get(id=pk)
         if issue.is_open:
             issue.is_open = False
+            Event.save(UpdateEvent(task=issue, field_name='is_open', old_content='true', new_content='false', author=request.user))
         else:
             issue.is_open = True
+            Event.save(UpdateEvent(task=issue, field_name='is_open', old_content='false', new_content='true', author=request.user))
         issue.save()
         return redirect(issue)
 
@@ -809,6 +866,8 @@ class PullRequestCreateView(CreateView):
             return super().form_invalid(form)
         form.instance.project = context['project']
         form.instance.creator = self.request.user
+        super().form_valid(form)
+        Event.save(CreateEvent(task=self.object, author=self.request.user, created_entity_type='Pull request'))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -835,6 +894,24 @@ class PullRequestUpdateView(UpdateView):
                 form.add_error(None, 'Title already in use')
                 return super().form_invalid(form)
 
+
+        old_pr = PullRequest.objects.filter(id=form.instance.id).first()
+        old_labels = list(old_pr.labels.all()).copy()
+
+        super().form_valid(form)
+        
+        if(old_labels != list(self.object.labels.all())):
+            apply_event = LabelApplication(task=self.object,  author=self.request.user)
+            Event.save(apply_event)
+            apply_event.applied_labels.set(self.object.labels.all())
+            Event.save(apply_event)
+            
+        diff = find_differences(old_pr, self.object)
+        for f in diff:
+            Event.save(UpdateEvent(task=self.object, field_name=f[0], old_content=getattr(old_pr, f[0]), new_content=str(f[1]), author=self.request.user))
+
+        if(self.object.labels != old_pr.labels):
+            Event.save(LabelApplication(task=self.object, applied_labels=self.object.labels, author=self.request.user))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
@@ -868,11 +945,15 @@ def pull_request_new_comment(request, pk):
     for c in comment_list:
         comments_reactions.append({'comment':c, 'reactions': Reaction.objects.filter(comment=c)})
 
+    events = sorted(chain(CreateEvent.objects.filter(task=pullRequest).all(), UpdateEvent.objects.filter(task=pullRequest).all()\
+        , LabelApplication.objects.filter(task=pullRequest).all()), key=lambda instance: instance.date_time)
+
     obj_dict = {
         'comment_form': form,
         'pr': pullRequest,
         'comments': comments_reactions,
-        'reactions': reactions
+        'reactions': reactions,
+        'events' : events
     }
 
     if request.method == 'POST':
@@ -886,7 +967,7 @@ def pull_request_new_comment(request, pk):
                 obj_dict['error_add'] = 'User not authenticated'
                 return render(request, 'pull_request_detail.html', obj_dict)
             else:
-                comment.writer = request.user
+                comment.author = request.user
                 comment.date_time = timezone.now()
                 comment.save()
                 return redirect('/pull/requests/{}'.format(pk))
