@@ -934,12 +934,12 @@ def github_branches(request, username, repo):
 
 def github_branch_commits(request, username, repo, branch):
     repo_info = get_specific_repository(request, username, repo)
-    # if 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
-    #     return page_not_found(request, "There is no repo like that")
+    if not isinstance(repo_info, list) and 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
+        return page_not_found(request, "There is no repo like that")
     branches = get_all_branches(request, username, repo)
     if branch == 'main':
         commits = get_all_commits_for_branch(request, username, repo, branch)
-        if 'message' in commits.keys() and commits['message'] == 'Not Found':
+        if not isinstance(commits, list) and 'message' in commits.keys() and commits['message'] == 'Not Found':
             return redirect('github_branch_commits', username=username, repo=repo, branch='master')
     else:
         commits = get_all_commits_for_branch(request, username, repo, branch)
