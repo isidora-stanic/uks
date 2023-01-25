@@ -934,8 +934,8 @@ def github_branches(request, username, repo):
 
 def github_branch_commits(request, username, repo, branch):
     repo_info = get_specific_repository(request, username, repo)
-    if 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
-        return page_not_found(request, "There is no repo like that")
+    # if 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
+    #     return page_not_found(request, "There is no repo like that")
     branches = get_all_branches(request, username, repo)
     if branch == 'main':
         commits = get_all_commits_for_branch(request, username, repo, branch)
