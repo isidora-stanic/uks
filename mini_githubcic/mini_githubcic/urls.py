@@ -71,6 +71,9 @@ urlpatterns = [
 
     path('github_repos/<slug:username>/<slug:repo>/branches', github_branches, name='github_branches'),
     path('github_repos/<slug:username>/<slug:repo>/<str:branch>/commits', github_branch_commits, name='github_branch_commits'),
+    path('github_repos/<slug:username>/<slug:repo>/branches/create', github_create_branch, name='github_create_branch'),
+    path('github_repos/<slug:username>/<slug:repo>/branches/<str:branch>/rename', github_rename_branch, name='github_rename_branch'),
+    path('github_repos/<slug:username>/<slug:repo>/branches/<str:branch>/delete', github_delete_branch, name='github_delete_branch'),
 
     path('login/oauth2/code/github', after_auth, name='after_auth'),
 

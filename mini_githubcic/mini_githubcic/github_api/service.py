@@ -63,8 +63,40 @@ def get_all_commits_for_branch(request, username, repo, branch):
     return send_github_req('https://api.github.com/repos/'+username+'/'+repo+'/commits?sha='+branch, request)
 
 
+def create_branch(request, username, repo, branch, commit_sha):
+    return send_github_req('https://api.github.com/repos/'+username+'/'+repo+'/git/refs', request,
+                           method='POST', data='{"ref": "refs/heads/'+branch+'", "sha": "'+commit_sha+'"}')
+
+
+def rename_branch(request, username, repo, branch, new_name):
+    return send_github_req('https://api.github.com/repos/'+username+'/'+repo+'/branches/'+branch+'/rename', request,
+                           method="POST", data='{"new_name": "'+new_name+'"}')
+
+
+def delete_branch(request, username, repo, branch):
+    print('AYOOOOOOOOOO','https://api.github.com/repos/'+username+'/'+repo+'/git/refs/heads/'+branch)
+    r = send_github_req('https://api.github.com/repos/'+username+'/'+repo+'/git/refs/heads/'+branch, request,
+                           method='DELETE')
+    print(r)
+    return r
+
+
 def compare_two_branches(request, username, repo, base, head):
-    return send_github_req('https://api.github.com/repos/' + username + '/' + repo + '/compare/' + base + '...' + head, request)
+    return send_github_req('https://api.github.com/repos/'+username+'/'+repo+'/compare/'+base+'...'+head, request)
+
+
+def merge_branches(request, username, repo, base, head, msg):
+    return send_github_req('https://api.github.com/repos/' + username + '/' + repo + '/merges', request,
+                    metod='POST', data='{"base":"'+base+'", "head": "'+head+'", "commit_message": "'+msg+'"}')
+
+
+def merge_usptream_branch(request, username, repo, upstream_branch):
+    """
+    Sync a fork branch with the upstream repository
+    Sync a branch of a forked repository to keep it up-to-date with the upstream repository.
+    """
+    return send_github_req('https://api.github.com/repos/' + username + '/' + repo + '/merge-upstream', request,
+                           method='POST', data='{"branch":"'+upstream_branch+'"}')
 
 
 def create_file_url(github_file_url):

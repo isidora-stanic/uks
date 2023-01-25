@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Create branch</h1>
+<form method="post" action="{% url 'github_create_branch' username repo %}">
+    {% csrf_token %}
+    <table>
+        <tr>
+            <td>New branch name:</td>
+            <td>
+                <input type="text" name="new_name" value="{{ new_name }}"/></td>
+            <td>
+                {% if new_name_error %}
+                <div class="greska">{{new_name_error}}</div>
+                {% endif %}
+            </td>
+        </tr>
+{#        <tr>#}
+{#            <td>From branch:</td>#}
+{#            <td>#}
+{#                <input type="text" name="branch" value="{{ branch }}"/></td>#}
+{#            <td>#}
+{#                {% if branch_error %}#}
+{#                <div class="greska">{{branch_error}}</div>#}
+{#                {% endif %}#}
+{#            </td>#}
+{#        </tr>#}
+        <select name="branch">
+            {% for b in branches %}
+                <option value="{{ b.commit.sha }}">{{ b.name }}</option>
+            {% endfor %}
+        </select>
+    </table>
+</form>
+{% if response %}
+{{ response }} {{ status_code }}
+{% endif %}
+{% endblock %}

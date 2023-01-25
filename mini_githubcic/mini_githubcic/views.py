@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import markdown
 from django.apps.registry import apps
@@ -14,7 +15,7 @@ from django.views.generic import (
 
 from .github_api.service import get_user_info, get_all_visible_repositories_by_user, \
     get_specific_repository, get_specific_repository_readme, get_repository_tree, get_file_content, \
-    get_tree_recursively, get_all_commits_for_branch, get_all_branches
+    get_tree_recursively, get_all_commits_for_branch, get_all_branches, rename_branch, delete_branch, create_branch
 from .github_api.utils import get_access_token, decode_base64_file
 from .models import User, Milestone, Commit, Visibility, Reaction
 from .forms import *
@@ -847,6 +848,53 @@ def github_branch_commits(request, username, repo, branch):
     commits = get_all_commits_for_branch(request, username, repo, branch)
     context = {'repo_info': repo_info, 'commits': commits, 'branch': branch, 'branches': branches, 'username': username, 'repo': repo}
     return render(request, 'github_branch_commits.html', context)
+
+
+def github_create_branch(request, username, repo):
+    branches = get_all_branches(request, username, repo)
+    if request.method == 'GET':
+        return render(request, "github_create_branch.html", {'username':username, 'repo':repo, 'branches': branches})
+    if request.method == 'POST':
+        new_name = request.POST['new_name']
+        branch = request.POST['branch']
+        for b in branches:
+            if new_name == b['name']:
+                return render(request, "github_rename_branch.html",
+                              {"new_name_error": "Branch with this name already exists", 'username': username,
+                               'repo': repo})
+        # print(json.loads(branch).commit)
+        resp = create_branch(request, username, repo, new_name, branch)
+        if 'ref' in resp.keys() and resp['ref'] == "refs/heads/"+new_name:
+            return redirect('github_branches', username=username, repo=repo)
+        return render(request, "github_create_branch.html", {'new_name_error': "Renaming was not successful", 'username': username, 'repo': repo})
+
+
+def github_rename_branch(request, username, repo, branch):
+    if request.method == 'GET':
+        return render(request, "github_rename_branch.html", {'username':username, 'repo':repo, 'branch':branch})
+    branches = get_all_branches(request, username, repo)
+    if request.method == 'POST':
+        new_name = request.POST['new_name']
+        for b in branches:
+            if new_name == b['name']:
+                return render(request, "github_rename_branch.html",
+                              {"new_name_error": "Branch with this name already exists", 'username':username, 'repo':repo, 'branch':branch})
+        resp = rename_branch(request, username, repo, branch, new_name)
+        if 'name' in resp.keys() and resp['name'] == new_name:
+            return redirect('github_branches', username=username, repo=repo)
+        return render(request, "github_rename_branch.html", {'new_name_error': "Renaming was not successful", 'branch': branch, 'username': username, 'repo': repo})
+
+
+def github_delete_branch(request, username, repo, branch):
+    if request.method == 'GET':
+        return render(request, "github_delete_branch.html", {'username':username, 'repo':repo, 'branch':branch})
+    if request.method == 'POST':
+        resp = delete_branch(request, username, repo, branch)
+        if resp.status_code == 204:
+            return redirect('github_branches', username=username, repo=repo)
+        return render(request, "github_delete_branch.html", {'username': username, 'repo': repo, 'branch': branch, 'err': 'Cannot delete this branch.'})
+
+
 
 
 def after_auth(request):
