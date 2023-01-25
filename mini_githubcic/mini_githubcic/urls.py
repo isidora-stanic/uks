@@ -62,7 +62,6 @@ urlpatterns = [
     path('myNotifications/<slug:username>', MyNotificationsListView.as_view(), name='list_notifications'),
     path('forkproject/<int:pk>/<slug:username>', fork_project, name='fork_project'),
     path('changes/', changes, name='changes'),#<slug:username>/<slug:repo>/<slug:commitsha>
-    path('github_repos/<slug:username>', github_auth_test, name='github_auth_test'),
     path('comments/<int:pk>/update', CommentUpdateView.as_view(), name='comment_update'),
     path('comments/<int:pk>/delete', CommentDeleteView.as_view(), name='comment_delete'),
     path('comments/<int:pk>/reaction/<str:rid>', toggle_reaction, name='comment_reaction'),
