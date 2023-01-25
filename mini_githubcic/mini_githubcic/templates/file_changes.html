@@ -1,11 +1,23 @@
 {% extends "base.html" %}
+{% load commit_extras %}
 {% block content %}
 
 <h1 class="title">Files changes</h1>
-
+    <div class="card_ch card card-header pl-3 pt-3 mb-4">
+    <div class="row">
+            <h5>{{ repo_info.committer.login }}</h5>
+            <span class="text-muted">{{ repo_info.commit.message }}</span>
+            <span class="text-muted">[{{ repo_info.commit.tree.sha }}]</span>
+            <span class="text-muted">committed {{ repo_info.commit.author.date|convert_str_date|timesince}} ago</span>
+    </div>
+    </div>
 {% for first in repo_info.files %}
-    <div class="card_ch">
-        {{first.filename}} +{{first.additions}} additions, -{{first.deletions}} deletions, <br/>
+    <div class="card card_ch">
+    <div class="card-header">
+        {{first.filename}} +{{first.additions}} additions, -{{first.deletions}} deletions
+    </div>
+    {% if first.patch %}
+    <div class="card-body">
         <table class="table_file">
             {% for line in first.patch %}
             <tr>
@@ -14,7 +26,7 @@
                         <td class="added_field">{{line}}</td>
                     {%else%}
                         {% if line.0 == '-' %}
-                            <td class="added_field">{{line}}</td>
+                            <td class="deleted_field">{{line}}</td>
                         {%else%}
                             <td class="nothing_field">{{line}}</td>
                         {%endif%}
@@ -22,6 +34,8 @@
             </tr>
             {% endfor %}
         </table>
+    </div>
+    {% endif %}
     </div>
     <br>
 {% endfor %}

@@ -13,6 +13,7 @@
             <hr>
             {%  for item in repo_info.json %}
             {%if item.owner.login|lower == github_account.login|lower %}
+                <div class="card my-3 p-3">
             <h3>{{ item.name }}</h3>
             <h5>{{ item.full_name }}</h5>
                 {% if item.private %}
@@ -21,10 +22,19 @@
                     <p>Public</p>
                 {% endif %}
                 <p>Owner: {{ item.owner.login }}</p>
+                {% if item.description is None %}
+                    <p class="text-muted">There is no description.</p>
+                {% else %}
+                    <p>{{ item.description }}</p>
+                {% endif %}
+
+                <a href="{% url 'github_branch_commits' item.owner.login item.name 'main' %}">See branch history</a>
+{#                <br>#}
+                <a href="#todo" style="pointer-events: none; color: gray;">Create Project</a>
+{#                <br>#}
                 <a href="{{ item.html_url }}">See on Github</a>
-                <p>{{ item.description }}</p>
                 <p>There is more...</p>
-                <hr>
+                </div>
             {%endif%}
             {% endfor %}
         </div>
@@ -33,6 +43,7 @@
             <hr>
             {%  for item in repo_info.json %}
             {%if item.owner.login|lower != github_account.login|lower %}
+                <div class="card my-3 p-3">
             <h3>{{ item.name }}</h3>
             <h5>{{ item.full_name }}</h5>
                 {% if item.private %}
@@ -41,10 +52,19 @@
                     <p>Public</p>
                 {% endif %}
                 <p>Owner: {{ item.owner.login }}</p>
+                {% if item.description is None %}
+                    <p class="text-muted">There is no description.</p>
+                {% else %}
+                    <p>{{ item.description }}</p>
+                {% endif %}
+
+                <a href="{% url 'github_branch_commits' item.owner.login item.name 'main' %}">See branch history</a>
+{#                <br>#}
+                <a href="#todo" style="pointer-events: none; color: gray;">Create Project</a>
+{#                <br>#}
                 <a href="{{ item.html_url }}">See on Github</a>
-                <p>{{ item.description }}</p>
                 <p>There is more...</p>
-                <hr>
+                </div>
             {%endif%}
             {% endfor %}
         </div>

@@ -212,10 +212,12 @@ class PullRequest(Task):
     def get_absolute_url(self):
         return reverse('pull_request_detail', kwargs={'pk': self.pk})
 
+
 class Reaction(models.Model):
     type = models.CharField(max_length=20, choices=ReactionType.choices, default=ReactionType.LIKE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+
 
 class Notification(models.Model): #razmisli o referenci na comit bukvalno
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, unique=False)  # OneToOne

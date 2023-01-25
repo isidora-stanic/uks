@@ -42,37 +42,45 @@ def get_github_auth_header(request):
     return header
 
 
-def send_github_req_with_auth(url, request):
+def send_github_req_with_auth(url, request, method='GET', data=None):
     """
-    Send GET request to Github API with access token
+    Send GET/POST request to Github API with access token
     Note: If there is no access token or if its expired or revoked, API will return 400 Bad credentials
     In this case use send_github_req_without_auth(url)
     """
-    return requests.get(url, headers=get_github_auth_header(request))
+    if method == 'GET':
+        return requests.get(url, headers=get_github_auth_header(request))
+    if method == 'POST':
+        return requests.post(url, headers=get_github_auth_header(request), data=data)
+    if method == 'DELETE':
+        return requests.delete(url, headers=get_github_auth_header(request))
 
 
-def send_github_req_without_auth(url):
+def send_github_req_without_auth(url, method='GET', data=None):
     """
-    Send GET request to Github API without access token
+    Send GET/POST request to Github API without access token
     """
-    return requests.get(url)
+    if method == 'GET':
+        return requests.get(url)
+    if method == 'POST':
+        return requests.post(url, data)
 
 
-def send_github_req(url, request):
+def send_github_req(url, request, method='GET', data=None):
     """
     Send GET request to Github API without access token
     Returns response in json format
     """
     if request.user.access_token:
         # if there is access token
-        response = send_github_req_with_auth(url, request)
+        response = send_github_req_with_auth(url, request, method, data)
         if response.status_code == 401:
             # if access is revoked or expired
             # deletes invalid access token
             # del request.session['access_token']
             # request.session.modified = True
             
-            response = send_github_req_without_auth(url)
+            response = send_github_req_without_auth(url, method, data)
             # to indicate that user needs to give access to github account
             # if he wants to make any changes and see his private repositories
             r = response.json()
@@ -80,7 +88,9 @@ def send_github_req(url, request):
             return r
     else:
         # if there is no access token
-        response = send_github_req_without_auth(url)
+        response = send_github_req_without_auth(url, method, data)
+    if method=='DELETE':
+        return response
     return response.json()
 
 
