@@ -22,3 +22,8 @@ def bring_back_slash(value):
 @register.filter
 def convert_str_date(value):
     return parser.parse(value)
+
+
+@register.filter
+def is_string(val):
+    return isinstance(val, str)

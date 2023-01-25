@@ -8,6 +8,7 @@ import copy
 from django.apps.registry import apps
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.views.defaults import page_not_found
 from django.views.generic import (
     CreateView,
     ListView,
@@ -324,6 +325,8 @@ class ProjectDetailView(DetailView):
         context = super(ProjectDetailView, self).get_context_data(*args, **kwargs)
         context['project_id'] = self.request.resolver_match.kwargs['pk']
         context['main_branch'] = Branch.objects.filter(project__id=context['project_id'], name='main').first()
+        context['repo_owner'] = self.get_object().link.split("https://github.com/")[1].split("/")[0]
+        context['repo_name'] = self.get_object().link.split("https://github.com/")[1].split("/")[1].replace(".git", "")
         if context['main_branch'] is None:
             b = Branch(name="main", project=Project.objects.filter(id=int(context['project_id'])).first())
             b.save()
@@ -703,7 +706,6 @@ class CommitDetailView(DetailView):
         return context
 
 
-
 class MyNotificationsListView(ListView):
     model = Notification
     template_name = 'list_notifications.html'
@@ -716,12 +718,14 @@ class MyNotificationsListView(ListView):
         context['notifications'] = Notification.objects.filter(user=context['user'])
         return context
 
+
 def make_notification(project, type_notification):
     users = project.watched
     for user in users.all():
-        message = f"New {type_notification} is made on project {project.title}"
+        message = f"New {type_notification} has been made on project {project.title}"
         notification = Notification(project=project, user=user, is_reded=False, message=message)
         notification.save()
+
 
 def fork_project(request, pk=None, username=None):
     # tj koliko u dublinu da kopiram
@@ -742,9 +746,9 @@ def fork_project(request, pk=None, username=None):
         saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
         return redirect('../../projects/'+str(saved_project.id))
 
-def changes(request, username=None, repo=None, commitsha=None):
+def changes(request, username, repo, commitsha):
    # repo_info = get_commit_changes(request, username, repo,commitsha)
-    repo_info = get_commit_changes(request, 'isidora-stanic', 'uks', '59e3d110bf4bfd5ec22c18193421942a6a56e2ac')
+    repo_info = get_commit_changes(request, username, repo, commitsha)
     context = {'repo_info': repo_info}
 
     for f in repo_info["files"]:
@@ -910,8 +914,6 @@ def list_repositories_auth(request):
 
 
 def github_get_specific_repo(request, username, repo):
-    # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
-    # repo_info = get_all_visible_repositories_by_user(request, username)
     repo_info = get_specific_repository(request, username, repo)
     readme = get_specific_repository_readme(request, username, repo)
     readme_content = markdown.markdown(decode_base64_file(readme['content']))
@@ -920,34 +922,6 @@ def github_get_specific_repo(request, username, repo):
 
     context = {'repo_info': repo_info, 'readme': readme, 'readme_content': readme_content, 'tree': tree}
     return render(request, 'github_get_specific_repo.html', context)
-
-
-def github_get_repo_tree_branch(request, username, repo, branch):
-    repo_info = get_specific_repository(request, username, repo)
-    tree = get_repository_tree(request, username, repo, branch)
-    context = {'repo_info': repo_info, 'tree': tree}
-    return render(request, 'github_get_specific_repo.html', context)
-
-
-def github_get_repo_subtree(request, username, repo, path):
-    repo_info = get_specific_repository(request, username, repo)
-    tree = get_file_content(request, username, repo, path)
-    context = {'repo_info': repo_info, 'tree': tree}
-    return render(request, 'github_get_specific_repo.html', context)
-
-
-def github_get_repo_tree_branch_fof(request, username, repo, path):
-    repo_info = get_specific_repository(request, username, repo)
-    content = get_file_content(request, username, repo, path)
-    context = {'repo_info': repo_info, 'tree': content, 'content': markdown.markdown(decode_base64_file(content['content']))}
-    return render(request, 'github_get_specific_file.html', context)
-
-
-def get_full_tree(request, username, repo, branch):
-    repo_info = get_specific_repository(request, username, repo)
-    tree = get_tree_recursively(request, username, repo, branch)
-    context = {'repo_info': repo_info, 'tree': tree}
-    return render(request, 'github_get_full_repo.html', context)
 
 
 def github_branches(request, username, repo):
@@ -960,8 +934,15 @@ def github_branches(request, username, repo):
 
 def github_branch_commits(request, username, repo, branch):
     repo_info = get_specific_repository(request, username, repo)
+    if 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
+        return page_not_found(request, "There is no repo like that")
     branches = get_all_branches(request, username, repo)
-    commits = get_all_commits_for_branch(request, username, repo, branch)
+    if branch == 'main':
+        commits = get_all_commits_for_branch(request, username, repo, branch)
+        if 'message' in commits.keys() and commits['message'] == 'Not Found':
+            return redirect('github_branch_commits', username=username, repo=repo, branch='master')
+    else:
+        commits = get_all_commits_for_branch(request, username, repo, branch)
     context = {'repo_info': repo_info, 'commits': commits, 'branch': branch, 'branches': branches, 'username': username, 'repo': repo}
     return render(request, 'github_branch_commits.html', context)
 

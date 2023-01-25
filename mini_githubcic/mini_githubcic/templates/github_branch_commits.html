@@ -31,9 +31,14 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <p class="card-text h5"><span class="text-muted">[{{ c.sha|shorten_sha }}]</span> <b>{{ c.commit.message }}</b></p>
+{#                        {% if c.commit.author|is_string %}#}
                         <p class="card-text h6"><b>{{ c.author.login }}</b> <span class="text-muted">
                             committed {{ c.commit.author.date|convert_str_date|timesince}} ago</span></p>
-                        <a href="#todo">View</a>
+
+                        <a href="{% url 'changes' username repo c.sha %}">View</a>
+{#                            {% else %}#}
+{#                            <p>{{ c }}</p>#}
+{#                        {% endif %}#}
                     </div>
                 </div>
                 {% endfor %}

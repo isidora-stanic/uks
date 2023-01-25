@@ -17,7 +17,8 @@
     <hr>
     </div>
     <div>
-        <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>
+{#        <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>#}
+        <a class="btn btn-primary" href="{% url 'github_branch_commits' repo_owner repo_name 'main' %}">Branch history</a>
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_pull_requests' object.id %}">Pull requests</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
@@ -28,7 +29,6 @@
             <a class="btn btn-primary" href="{% url 'fork_project' object.id request.user.username %}">Fork project</a>
         {% endif %}
         {% if request.user == project.lead %}
-
         <a class="btn btn-primary" href="{% url 'project_update' object.id %}">Update</a>
         {% endif %}
         {% if request.user == project.lead %}

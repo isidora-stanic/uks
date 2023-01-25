@@ -19,7 +19,7 @@
                     <div class="card-body">
                     <div class="row">
                         <div class="col-auto mr-auto"><a href="{% url 'github_branch_commits' username repo branch.name|replace_slash %}" class="card-text">{{ branch.name }}</a></div>
-                        <div class="col-auto"><a href="#todo">[{{ branch.commit.sha|shorten_sha }}]</a></div>
+                        <div class="col-auto"><a href="{% url 'changes' username repo branch.commit.sha %}">[{{ branch.commit.sha|shorten_sha }}]</a></div>
                     </div>
                         {% if branch.name != 'main' %}
 {#                        {%if request.user in project.developers.all or request.user == project.lead %}#}
