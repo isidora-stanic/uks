@@ -473,6 +473,9 @@ class MilestoneCreateView(CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         form.instance.project = context['project']
+        if (form.instance.due_date - datetime.datetime.now(timezone.utc)).days < 0:
+            form.add_error(None, 'Day is before today')
+            return super().form_invalid(form)
         form.instance.lead = self.request.user
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if len(Milestone.objects.filter(title=form.instance.title)) != 0:
@@ -713,7 +716,8 @@ def starr_project(request, pk=None, username=None):
         user = User.objects.get(username=username)
         project.starred.add(user)
         project.save()
-        return redirect(project)
+        return redirect("../../projects/"+str(project.id))
+
 
 def unstarr_project(request, pk=None, username=None):
     if request.method == 'GET':
