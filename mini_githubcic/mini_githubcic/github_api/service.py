@@ -110,3 +110,6 @@ def create_folder_url(github_folder_url):
 
 def get_commit_changes(request, username, repo, sha):#"59e3d110bf4bfd5ec22c18193421942a6a56e2ac"
     return send_github_req('https://api.github.com/repos/' + username + '/' + repo + '/commits/' + sha, request)
+
+def git_fork_projects(request, username, repo):
+    return send_github_req('https://api.github.com/repos/' + username + '/' + repo + '/forks', request, method='POST')
