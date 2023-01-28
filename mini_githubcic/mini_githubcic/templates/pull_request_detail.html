@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Pull request details</h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=pr.project.id user_id=pr.project.lead.id %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Pull request details</div>
+    </div>
+</h1>
 <article class="container">
     <div class="row">
         <div class="col-auto mr-auto">
@@ -17,9 +26,9 @@
     <div class="grid-container">
         <div class="item1"></div>
         <div class="item2 comment-block">
-            <p> {{ pr.creator }} requested to merge
-                <a href="{% url 'branch_detail' pr.source.id %}">{{ pr.source.name }}</a> into
-                <a href="{% url 'branch_detail' pr.target.id %}">{{ pr.target.name }}</a>
+            <p> {{ pr.creator }} requested to merge <b>{{ pr.source.name }}</b> into <b>{{ pr.target.name }}</b>
+ {#                <a href="{% url 'branch_detail' pr.source.id %}">{{ pr.source.name }}</a> into#}
+ {#                <a href="{% url 'branch_detail' pr.target.id %}">{{ pr.target.name }}</a>#}
             </p>
             <p> Description - {{ pr.description }}</p>
             <p> Date - {{ pr.date_created|date:"d M, Y" }}</p>

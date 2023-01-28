@@ -89,4 +89,10 @@ urlpatterns = [
     path('github_repos/<slug:username>/<slug:repo>/branches/<str:branch>/rename', github_rename_branch, name='github_rename_branch'),
     path('github_repos/<slug:username>/<slug:repo>/branches/<str:branch>/delete', github_delete_branch, name='github_delete_branch'),
 
+    path('search/<slug:project_id>/<slug:user_id>', advanced_search, name='advanced_search'),
+    path('search/<slug:project_id>/<slug:user_id>/<slug:keyword>/<slug:search_type>/<slug:selected>',
+         toggle_search_results, name='toggle_search_results'),
+    path('search/results/<slug:project_id>/<slug:user_id>/<slug:keyword>/<slug:search_type>/<int:selected>',
+         advanced_search_result, name='advanced_search_results'),
+
 ]
