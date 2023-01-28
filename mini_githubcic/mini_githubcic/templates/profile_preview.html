@@ -53,7 +53,7 @@
                             <div class="card-body">
                                 <p class="card-text h5"><span class="text-muted">[{{ c }}]</span> <b>{{ c.log_message }}</b></p>
                                 <p class="card-text h6"><b>{{ c.author.username }}</b> <span class="text-muted">committed on {{ c.date_time }}</span></p>
-                                <a href="{% url 'commit_detail' c.id %}">View</a>
+{#                                <a href="{% url 'commit_detail' c.id %}">View</a>#}
                             </div>
                         </div>
                     {% endfor %}

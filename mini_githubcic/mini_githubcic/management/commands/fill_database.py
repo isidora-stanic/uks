@@ -29,20 +29,20 @@ class Command(BaseCommand):
         u3 = User.objects.get(username="U3")
 
         p1 = Project(title="project", description="d1", licence="l1", visibility=Visibility.PUBLIC,
-                     link="https://github.com/" + u1.username + "/project.git", lead=u1)
+                     link="https://github.com/isidora-stanic/uks", lead=u1)
         p1.save()
         p1.developers.add(u1)
         p1.save()
 
         p2 = Project(title="test", description="d2", licence="l2", visibility=Visibility.PUBLIC,
-                     link="https://github.com/" + u2.username + "/test.git", lead=u2)
+                     link="https://github.com/isidora-stanic/xml-projekat", lead=u2)
         p2.save()
         p2.developers.add(u1)
         p2.developers.add(u2)
         p2.save()
 
         p3 = Project(title="gitic", description="d3", licence="l3", visibility=Visibility.PRIVATE,
-                     link="https://github.com/" + u3.username + "/gitic.git", lead=u3)
+                     link="https://github.com/isidora-stanic/ntp-projekat", lead=u3)
         p3.save()
         p3.developers.add(u3)
         p3.save()
@@ -215,7 +215,7 @@ class Command(BaseCommand):
         self._insert_issues()
         self._insert_milestones()
         self._insert_labels()
-        self._insert_branches()
-        self._insert_commits()
-        self._insert_commits_and_branches()
+        # self._insert_branches()
+        # self._insert_commits()
+        # self._insert_commits_and_branches()
         self._insert_comments()
