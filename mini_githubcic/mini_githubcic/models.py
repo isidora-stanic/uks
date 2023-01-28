@@ -169,7 +169,7 @@ class Branch(models.Model):
     parent_branch = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)
 
     def get_absolute_url(self):
-        return reverse('branch_detail', kwargs={'pk': self.pk})
+        return '/branches/'+self.pk
 
     def __str__(self):
         return "%s" % (self.name)
@@ -185,7 +185,7 @@ class Commit(models.Model):
     parents = models.ManyToManyField("self", symmetrical=False, blank=True, verbose_name=('Parent commits'))
 
     def get_absolute_url(self):
-        return reverse('commit_detail', kwargs={'pk': self.pk})
+        return '/commits/'+self.pk
 
     def __str__(self):
         return "%s" % (self.hash[0:7])

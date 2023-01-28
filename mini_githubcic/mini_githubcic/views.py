@@ -383,6 +383,16 @@ class ProjectDetailView(DetailView):
         context['main_branch'] = Branch.objects.filter(project__id=context['project_id'], name='main').first()
         context['repo_owner'] = self.get_object().link.split("https://github.com/")[1].split("/")[0]
         context['repo_name'] = self.get_object().link.split("https://github.com/")[1].split("/")[1].replace(".git", "")
+        if self.request.user.is_authenticated and self.request.user.access_token:
+            repo_info = get_specific_repository(self.request, context['repo_owner'], context['repo_name'])
+            # repo_info = get_specific_repository(request, username, "uks")
+            if isinstance(repo_info, dict) and 'message' in repo_info.keys():
+                context['repo_exists'] = False
+            else:
+                context['repo_exists'] = True
+        else:
+            context['repo_exists'] = False
+
         if context['main_branch'] is None:
             b = Branch(name="main", project=Project.objects.filter(id=int(context['project_id'])).first())
             b.save()

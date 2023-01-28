@@ -18,8 +18,8 @@
         <div class="item1"></div>
         <div class="item2 comment-block">
             <p> {{ pr.creator }} requested to merge
-                <a href="{% url 'branch_detail' pr.source.id %}">{{ pr.source.name }}</a> into
-                <a href="{% url 'branch_detail' pr.target.id %}">{{ pr.target.name }}</a>
+{#                <a href="{% url 'branch_detail' pr.source.id %}">{{ pr.source.name }}</a> into#}
+{#                <a href="{% url 'branch_detail' pr.target.id %}">{{ pr.target.name }}</a>#}
             </p>
             <p> Description - {{ pr.description }}</p>
             <p> Date - {{ pr.date_created|date:"d M, Y" }}</p>

@@ -19,7 +19,7 @@
     <nav class="container">
         <div class="row">
           
-          {% if request.user.is_authenticated and request.user.access_token %}
+          {% if request.user.is_authenticated %}
           <div class="col-auto ">
             <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
           </div>
