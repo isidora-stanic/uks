@@ -18,7 +18,7 @@ from django.views.generic import (
     DeleteView
 )
 
-from .util import find_differences
+from .util import *
 
 from .github_api.service import (
     get_user_info,
@@ -158,7 +158,7 @@ class ProjectCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.lead = self.request.user
-        form.instance.developers.push(self.request.user)
+        #form.instance.developers.push(self.request.user)
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if Project.objects.filter(title=form.instance.title).exists():
             form.add_error(None, 'Title already in use')
@@ -1116,111 +1116,6 @@ def advanced_search(request, project_id, user_id):
         return render(request, "advanced_search.html", {'new_name_error': "Seaarch was not successful"})
 
 
-def search_in_project(keyword, project_id):
-    issue_list = Issue.objects.filter(project__id=project_id)
-    pr_list = PullRequest.objects.filter(project__id=project_id)
-    if " " in keyword:
-        klist = keyword.split(" ")
-        filtered_issues = [x for x in issue_list for k in klist
-                       if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                       any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower())]
-        filtered_prs = [x for x in pr_list for k in klist
-                           if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower())]
-        return filtered_issues, filtered_prs
-    else:
-        filtered_issues = [x for x in issue_list
-                       if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                       any(y for y in Comment.objects.filter(task__id=x.id) if keyword.lower() in y.content.lower())]
-        filtered_prs = [x for x in pr_list
-                           if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if
-                               keyword.lower() in y.content.lower())]
-        return filtered_issues, filtered_prs
-
-
-def search_in_user(keyword, user_id):
-    project_list = Project.objects.filter(lead__id=user_id)
-    issue_list = Issue.objects.filter(project__lead__id=user_id)
-    pr_list = PullRequest.objects.filter(project__lead__id=user_id)
-    if " " in keyword:
-        klist = keyword.split(" ")
-        filtered_projects = [p for p in project_list if
-                             any(k for k in klist if k.lower() in p.title.lower()
-                                 or k.lower() in p.description.lower() or
-                                 any(x for x in Issue.objects.filter(project__id=p.id)
-                                     if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                                     any(y for y in Comment.objects.filter(task__id=x.id) if
-                                                                    k.lower() in y.content.lower())))]
-        filtered_issues = [x for x in issue_list if any(k for k in klist
-                           if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower()))]
-
-        filtered_prs = [x for x in pr_list if any(k for k in klist
-                           if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower()))]
-        return filtered_projects, filtered_issues, filtered_prs
-    else:
-        filtered_projects = [p for p in project_list
-                             if keyword.lower() in p.title.lower() or keyword.lower() in p.description.lower() or
-                             any(x for x in Issue.objects.filter(project__id=p.id)
-                                 if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                                 any(y for y in Comment.objects.filter(task__id=x.id) if
-                                     keyword.lower() in y.content.lower()))]
-        filtered_issues = [x for x in issue_list
-                           if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if
-                               keyword.lower() in y.content.lower())]
-
-        filtered_prs = [x for x in pr_list
-                           if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if
-                               keyword.lower() in y.content.lower())]
-        return filtered_projects, filtered_issues, filtered_prs
-
-
-def search_in_github(keyword):
-    issue_list = Issue.objects.all()
-    project_list = Project.objects.all()
-    user_list = User.objects.all()
-    pr_list = PullRequest.objects.all()
-    if " " in keyword:
-        klist = keyword.split(" ")
-        filtered_issues = [x for x in issue_list if any(k for k in klist
-                       if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                       any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower()))]
-
-        filtered_projects = [p for p in project_list if any(k for k in klist
-                            if k.lower() in p.title.lower() or k.lower() in p.description.lower() or
-                            any(x for x in Issue.objects.filter(project__id=p.id)
-                            if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                            any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower())))]
-
-        filtered_users = [u for u in user_list if any(k for k in klist if k.lower() in u.username.lower())]
-        filtered_prs = [x for x in pr_list if
-                        any(k for k in klist if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                            any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower()))]
-        return filtered_projects, filtered_issues, filtered_users, filtered_prs
-    else:
-        filtered_issues = [x for x in issue_list
-                       if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                       any(y for y in Comment.objects.filter(task__id=x.id) if keyword.lower() in y.content.lower())]
-
-        filtered_projects = [p for p in project_list
-                             if keyword.lower() in p.title.lower() or keyword.lower() in p.description.lower() or
-                             any(x for x in Issue.objects.filter(project__id=p.id)
-                             if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                             any(y for y in Comment.objects.filter(task__id=x.id) if
-                            keyword.lower() in y.content.lower()))]
-
-        filtered_users = [u for u in user_list if keyword.lower() in u.username.lower()]
-        filtered_prs = [x for x in pr_list
-                           if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if
-                               keyword.lower() in y.content.lower())]
-        return filtered_projects, filtered_issues, filtered_users, filtered_prs
-
-
 def toggle_search_results(request, project_id, user_id, keyword, search_type, selected):
     if request.method == 'GET':
         return redirect('advanced_search_results', project_id=project_id,
@@ -1238,10 +1133,10 @@ def advanced_search_result(request, project_id, user_id, keyword=None,  search_t
         obj_dict['search_type'] = 's2'
         obj_dict['info'] = User.objects.filter(id=user_id).first().username
         obj_dict['projects'], obj_dict['issues'], obj_dict['prs'] = search_in_user(obj_dict['keyword'], user_id)
-    if 's3' in search_type:
+    if 's1' in search_type:
         obj_dict['search_type'] = 's1'
         obj_dict['projects'], obj_dict['issues'], obj_dict['users'], obj_dict['prs'] = search_in_github(obj_dict['keyword'])
-    if 's1' in search_type:
+    if 's3' in search_type:
         obj_dict['search_type'] = 's3'
         obj_dict['info'] = Project.objects.filter(id=project_id).first().title
         obj_dict['issues'], obj_dict['prs'] = search_in_project(obj_dict['keyword'], project_id)
