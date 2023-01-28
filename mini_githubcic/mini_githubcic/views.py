@@ -799,15 +799,15 @@ def fork_project(request, pk=None, username=None):
     # tj koliko u dublinu da kopiram
     project = Project.objects.filter(id=pk)[0]
 
-    resp = git_fork_projects(request, "rajtarovN", "Love-Pets")
-    print(resp)
-    # if 'ref' in resp.keys() and resp['ref'] == "refs/heads/" + new_name:project.title
+    resp = git_fork_projects(request, username, project.title)
+    print(resp["html_url"])
+    # if 'ref' in resp.keys() and resp['ref'] == "refs/heads/" + new_name:
     #     return redirect('github_branches', username=username, repo=repo)
     # return render(request, "github_create_branch.html",
     #               {'new_name_error': "Renaming was not successful", 'username': username, 'repo': repo})
 
     #result
-    link = project.link
+    link = resp["html_url"]
 
     if project.visibility == 'PUBLIC':
         if project.number_of_forked_project is None:
@@ -819,7 +819,7 @@ def fork_project(request, pk=None, username=None):
                               licence = project.licence,
                               description = project.description,
                               visibility = project.visibility,
-                              link= project.link, #novi todo
+                              link= resp["html_url"], #novi todo
                               lead = user, fork_parent= project)
         new_project.save()
         saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
