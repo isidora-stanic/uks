@@ -17,7 +17,11 @@
     <hr>
     </div>
     <div>
-        <a class="btn btn-primary" href="{% url 'github_branch_commits' repo_owner repo_name 'main' %}">Branch history</a>
+        {% if repo_exists %}
+            <a class="btn btn-primary" href="{% url 'github_branch_commits' repo_owner repo_name 'main' %}">Branch history</a>
+        {% else %}
+            <a disabled class="btn btn-secondary disabled" href="#">Branch history</a>
+        {% endif %}
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_pull_requests' object.id %}">Pull requests</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
