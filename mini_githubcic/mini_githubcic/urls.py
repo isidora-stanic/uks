@@ -94,5 +94,7 @@ urlpatterns = [
          toggle_search_results, name='toggle_search_results'),
     path('search/results/<slug:project_id>/<slug:user_id>/<slug:keyword>/<slug:search_type>/<int:selected>',
          advanced_search_result, name='advanced_search_results'),
+    path('tasks/<str:task_type>/<int:selected_tab>/filter', tasks_filter, name='tasks_filter'),
+    path('tasks/<int:pk>', forward_to_view_task, name='forward_to_view_task')
 
 ]

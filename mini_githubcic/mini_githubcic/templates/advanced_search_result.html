@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">
+<h1 class="title" style="display:flex;">
     <div class="col-auto mr-auto" style="display:flex;">
         <div style="border-bottom: groove">
             {% block advanced_search %}
@@ -13,6 +13,10 @@
             {% endif %}
             {% endblock advanced_search %}
         </div>
+        {% if request.user.is_authenticated %}
+        <a class="nav-links" style="line-height: 2px;" href="{% url 'tasks_filter' 'pr' 1 %}">Pull Requests</a>
+        <a class="nav-links" href="{% url 'tasks_filter' 'issue' 1 %}" style="line-height: 2px;">Issues</a>
+        {% endif %}
         <div style="margin-top: 8px;margin-left:20px">Search results for "{{keyword}}" in
         {% if search_type == 's1' %}
             All Mini Github-cic
@@ -64,9 +68,6 @@
                         class="counter"
                         data-search-type="Users">{{users|length}}</span></a>
                 {% endif %}
-                <a class="menu-item" >Commits<span
-                        class="counter"
-                        data-search-type="Commits">0</span></a>
             </nav>
         </div>
         <div class="item1">
