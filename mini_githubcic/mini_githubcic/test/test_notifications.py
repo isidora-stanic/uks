@@ -18,12 +18,6 @@ class MilestoneTestCase(TestCase):
         self.assertEqual(notification.message, notification1.message)
         self.assertEqual(notification.project.id, notification1.project.id)
 
-    # def test_edit_notification(self):
-    #     notification = Notification.objects.get(id=1)
-    #     milestone = Milestone.objects.get(id=1)
-    #     notification.message = "it is made commit or pr"
-    #     notification.save()
-    #     self.assertEqual("it is made commit or pr", Notification.objects.get(id=1))
 
     def test_delete_notification(self):
         project = Project.objects.get(id=1)
