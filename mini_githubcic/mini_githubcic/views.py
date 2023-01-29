@@ -21,6 +21,7 @@ from django.views.generic import (
 from .util import find_differences
 
 from .github_api.service import (
+    get_user_actions,
     get_user_info,
     get_all_visible_repositories_by_user,
     get_specific_repository,
@@ -660,6 +661,10 @@ class ProfilePreview(DetailView):
     template_name = 'profile_preview.html'
     slug_field = 'username'
     slug_url_kwarg = 'username'
+    
+    def format_repo_names(self, repo):
+        repo['repo']['name'] = repo['repo']['name'].replace('/', '_')
+        return repo
 
     def get_context_data(self, *args, **kwargs):
         context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
@@ -667,8 +672,8 @@ class ProfilePreview(DetailView):
         context['github_oauth_url'] = "https://github.com/login/oauth/authorize?client_id=" + settings.GITHUB_CLIENT_ID + "&scope=repo%2Cuser&state="+self.request.resolver_match.kwargs['username']
         context['authorized_account'] = get_user_info(self.request).json()
         context['projects'] = Project.objects.filter(Q(lead=context['user']) & Q(visibility=Visibility.PUBLIC)).all()
-        context['commits'] = Commit.objects.filter(author=context['user']).filter(
-            branches__project__visibility=Visibility.PUBLIC).distinct()
+        context['actions'] = get_user_actions(self.request).json()
+        context['actions'] = list(map(lambda x: self.format_repo_names(x), context['actions']))
         return context
     
 
@@ -714,7 +719,6 @@ class StarredProjectListView(ListView):
         context = super(StarredProjectListView, self).get_context_data(*args, **kwargs)
         context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
         context['projects'] = Project.objects.filter(starred=context['user'])
-        print(context['projects'])
         return context
 
 def starr_project(request, pk=None, username=None):
@@ -814,8 +818,10 @@ def fork_project(request, pk=None, username=None):
         return redirect('../../projects/'+str(saved_project.id))
 
 def changes(request, username, repo, commitsha):
-   # repo_info = get_commit_changes(request, username, repo,commitsha)
-    repo_info = get_commit_changes(request, username, repo, commitsha)
+    if username == '_':
+        username, repo = repo.split('_') 
+    repo_info = get_commit_changes(request, username, repo, commitsha) 
+        
     context = {'repo_info': repo_info}
 
     for f in repo_info["files"]:
@@ -994,7 +1000,6 @@ class PullRequestDeleteView(DeleteView):
         
 def list_repositories_auth(request):
     # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
-    print(request.user)
     repo_info = get_all_visible_repositories_by_user(request)
     account_resp = get_user_info(request)
     # repo_info = get_specific_repository(request, username, "uks")
