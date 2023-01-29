@@ -1,15 +1,17 @@
 {% if projects %}
 <div class="row" style="border-bottom-style: inset;width: 100%;margin-left: 1px;">
-    <div class="col-auto mr-auto" >
+    <div class="col-auto mr-auto">
         <h3> {{ projects|length }} project results</h3>
     </div>
 </div>
 <br>
 {% for project in projects %}
-<div class="card mb-3">
+<div class="card mb-3" style="text-align: left;">
     <div class="card-body row">
         <div class="col-auto mr-auto">
-            <p class="card-text">{{ project }} </p>
+            <p class="card-text"><b>{{ project.title }}</b>
+                <small>{{project.description}}</small>
+            </p>
             <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
         </div>
     </div>

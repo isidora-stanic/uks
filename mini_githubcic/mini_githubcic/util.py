@@ -10,105 +10,88 @@ def find_differences(old_obj, updated_obj):
     return diff
 
 
-def search_in_project(keyword, project_id):
-    issue_list = Issue.objects.filter(project__id=project_id)
-    pr_list = PullRequest.objects.filter(project__id=project_id)
-    if " " in keyword:
-        klist = keyword.split(" ")
-        filtered_issues = [x for x in issue_list for k in klist
-                           if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower())]
-        filtered_prs = [x for x in pr_list for k in klist
-                        if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                        any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower())]
-        return filtered_issues, filtered_prs
-    else:
-        filtered_issues = [x for x in issue_list
-                           if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if
-                               keyword.lower() in y.content.lower())]
-        filtered_prs = [x for x in pr_list
-                        if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                        any(y for y in Comment.objects.filter(task__id=x.id) if
-                            keyword.lower() in y.content.lower())]
-        return filtered_issues, filtered_prs
+def search_in_project(keyword, user):
+    filtered_issues = list(filter_query_issues(keyword, user))
+    filtered_prs = list(filter_query_prs(keyword, user))
+    return filtered_issues, filtered_prs
 
 
-def search_in_user(keyword, user_id):
-    project_list = Project.objects.filter(lead__id=user_id)
-    issue_list = Issue.objects.filter(project__lead__id=user_id)
-    pr_list = PullRequest.objects.filter(project__lead__id=user_id)
-    if " " in keyword:
-        klist = keyword.split(" ")
-        filtered_projects = [p for p in project_list if
-                             any(k for k in klist if k.lower() in p.title.lower()
-                                 or k.lower() in p.description.lower()
-                                 )]
-        filtered_issues = [x for x in issue_list if any(k for k in klist if
-                                                        k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                                                        any(y for y in Comment.objects.filter(task__id=x.id) if
-                                                            k.lower() in y.content.lower()))]
-
-        filtered_prs = [x for x in pr_list if any(k for k in klist if
-                                                  k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                                                  any(y for y in Comment.objects.filter(task__id=x.id) if
-                                                      k.lower() in y.content.lower()))]
-        return filtered_projects, filtered_issues, filtered_prs
-    else:
-        filtered_projects = [p for p in project_list
-                             if keyword.lower() in p.title.lower() or keyword.lower() in p.description.lower()
-                             ]
-        filtered_issues = [x for x in issue_list
-                           if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if
-                               keyword.lower() in y.content.lower())]
-
-        filtered_prs = [x for x in pr_list
-                        if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                        any(y for y in Comment.objects.filter(task__id=x.id) if
-                            keyword.lower() in y.content.lower())]
-        return filtered_projects, filtered_issues, filtered_prs
+def search_in_user(keyword, user):
+    filtered_projects = list(search_query_projects(keyword, user))
+    filtered_issues = list(filter_query_issues(keyword, user))
+    filtered_prs = list(filter_query_prs(keyword, user))
+    return filtered_projects, filtered_issues, filtered_prs
 
 
-def search_in_github(keyword):
-    issue_list = Issue.objects.all()
-    project_list = Project.objects.all()
-    user_list = User.objects.all()
-    pr_list = PullRequest.objects.all()
-    if " " in keyword:
-        klist = keyword.split(" ")
-        filtered_issues = [x for x in issue_list if any(k for k in klist
-                                                        if
-                                                        k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                                                        any(y for y in Comment.objects.filter(task__id=x.id) if
-                                                            k.lower() in y.content.lower()))]
+def search_in_github(keyword, user):
+    filtered_projects = list(search_query_projects(keyword, user))
+    filtered_issues = list(filter_query_issues(keyword, user))
+    filtered_prs = list(filter_query_prs(keyword, user))
+    filtered_users = list(search_query_users(keyword))
+    return filtered_projects, filtered_issues, filtered_users, filtered_prs
 
-        filtered_projects = [p for p in project_list if any(k for k in klist
-                                                            if
-                                                            k.lower() in p.title.lower() or k.lower() in p.description.lower())]
 
-        filtered_users = [u for u in user_list if any(k for k in klist if k.lower() in u.username.lower())]
-        filtered_prs = [x for x in pr_list if
-                        any(k for k in klist if k.lower() in x.title.lower() or k.lower() in x.description.lower() or
-                            any(y for y in Comment.objects.filter(task__id=x.id) if k.lower() in y.content.lower()))]
-        return filtered_projects, filtered_issues, filtered_users, filtered_prs
-    else:
-        filtered_issues = [x for x in issue_list
-                           if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                           any(y for y in Comment.objects.filter(task__id=x.id) if
-                               keyword.lower() in y.content.lower())]
+def search_query_users(query):
+    users = User.objects.all()
+    options = query.split(" ")
+    word = [x for x in options if x.find(":") == -1]
+    if len(word) >= 1:
+        for w in word:
+            users = users.filter(username__contains=w.lower())
+    return users
 
-        filtered_projects = [p for p in project_list
-                             if keyword.lower() in p.title.lower() or keyword.lower() in p.description.lower()]
 
-        filtered_prs = [x for x in pr_list
-                        if keyword.lower() in x.title.lower() or keyword.lower() in x.description.lower() or
-                        any(y for y in Comment.objects.filter(task__id=x.id) if
-                            keyword.lower() in y.content.lower())]
+def search_query_projects(query, user):
+    projects = Project.objects.all()
+    options = query.split(" ")
+    word = [x for x in options if x.find(":") == -1]
+    if 'is:public' in query:
+        projects = projects.filter(visibility='PUBLIC')
+    if 'is:private' in query:
+        projects = projects.filter(Q(visibility=Visibility.PRIVATE) &
+                         (Q(lead__id=user.id) | Q(developers=user))).distinct()
+    if 'is:public' not in query and 'is:private' not in query:
+        projects = projects.filter(Q(visibility=Visibility.PUBLIC) | (Q(visibility=Visibility.PRIVATE) &
+                            (Q(lead__id=user.id) | Q( developers=user)))).distinct()
+    if 'in:name' in query:
+        projects = projects.filter(Q(title__contains=word[0].lower())).distinct()
+    if 'in:description' in query:
+        projects = projects.filter(Q(description__contains=word[0].lower())).distinct()
+    if 'in:name,description' in query:
+        projects = projects.filter(title__contains=word[0].lower(), description__contains=word[0].lower()).distinct()
+    if ('in:name' and 'in:name,description' and 'in:description') not in query :
+        projects = projects.filter(title__contains=word[0].lower(), description__contains=word[0].lower()).distinct()
+    if 'user:' in query:
+        i = query.find('user:')
+        author = query[i + 5:].split(" ")[0]
+        projects = projects.filter(lead__username__contains=author.lower())
+    if 'repo:' in query:
+        i = query.find('repo:')
+        params = (query[i + 5:].split(" ")[0]).split('/')
+        projects = projects.filter(lead__username__contains=params[0].lower(),title__contains=params[1].lower())
+    if 'forks:' in query:
+        i = query.find('forks:')
+        params = query[i + 6:].split(" ")[0]
+        if ('>' and '<' and '>=' and '<=' and '..') not in params:
+            val = params[1:]
+            projects = projects.filter(number_of_forked_project=val).distinct()
+        if '>' in params:
+            val = params[1:]
+            projects = projects.filter(number_of_forked_project__gt=val).distinct()
+        if '>=' in params:
+            val = params[1:]
+            projects = projects.filter(number_of_forked_project__gte=val).distinct()
+        if '<' in params:
+            val = params[1:]
+            projects = projects.filter(number_of_forked_project__lt=val).distinct()
+        if '<=' in params:
+            val = params[1:]
+            projects = projects.filter(number_of_forked_project__lte=val).distinct()
+        if '..' in params:
+            vals = params.split("..")
+            projects = projects.filter(number_of_forked_project__lt=vals[1], number_of_forked_project__gt=vals[0]).distinct()
 
-        filtered_users = [u for u in user_list if keyword.lower() in u.username.lower()]
-
-        return filtered_projects, filtered_issues, filtered_users, filtered_prs
+    return projects
 
 
 def filter_query(query, user):

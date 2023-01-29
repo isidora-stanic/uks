@@ -6,10 +6,12 @@
 </div>
 <br>
 {% for issue in issues %}
-<div class="card mb-3">
+<div class="card mb-3" style="text-align: left;">
     <div class="card-body row">
         <div class="col-auto mr-auto">
-            <p class="card-text">{{ issue }} </p>
+            <p class="card-text"><b>{{ issue.title }}</b>
+                <small>{{issue.description}}</small>
+            </p>
             <a class="btn btn-primary" href="{% url 'issue_detail' issue.id %}">View</a>
         </div>
     </div>

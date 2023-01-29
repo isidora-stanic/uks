@@ -1,20 +1,24 @@
 {% if prs %}
 <div class="row" style="border-bottom-style: inset;width: 100%;margin-left: 1px;">
-    <div class="col-auto mr-auto" >
+    <div class="col-auto mr-auto">
         <h3> {{ prs|length }} pull request results</h3>
     </div>
 </div>
 <br>
+
 {% for pr in prs %}
-<div class="card mb-3">
+<div class="card mb-3" style="text-align: left;">
     <div class="card-body row">
         <div class="col-auto mr-auto">
-            <p class="card-text">{{ pr }} </p>
+            <p class="card-text"><b>{{ pr.title }}</b>
+                <small>{{pr.description}}</small>
+            </p>
             <a class="btn btn-primary" href="{% url 'pull_request_detail' pr.id %}">View</a>
         </div>
     </div>
 </div>
 {% endfor %}
+
 {% else %}
 <div data-view-component="true"
      style="padding: 32px;position: relative;text-align: center;padding-right: 8px !important;padding-left: 8px) !important;">
