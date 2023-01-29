@@ -2,9 +2,9 @@ name: Django CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   test:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.9]
+        python-version: ['3.10']
 
     steps:
     - uses: actions/checkout@v2
@@ -23,6 +23,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Dependencies
       run: |
+        cd mini_githubcic
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Setup Django DB
@@ -33,4 +34,4 @@ jobs:
     - name: Run Django Test Suite
       run: |
         cd mini_githubcic
-        python manage.py test mini_githubcic.tests --noinput
+        python manage.py test mini_githubcic.test --noinput
