@@ -1,0 +1,33 @@
+{% extends 'insights.html' %}
+{% block insights %}
+
+<div>
+    {% if forks %}
+    <div class="network mb-3" id="network">
+        <h3 class="d-inline" data-view-component="true">Forks of {{repo_owner}}/{{repo_name}}</h3>
+        <div class="mt-3">
+            <div class="repo">
+                <a >{{repo_owner}}</a>
+                <span class="color-fg-muted">/</span>
+                <a class="Link--secondary">{{repo_name}}</a>
+            </div>
+            {% for key, value in forks.items %}
+            <div class="repo">
+
+                <svg class="network-tree" fill="var(--color-neutral-muted, #d1d5da)" height="26" viewBox="0 0 20 26"
+                     width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path clip-rule="evenodd" d="M10 0V13H20V14H9V0H10Z" fill-rule="evenodd"></path>
+                </svg>
+
+                <a href="{{value}}">{{key}}</a>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {%endif %}
+
+</div>
+
+
+{% endblock %}

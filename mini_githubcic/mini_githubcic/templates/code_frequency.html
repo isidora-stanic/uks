@@ -1,0 +1,86 @@
+{% extends 'insights.html' %}
+{% block insights %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
+<script crossorigin="anonymous"
+        integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g=="
+        src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script crossorigin="anonymous"
+        integrity="sha512-qeclqxc+2KW7GtbmHcj/Ev5eBoYpPnuAcPqusYRIfvaC9OWHlDwu1BrIVPYvfNDG+SRIRiPIokiSvhlLJXDqsw=="
+        src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/0.7.7/chartjs-plugin-zoom.js"></script>
+
+{% if labels %}
+<div id="container" style="width: 75%;">
+    {{repo_info}}
+    {{temp_date}}
+    <canvas id="commit-line"></canvas>
+</div>
+
+<script>
+    const config = {
+      type: 'line',
+      data: {
+        datasets: [
+        {
+          data: {{ added | safe }},
+          backgroundColor: [
+            '#00FF00'
+          ],
+          label: 'Added'
+        },
+        {
+          data: {{ deleted | safe }},
+          backgroundColor: [
+            '#FF0000'
+          ],
+          label: 'Deleted'
+        }],
+        labels: {{ labels|safe }}
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Commits'
+          },
+          zoom: {
+            pan: {
+              enabled:true,
+              mode:'x'
+            },
+            zoom: {
+              enabled: true,
+              wheel: true,
+              drag: true,
+              mode: 'xy',
+              speed: 0.1,
+              threshold: 2
+            }
+          }
+        },
+        scales: {
+          x: {
+            display: true,
+          },
+          y: {
+            display: true,
+            min: -100,
+            max: 1000
+          }
+        },
+      },
+    };
+
+
+    window.onload = function() {
+      let ctx = document.getElementById('commit-line').getContext('2d');
+      window.barChsrt = new Chart(ctx, config);
+
+    };
+
+
+</script>
+{% endif %}
+
+{% endblock %}

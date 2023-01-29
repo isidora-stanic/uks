@@ -23,6 +23,7 @@
             <a disabled class="btn btn-secondary disabled" href="#">Branch history</a>
         {% endif %}
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
+        <a class="btn btn-primary" href="{% url 'pulse' object.lead.username object.title %}">Pulse</a>
         <a class="btn btn-primary" href="{% url 'list_pull_requests' object.id %}">Pull requests</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
         <a class="btn btn-primary" href="{% url 'list_labels' object.id %}">Labels</a>

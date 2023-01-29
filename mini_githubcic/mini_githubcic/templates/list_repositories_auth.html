@@ -33,6 +33,7 @@
                 <a href="#todo" style="pointer-events: none; color: gray;">Create Project</a>
 {#                <br>#}
                 <a href="{{ item.html_url }}">See on Github</a>
+                     <a class="btn btn-primary" href="{% url 'insights' item.owner.login item.name %}">Insights</a>
                 <p>There is more...</p>
                 </div>
             {%endif%}
