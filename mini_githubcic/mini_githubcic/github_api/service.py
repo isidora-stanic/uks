@@ -8,6 +8,12 @@ def get_user_info(request):
         request.user.save()
     return user_info_resp
 
+def get_user_actions(request):
+    user_info_resp = send_github_req_with_auth('https://api.github.com/user', request)
+    username = user_info_resp.json()['login']
+    user_commits_resp = send_github_req_with_auth(f'https://api.github.com/users/{username}/events', request)
+    return user_commits_resp
+
 def search_repositories_by_user(request, username):
     return send_github_req(
         'https://api.github.com/search/repositories?q=user:'+username,

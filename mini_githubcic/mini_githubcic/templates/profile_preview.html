@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+{% load commit_extras %}
 {% block content %}
 <h1 class="title">
     <div class="col-auto mr-auto" style="display:flex;">
@@ -53,23 +54,32 @@
     </div>
     <h1 class="title">User's contributions</h1>
     <div class="container">
-        {% if commits %}
+        {% if actions %}
 
             <div class="tab-content">
                 <div class="tab-pane  active" >
-                    {% for c in commits %}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <p class="card-text h5"><span class="text-muted">[{{ c }}]</span> <b>{{ c.log_message }}</b></p>
-                                <p class="card-text h6"><b>{{ c.author.username }}</b> <span class="text-muted">committed on {{ c.date_time }}</span></p>
-{#                                <a href="{% url 'commit_detail' c.id %}">View</a>#}
-
-                            </div>
-                        </div>
+                    {% for a in actions %}
+                        {% if a.type == 'PushEvent' and a.payload.commits %}
+                            {% for commit in a.payload.commits %}
+                            {% if commit.author.name == authorized_account.login %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <p class="card-text h5"><span class="text-muted">[{{ commit.sha|shorten_sha }}]</span> <b>{{ commit.message }}</b></p>
+           
+                                    <p class="card-text h6"><b>{{ commit.author.name }}</b> <span class="text-muted">
+                                        committed {{ a.created_at|convert_str_date|timesince}} ago</span></p>
+            
+                                    <a href="{% url 'changes' '_' a.repo.name commit.sha %}">View</a> 
+           
+                                </div>
+                            </div> 
+                            {% endif %}
+                            {% endfor %}
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
-
+        
         {% else %}
         This user has no commits.
         {% endif %}
