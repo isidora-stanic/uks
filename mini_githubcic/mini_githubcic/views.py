@@ -1,5 +1,4 @@
-import datetime
-import json
+from datetime import datetime
 
 from itertools import chain
 import markdown
@@ -9,6 +8,7 @@ import copy
 from django.apps.registry import apps
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.utils.timezone import timedelta
 from django.views.defaults import page_not_found
 from django.views.generic import (
     CreateView,
@@ -20,41 +20,9 @@ from django.views.generic import (
 
 from .util import *
 
-from .github_api.service import (
-    get_user_info,
-    get_all_visible_repositories_by_user,
-    get_specific_repository,
-    get_specific_repository_readme,
-    get_repository_tree, 
-    get_file_content,
-    get_tree_recursively,
-    get_commit_changes, 
-    get_all_commits_for_branch, 
-    get_all_branches, 
-    rename_branch, 
-    delete_branch, 
-    create_branch,
-    git_fork_projects
-)
+from .github_api.service import *
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import (
-    LabelApplication, 
-    User, 
-    Milestone, 
-    Commit, 
-    Visibility,
-    Reaction, 
-    Notification,
-    Project, 
-    Issue, 
-    Label, 
-    Branch, 
-    CreateEvent, 
-    Event, 
-    Task, 
-    UpdateEvent
-)
-
+from .models import *
 from .forms import *
 
 from django.urls import reverse_lazy
@@ -1116,6 +1084,266 @@ def after_auth(request):
     user.access_token = response.json()['access_token']
     user.save()
     return redirect('/login', {})
+
+
+def insights(request, username, repo):
+    project = Project.objects.filter(title=repo, lead__username=username).first()
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'project': project,
+        #'project_id': project.id
+    }
+    return render(request, 'insights.html', context)
+
+
+def pulse(request, username, repo):
+    project = Project.objects.filter(title=repo, lead__username=username).first()
+    today = timezone.now()
+    date_from = timezone.now() - timedelta(7)
+    date_from = date_from
+    set_filter = 'hours'
+    if request.GET.get('filter'):
+        date_filter = request.GET.get('filter')
+
+        if date_filter == 'hours':
+            date_from = timezone.now() - timedelta(1)
+        elif date_filter == 'days':
+            date_from = timezone.now() - timedelta(3)
+            set_filter = 'days'
+
+    merged_pull_requests = PullRequest.objects.filter(project=project, state=State.MERGED,
+                                                      date_created__range=[date_from, today]).all()
+    open_pull_requests = PullRequest.objects.filter(project=project, state=State.OPEN,
+                                                    date_created__range=[date_from, today]).all()
+    closed_issues = Issue.objects.filter(project=project, is_open=False, date_created__range=[date_from, today]).all()
+    new_issues = Issue.objects.filter(project=project, is_open=True,  date_created__range=[date_from, today]).all()
+
+    people_pr_merged = merged_pull_requests.values_list('creator_id', flat=True).distinct()
+    people_pr_open = open_pull_requests.values_list('creator_id', flat=True).distinct()
+    people_is_closed = closed_issues.values_list('creator_id', flat=True).distinct()
+    people_is_new = new_issues.values_list('creator_id', flat=True).distinct()
+    context = {
+        'filter': set_filter,
+        'repo_owner': username,
+        'repo_name': repo,
+        'date_from': date_from.date(),
+        'date_to': today.date(),
+        'count_active_pull_requests': len(merged_pull_requests) + len(open_pull_requests),  # 100 / total * x
+        'merged_pull_requests': merged_pull_requests,
+        'open_pull_requests': open_pull_requests,
+        'count_active_issues': len(closed_issues) + len(new_issues),
+        'closed_issues': closed_issues,
+        'new_issues': new_issues,
+        'people_pr_merged': people_pr_merged,
+        'people_pr_open': people_pr_open,
+        'people_is_closed': people_is_closed,
+        'people_is_new': people_is_new
+
+    }
+
+    return render(request, 'pulse.html', context)
+
+
+def traffic(request, username, repo):
+    labels = []
+    count = []
+    uniques = []
+    git_traffic_list = get_repository_traffic(request, username, repo)['clones']
+    if len(git_traffic_list) == 0:
+        context = {
+            'repo_owner': username,
+            'repo_name': repo,
+        }
+        return render(request, 'traffic.html', context)
+    start_date = datetime.strptime(git_traffic_list[0]['timestamp'].split('T')[0], '%Y-%m-%d').date()
+    end_date = datetime.strptime(git_traffic_list[-1]['timestamp'].split('T')[0], '%Y-%m-%d').date()
+    to = [n for n in range(int((end_date - start_date).days))]
+    for i in to:
+        labels.append(start_date.__str__())
+        for item in git_traffic_list:
+            if datetime.strptime(item['timestamp'].split('T')[0], '%Y-%m-%d').date() == start_date:
+                count.append(item['count'])
+                uniques.append(item['uniques'])
+                break
+            else:
+                count.append(0)
+                uniques.append(0)
+
+        start_date += timedelta(days=1)
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'labels': labels,
+        'count': count,
+        'uniques': uniques,
+        'result': git_traffic_list
+    }
+
+    return render(request, 'traffic.html', context)
+
+
+def contributors(request, username, repo):
+    repo_info = get_specific_repository(request, username, repo)
+    if not isinstance(repo_info, list) and 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
+        return page_not_found(request, "There is no repo like that")
+    branches = get_all_branches(request, username, repo)
+    commits = get_all_commits_for_branch(request, username, repo, 'main')
+    if not isinstance(commits, list) and 'message' in commits.keys() and commits['message'] == 'Not Found':
+        return
+    dates = [n['commit']['author']['date'] for n in commits]
+    dates = [datetime.strptime(n.split('T')[0], '%Y-%m-%d').date() for n in dates]
+
+    start_date = dates[-1]
+    end_date = timezone.now().date()
+    to = [n for n in range(int((end_date - start_date).days))]
+
+    labels = []
+    counts = []
+    # { 'developer' : { 'date': x, 'counts': y } }
+    developer_map = {}
+    for i in to:
+        labels.append(str(start_date))
+        count = 0
+        for item in commits:
+            if datetime.strptime(item['commit']['author']['date'].split('T')[0], '%Y-%m-%d').date() == start_date:
+                count += 1
+                author = item['commit']['author']['name']
+                if author in developer_map:
+                    if start_date in developer_map[author]:
+                        developer_map[author][start_date] += 1
+                    else:
+                        developer_map[author][start_date] = 0
+                else:
+                    developer_map[author] = {}
+                    developer_map[author][start_date] = 0
+
+        counts.append(count)
+        developers = developer_map.keys()
+        for developer in developers:
+            if start_date in developer_map[developer]:
+                continue
+            else:
+                developer_map[developer][start_date] = 0
+
+        start_date += timedelta(days=1)
+
+    for developer in developer_map.keys():
+        developer_map[developer] = list(developer_map[developer].values())
+    context = {
+        'repo_info': repo_info,
+        'commits': commits,
+        'branches': branches,
+        'repo_owner': username,
+        'repo_name': repo,
+        'dates': dates,
+        'labels': labels,
+        'counts': counts,
+        'developer_map': developer_map
+    }
+
+    return render(request, 'contributors.html', context)
+
+
+def commits_chart(request, username, repo):
+    repo_info = get_specific_repository(request, username, repo)
+    if not isinstance(repo_info, list) and 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
+        return page_not_found(request, "There is no repo like that")
+    branches = get_all_branches(request, username, repo)
+    commits = get_all_commits_for_branch(request, username, repo, 'main')
+    if not isinstance(commits, list) and 'message' in commits.keys() and commits['message'] == 'Not Found':
+        return
+    dates = [n['commit']['author']['date'] for n in commits]
+    dates = [datetime.strptime(n.split('T')[0], '%Y-%m-%d').date() for n in dates]
+
+    start_date = dates[-1]
+    end_date = timezone.now().date()
+    to = [n for n in range(int((end_date - start_date).days))]
+
+    labels = []
+    counts = []
+
+    for i in to:
+        labels.append(str(start_date))
+        count = 0
+        for item in commits:
+            if datetime.strptime(item['commit']['author']['date'].split('T')[0], '%Y-%m-%d').date() == start_date:
+                count += 1
+        counts.append(count)
+
+        start_date += timedelta(days=1)
+
+    context = {
+        'repo_info': repo_info,
+        'commits': commits,
+        'branches': branches,
+        'repo_owner': username,
+        'repo_name': repo,
+        'labels': labels,
+        'counts': counts,
+    }
+
+    return render(request, 'commits.html', context)
+
+
+def forks(request, username, repo):
+    forks_info = get_forks(request, username, repo)
+    # { 'user' : 'repo' }
+    forks_map = {}
+    for fork in forks_info:
+        forks_map[fork['full_name']] = fork['html_url']
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'forks': forks_map,
+    }
+
+    return render(request, 'forks.html', context)
+
+
+def code_frequency(request, username, repo):
+    git_code_frequency = get_code_frequency(request, username, repo)
+    temp_date = [datetime.fromtimestamp(n[0]).date() for n in git_code_frequency]
+
+    labels = []
+    added = []
+    deleted = []
+
+    if len(git_code_frequency) == 0:
+        context = {
+            'repo_owner': username,
+            'repo_name': repo,
+        }
+        return render(request, 'code_frequency.html', context)
+
+    start_date = temp_date[0]
+    end_date = temp_date[-1]
+    to = [n for n in range(int((end_date - start_date).days))]
+    for i in to:
+        labels.append(start_date.__str__())
+        add_count = 0
+        delete_count = 0
+        for item in git_code_frequency:
+            if datetime.fromtimestamp(item[0]).date() == start_date:
+                add_count += item[1]
+                delete_count += item[2]
+
+        added.append(add_count)
+        deleted.append(delete_count)
+        start_date += timedelta(days=1)
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'labels': labels,
+        'added': added,
+        'deleted': deleted
+    }
+
+    return render(request, 'code_frequency.html', context)
 
 
 def advanced_search(request, project_id, user_id):
