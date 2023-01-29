@@ -644,8 +644,9 @@ class ProfilePreview(DetailView):
         context['github_oauth_url'] = "https://github.com/login/oauth/authorize?client_id=" + settings.GITHUB_CLIENT_ID + "&scope=repo%2Cuser&state="+self.request.resolver_match.kwargs['username']
         context['authorized_account'] = get_user_info(self.request).json()
         context['projects'] = Project.objects.filter(Q(lead=context['user']) & Q(visibility=Visibility.PUBLIC)).all()
-        context['actions'] = get_user_actions(self.request).json()
-        context['actions'] = list(map(lambda x: self.format_repo_names(x), context['actions']))
+        if context['authorized_account']['message'] != 'Requires authentication':
+            context['actions'] = get_user_actions(self.request).json()
+            context['actions'] = list(map(lambda x: self.format_repo_names(x), context['actions']))
         return context
     
 
