@@ -125,7 +125,7 @@ class Task(models.Model):
 
 class Event(models.Model):
     date_time = models.DateTimeField(default=timezone.now)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="events", related_query_name="event")
     author = models.ForeignKey(User, blank=False, null=True, related_name='author', on_delete=models.CASCADE)
 
 

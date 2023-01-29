@@ -1,14 +1,29 @@
 {% extends 'base.html' %}
 {% block content %}
 {% if project_id %}
-<h1 class="title">Labels for <b>{{ project.title }}</b></h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=project.id user_id=project.lead.id %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Labels for <b>{{ project.title }}</b></div>
+    </div>
+</h1>
 {% endif %}
 
 <div class="container">
-{%if request.user in project.developers.all or request.user == project.lead %}
-    <a class="btn default-button" href="{% url 'add_label' project.id%}">New label</a>
-{% endif %}
-    <br/>
+    <div class="row">
+        <div class="col-auto mr-auto">
+           {%if request.user in project.developers.all or request.user == project.lead %}
+            <a class="btn default-button" href="{% url 'add_label' project.id%}">New label</a>
+            {%endif%}
+        </div>
+        <div class="col-auto">
+            <a class="btn btn-primary" href="{% url 'project_detail' project_id %}">Back to project</a>
+        </div>
+    </div>
     {% if labels %}
     {% for label in labels %}
     <div class="card mb-3">

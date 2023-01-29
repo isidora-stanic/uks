@@ -1,6 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1 class="title">Watched projects</h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=False s3=False project_id=0 user_id=0 %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Watched projects</div>
+    </div>
+</h1>
 
 <div class="container">
     <br/>

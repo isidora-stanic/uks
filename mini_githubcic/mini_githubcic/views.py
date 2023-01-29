@@ -18,7 +18,7 @@ from django.views.generic import (
     DeleteView
 )
 
-from .util import find_differences
+from .util import *
 
 from .github_api.service import (
     get_user_info,
@@ -159,7 +159,7 @@ class ProjectCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.lead = self.request.user
-        form.instance.developers.push(self.request.user)
+        #form.instance.developers.push(self.request.user)
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if Project.objects.filter(title=form.instance.title).exists():
             form.add_error(None, 'Title already in use')
@@ -954,6 +954,7 @@ class PullRequestDetailView(DetailView):
     model = PullRequest
     template_name = 'pull_request_detail.html'
 
+
 def pull_request_new_comment(request, pk):
     reactions = add_reactions()
 
@@ -1111,3 +1112,116 @@ def after_auth(request):
     user.access_token = response.json()['access_token']
     user.save()
     return redirect('/login', {})
+
+
+def advanced_search(request, project_id, user_id):
+    if request.method == 'GET':
+        return render(request, "advanced_search_result.html",
+                      {'project_id': project_id, 'user_id': user_id, 'selected': 2})
+    if request.method == 'POST':
+        obj_dict = {
+            'keyword': request.POST['keyword'],
+            'project_id': project_id,
+            'user_id': user_id,
+            'selected': 2
+        }
+        if 'search_user' in request.POST:
+            obj_dict['search_type'] = 's2'
+            u = User.objects.filter(id=user_id).first()
+            if 'user:' not in obj_dict['keyword']:
+                obj_dict['keyword'] = request.POST['keyword'] + " user:" + u.username + " author:" + u.username
+        if 'search_all' in request.POST:
+            obj_dict['search_type'] = 's1'
+        if 'search_project' in request.POST:
+            obj_dict['search_type'] = 's3'
+            p = Project.objects.filter(id=project_id).first()
+            if 'repo:' not in obj_dict['keyword']:
+                obj_dict['keyword'] = request.POST['keyword'] + " repo:" + p.lead.username + "/" + p.title + " author:" + p.lead.username
+
+        if obj_dict['keyword'] not in {None, ''}:
+            # return render(request, "advanced_search_result.html", obj_dict)
+            return redirect('advanced_search_results', project_id=project_id,
+                            user_id=user_id, keyword=obj_dict['keyword'],
+                            search_type=obj_dict['search_type'], selected=obj_dict['selected'])
+
+        return render(request, "advanced_search.html", {'new_name_error': "Seaarch was not successful"})
+
+
+def toggle_search_results(request, project_id, user_id, keyword, search_type, selected):
+    if request.method == 'GET':
+        return redirect('advanced_search_results', project_id=project_id,
+                        user_id=user_id, keyword=keyword, search_type=search_type, selected=selected)
+
+
+def advanced_search_result(request, project_id, user_id, keyword=None,  search_type=None, selected=2):
+    obj_dict = {
+        'project_id': project_id,
+        'user_id': user_id,
+        'keyword': keyword,
+        'selected': selected,
+        'iss': 'issue'
+    }
+    if 's2' in search_type:
+        obj_dict['search_type'] = 's2'
+        u = User.objects.filter(id=user_id).first()
+        obj_dict['info'] = u.username
+        if 'user:' not in obj_dict['keyword']:
+            obj_dict['keyword'] = keyword + " user:" + u.username + " author:" + u.username
+        obj_dict['projects'], obj_dict['issues'], obj_dict['prs'] = search_in_user(obj_dict['keyword'], request.user)
+    if 's1' in search_type:
+        obj_dict['search_type'] = 's1'
+        obj_dict['projects'], obj_dict['issues'], obj_dict['users'], obj_dict['prs'] = search_in_github(obj_dict['keyword'], request.user)
+    if 's3' in search_type:
+        obj_dict['search_type'] = 's3'
+        p = Project.objects.filter(id=project_id).first()
+        obj_dict['info'] = p.title
+        if 'repo:' not in obj_dict['keyword']:
+            obj_dict['keyword'] = keyword + " repo:" + p.lead.username + "/" + p.title + " author:" + p.lead.username
+        obj_dict['issues'], obj_dict['prs'] = search_in_project(obj_dict['keyword'], request.user)
+    if obj_dict['keyword'] not in {None, ''}:
+        return render(request, "advanced_search_result.html", obj_dict)
+    return render(request, "advanced_search_result.html", {'new_name_error': "Seaarch was not successful"})
+
+
+def tasks_filter(request, task_type, selected_tab):
+    if request.method == 'GET':
+        obj_dict = {
+            'task_type': task_type,
+            'selected_tab': selected_tab,
+            'query': '',
+        }
+        if task_type in ['pr', 'issue']:
+            if selected_tab == 1: #created
+                obj_dict['query'] = "is:" + task_type + " author:"+request.user.username
+            elif selected_tab == 2: #assigned
+                obj_dict['query'] = "is:" + task_type + " assignee:" + request.user.username
+            else:
+                obj_dict['query'] = "is:" + task_type
+        else:
+            if selected_tab == 1: #created
+                obj_dict['query'] = "author:"+request.user.username
+            elif selected_tab == 2: #assigned
+                obj_dict['query'] = "assignee:" + request.user.username
+            else:
+                obj_dict['query'] = ""
+
+        obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
+        return render(request, "tasks_filter.html", obj_dict)
+
+    if request.method == 'POST':
+        obj_dict = {
+            'query': request.POST['query'],
+            'selected_tab': selected_tab,
+            'task_type': task_type,
+        }
+        if obj_dict['query'] not in {None, ''}:
+            obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
+            return render(request, "tasks_filter.html", obj_dict)
+        return render(request, "tasks_filter.html", {'new_name_error': "Filter was not successful"})
+
+
+def forward_to_view_task(request, pk):
+    if Issue.objects.filter(id=pk):
+        return redirect('issue_detail', pk=pk)
+    else:
+        return redirect('pull_request_detail', pk=pk)

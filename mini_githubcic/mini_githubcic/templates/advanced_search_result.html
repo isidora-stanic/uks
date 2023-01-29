@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title" style="display:flex;">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% if search_type == 's3' %}
+            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=project_id user_id=user_id %}
+            {% elif search_type == 's2' %}
+            {% include "advanced_search.html" with s1=True s2=True s3=False project_id=project_id user_id=user_id %}
+            {% else %}
+            {% include "advanced_search.html" with s1=True s2=False s3=False project_id=project_id user_id=user_id %}
+            {% endif %}
+            {% endblock advanced_search %}
+        </div>
+        {% if request.user.is_authenticated %}
+        <a class="nav-links" style="line-height: 2px;" href="{% url 'tasks_filter' 'pr' 1 %}">Pull Requests</a>
+        <a class="nav-links" href="{% url 'tasks_filter' 'issue' 1 %}" style="line-height: 2px;">Issues</a>
+        {% endif %}
+        <div style="margin-top: 8px;margin-left:20px">Search results for "{{keyword}}" in
+        {% if search_type == 's1' %}
+            All Mini Github-cic
+        {% endif %}
+        {% if search_type == 's2' %}
+            in this user: <b>{{info}}</b>
+        {% endif %}
+        {% if search_type == 's3' %}
+            in this project: <b>{{info}}</b>
+        {% endif %}
+        </div>
+    </div>
+</h1>
+<div class="container">
+    <div class="grid-container">
+        <div class="item2">
+            <br>
+            <nav class="menu" data-pjax>
+
+                {% if search_type != 's3' %}
+                <a class="menu-item"
+                   style="{% if selected is 1 %}
+                   border-right: groove !important;
+                   {% endif %}"
+                   href="{% url 'toggle_search_results' project_id user_id keyword search_type 1 %}">Repositories<span
+                        class="counter"
+                        data-search-type="Repositories">{{projects|length}}</span></a>
+                {% endif %}
+                <a class="menu-item"
+                   style="{% if selected is 2 %}
+                   border-right: groove !important;
+                   {% endif %}"
+                   href="{% url 'toggle_search_results' project_id user_id keyword search_type 2 %}">Issues<span
+                        class="counter"
+                        data-search-type="Issues">{{issues|length}}</span></a>
+                <a class="menu-item"
+                   style="{% if selected is 3 %}
+                   border-right: groove !important;
+                   {% endif %}"
+                   href="{% url 'toggle_search_results' project_id user_id keyword search_type 3 %}">Pull Requests<span
+                        class="counter"
+                        data-search-type="Issues">{{prs|length}}</span></a>
+                {% if search_type == 's1' %}
+                <a class="menu-item"
+                   style="{% if selected is 4 %}
+                   border-right: groove !important;
+                   {% endif %}"
+                   href="{% url 'toggle_search_results' project_id user_id keyword search_type 4 %}">Users<span
+                        class="counter"
+                        data-search-type="Users">{{users|length}}</span></a>
+                {% endif %}
+            </nav>
+        </div>
+        <div class="item1">
+            {% if selected is 1 %}
+            {% include "advanced_search_result_projects.html" with projects=projects %}
+            {% elif selected is 2 %}
+            {% include "advanced_search_result_issues.html" with issues=issues %}
+            {% elif selected is 3 %}
+            {% include "advanced_search_result_pr.html" with prs=prs %}
+            {% else %}
+            {% include "advanced_search_result_users.html" with users=users %}
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

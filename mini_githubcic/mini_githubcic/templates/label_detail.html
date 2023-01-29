@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Label details</h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=object.project.id user_id=object.project.lead.id %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Label details</div>
+    </div>
+</h1>
 <article class="container">
     <div>
         <h2> Name - {{ object.name }}</h2>
@@ -9,7 +18,7 @@
 
     </div>
     <div>
-        <a class="btn btn-primary" href="{% url 'project_issues' object.project.id %}">Back to project</a>
+        <a class="btn btn-secondary" href="{% url 'list_labels' object.project.id %}">Back to list</a>
         {%if request.user in object.project.developers.all or request.user == object.project.lead %}
         <a class="btn btn-primary" href="{% url 'label_update' object.id %}">Update</a>
         <a class="btn btn-danger" href="{% url 'label_delete' object.id %}">Delete</a>
