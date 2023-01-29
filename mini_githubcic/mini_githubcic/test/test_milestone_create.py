@@ -17,7 +17,7 @@ class MilestoneCreateTest(TestCase):
 
     def test_successful_create_milestone(self):
 
-        credentials = {'title': 'proba1', 'description': 'desc1', 'is_open': True, 'due_date':datetime.datetime.today()}#
+        credentials = {'title': 'proba1', 'description': 'desc1', 'is_open': True, 'due_date':datetime.datetime.today()+datetime.timedelta(days=3)}#
 
         response = self.client.post(reverse('add_milestone',args=[1]), credentials, follow=True)
         self.assertEqual(response.status_code, 200)

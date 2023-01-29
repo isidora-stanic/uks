@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\mini_githubcic\test\test_milestone_edit.py">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\mini_githubcic\views.py">
           <value>
             <Attribute>
