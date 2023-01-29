@@ -1,0 +1,130 @@
+@startuml
+enum Visibility {
+ PUBLIC
+ PRIVATE 
+}
+
+class User{
+  username: string
+  password: string 
+  access_token: string
+  is_superuser: string
+}
+
+class Label {
+  name: string
+  color: ColorField
+  description: string
+}
+
+class Task {
+  title: string
+  description: string
+  date_created: DateTime
+}
+
+enum State {
+  OPEN
+  CLOSE
+  MERGED
+}
+
+class Project {
+  title: string
+  description: string
+  licence: string
+  visibility: Visibility
+  link: string
+  number_of_forked_project: int
+}
+
+class Milestone {
+  title: string
+  description: string
+  due_date: Date
+  is_open: boolean
+}
+
+class Event {
+  date_time: DateTime
+}
+
+class Issue {
+  is_open: boolean
+}
+
+class Comment {
+  content: string
+}
+
+class Branch {
+  name: string
+}
+class Commit {
+  date_time: DateTime
+  log_message: string
+  hash: string
+}
+
+class UpdateEvent {
+  filed_name: string
+  old_content: string
+  new_content: string
+}
+
+class CreateEvent{
+  created_entity_type: string
+}
+
+enum ReactionType {
+  LIKE 
+  DISLIKE
+  SMILE
+  TADA
+  THINKING_FACE
+  HEART
+  ROCKET
+  EYES
+}
+
+class Reaction {
+  type: ReactionType
+}
+
+class Notification{
+  is_reded: boolean
+  message: string
+}
+
+Project --> "lead" User
+Project "0..*" --> "1..* developers" User
+Project "starred 0..*" --> "0..*" User
+Project "watched 0..*" --> "0..*" User
+Project --> "fork_parent" Project
+Project <-- "0..*" Label
+Project *-- "0..*" Milestone
+Project "0..1" <-- "0..*" Task
+Task "0..*" --> "0..1 assigned_to" User
+Task "0..*" --> "creator" User
+Task "0..*" --> "0..*" Label
+Task <-- "0..*" Event
+Event "0..*" --> "0..1 author" User
+Event <|-- Comment
+Event <|-- LabelApplication
+Event <|-- CreateEvent
+Event <|-- UpdateEvent
+LabelApplication "0..*" --> "1..* applied_labels" Label
+Branch "1..*" --* Project
+Branch "0..1 parent_branch" <-- "0..*" Branch
+Commit "0..*" --> "author" User
+Commit "0..*" --> "1..*" Branch
+Commit "0..*" --> "0..* parents" Commit
+Issue --|> Task
+Issue "0..*" --> "0..1" Milestone
+PullRequest --|> Task
+PullRequest "0..*" --* "target" Branch
+PullRequest "0..*" --* "source" Branch
+Reaction .. (User, Comment)
+Notification "0..*" --> "0..1" User
+Notification "0..*" --> "0..1" Project
+@enduml
