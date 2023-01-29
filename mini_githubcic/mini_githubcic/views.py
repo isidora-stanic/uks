@@ -798,8 +798,8 @@ def make_notification(project, type_notification):
 def fork_project(request, pk=None, username=None):
     # tj koliko u dublinu da kopiram
     project = Project.objects.filter(id=pk)[0]
-
-    resp = git_fork_projects(request, username, project.title)
+    names = project.link.split("/")
+    resp = git_fork_projects(request, names[len(names)-2], names[len(names)-1])
     print(resp["html_url"])
     # if 'ref' in resp.keys() and resp['ref'] == "refs/heads/" + new_name:
     #     return redirect('github_branches', username=username, repo=repo)
