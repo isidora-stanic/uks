@@ -27,10 +27,10 @@ jobs:
         pip install -r requirements.txt
     - name: Setup Django DB
       run: |
-        cd prodavnicesajt
+        cd mini_githubcic
         python manage.py makemigrations
         python manage.py migrate
     - name: Run Django Test Suite
       run: |
-        cd prodavnicesajt
+        cd mini_githubcic
         python manage.py test mini_githubcic.tests --noinput
