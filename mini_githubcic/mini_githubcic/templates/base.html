@@ -18,8 +18,9 @@
 <header class=" custom-header">Mini GitHub-cic
     <nav class="container">
         <div class="row">
+         
+          {% if request.user.is_authenticated %}
 
-          {% if request.user.is_authenticated and request.user.access_token %}
           <div class="col-auto ">
             <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
           </div>

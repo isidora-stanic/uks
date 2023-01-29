@@ -16,18 +16,21 @@
         <p> Description - {{ object.description }}</p>
         <p> Licence - {{ object.licence }}</p>
         <p> Visibility - {{ object.visibility | title }}</p>
-        <p> Link - {{ object.link }}</p>
+        <p> Repo - <a href="{{ object.link }}">{{ object.link }}</a></p>
         <p> Lead - <a href="{% url 'profile_preview' object.lead.username %}">{{ object.lead }}</a></p>
-        <p> Developers:</p>
+        <span> Developers:</span>
         {% for dev in object.developers.all %}
             <a href="{% url 'profile_preview' dev.username %}">{{ dev.username }}</a>
         {% endfor %}
-        <p>Number of times this project has been forked {{ object.number_of_forked_project }}</p>
+        <p>Number of times this project has been forked: {{ object.number_of_forked_project }}</p>
     <hr>
     </div>
     <div>
-{#        <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>#}
-        <a class="btn btn-primary" href="{% url 'github_branch_commits' repo_owner repo_name 'main' %}">Branch history</a>
+        {% if repo_exists %}
+            <a class="btn btn-primary" href="{% url 'github_branch_commits' repo_owner repo_name 'main' %}">Branch history</a>
+        {% else %}
+            <a disabled class="btn btn-secondary disabled" href="#">Branch history</a>
+        {% endif %}
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
         <a class="btn btn-primary" href="{% url 'list_pull_requests' object.id %}">Pull requests</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>

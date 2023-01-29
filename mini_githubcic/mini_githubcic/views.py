@@ -382,6 +382,16 @@ class ProjectDetailView(DetailView):
         context['main_branch'] = Branch.objects.filter(project__id=context['project_id'], name='main').first()
         context['repo_owner'] = self.get_object().link.split("https://github.com/")[1].split("/")[0]
         context['repo_name'] = self.get_object().link.split("https://github.com/")[1].split("/")[1].replace(".git", "")
+        if self.request.user.is_authenticated and self.request.user.access_token:
+            repo_info = get_specific_repository(self.request, context['repo_owner'], context['repo_name'])
+            # repo_info = get_specific_repository(request, username, "uks")
+            if isinstance(repo_info, dict) and 'message' in repo_info.keys():
+                context['repo_exists'] = False
+            else:
+                context['repo_exists'] = True
+        else:
+            context['repo_exists'] = False
+
         if context['main_branch'] is None:
             b = Branch(name="main", project=Project.objects.filter(id=int(context['project_id'])).first())
             b.save()
@@ -654,7 +664,7 @@ class ProfilePreview(DetailView):
     def get_context_data(self, *args, **kwargs):
         context = super(ProfilePreview, self).get_context_data(*args, **kwargs)
         context['user'] = User.objects.filter(username=self.request.resolver_match.kwargs['username']).first()
-        context['github_oauth_url'] = "https://github.com/login/oauth/authorize?client_id=" + settings.GITHUB_CLIENT_ID + "&scope=repo%2Cuser"
+        context['github_oauth_url'] = "https://github.com/login/oauth/authorize?client_id=" + settings.GITHUB_CLIENT_ID + "&scope=repo%2Cuser&state="+self.request.resolver_match.kwargs['username']
         context['authorized_account'] = get_user_info(self.request).json()
         context['projects'] = Project.objects.filter(Q(lead=context['user']) & Q(visibility=Visibility.PUBLIC)).all()
         context['commits'] = Commit.objects.filter(author=context['user']).filter(
@@ -985,6 +995,7 @@ class PullRequestDeleteView(DeleteView):
         
 def list_repositories_auth(request):
     # repo_info = search_repositories_by_user(request, username) # todo request.user.username when connected to github
+    print(request.user)
     repo_info = get_all_visible_repositories_by_user(request)
     account_resp = get_user_info(request)
     # repo_info = get_specific_repository(request, username, "uks")
@@ -992,7 +1003,7 @@ def list_repositories_auth(request):
         context = {'repo_info': repo_info, 'github_account': account_resp.json()}
         return render(request, 'list_repositories_auth.html', context)
     else:
-        return redirect('/user/'+request.user.username, {})
+        return redirect('/user/'+request.user.username, {'user': request.user})
 
 
 def github_get_specific_repo(request, username, repo):
@@ -1080,13 +1091,15 @@ def after_auth(request):
     """
     This view runs when the user authorizes this app to use all the account and repository info
     """
+    
     request_token = request.GET.get('code')
     response = get_access_token(request_token)
     # insert access token into session
     # request.session['access_token'] = response.json()['access_token']
-    request.user.access_token = response.json()['access_token']
-    request.user.save()
-    return redirect('/user/'+request.user.username, {})
+    user = User.objects.get(username=request.GET.get('state'))
+    user.access_token = response.json()['access_token']
+    user.save()
+    return redirect('/login', {})
 
 
 def advanced_search(request, project_id, user_id):
