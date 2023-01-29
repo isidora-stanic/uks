@@ -1,5 +1,4 @@
-from datetime import datetime
-
+import datetime
 from itertools import chain
 import markdown
 
@@ -252,7 +251,7 @@ def new_comment(request, pk):
 class ProjectUpdateView(UpdateView):
     model = Project
     template_name = 'project_update.html'
-    fields = ['title', 'description', 'developers', 'visibility', 'link', 'licence']
+    form_class = UpdateProjectForm
 
     def form_valid(self, form):
 
