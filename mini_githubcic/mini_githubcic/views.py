@@ -1134,12 +1134,9 @@ def advanced_search(request, project_id, user_id):
             obj_dict['search_type'] = 's1'
         if 'search_project' in request.POST:
             obj_dict['search_type'] = 's3'
-            p = Project.objects.filter(id=project_id).first()
-            if 'repo:' not in obj_dict['keyword']:
-                obj_dict['keyword'] = request.POST['keyword'] + " repo:" + p.lead.username + "/" + p.title + " author:" + p.lead.username
 
         if obj_dict['keyword'] not in {None, ''}:
-            # return render(request, "advanced_search_result.html", obj_dict)
+             #return render(request, "advanced_search_result.html", obj_dict)
             return redirect('advanced_search_results', project_id=project_id,
                             user_id=user_id, keyword=obj_dict['keyword'],
                             search_type=obj_dict['search_type'], selected=obj_dict['selected'])
@@ -1175,9 +1172,7 @@ def advanced_search_result(request, project_id, user_id, keyword=None,  search_t
         obj_dict['search_type'] = 's3'
         p = Project.objects.filter(id=project_id).first()
         obj_dict['info'] = p.title
-        if 'repo:' not in obj_dict['keyword']:
-            obj_dict['keyword'] = keyword + " repo:" + p.lead.username + "/" + p.title + " author:" + p.lead.username
-        obj_dict['issues'], obj_dict['prs'] = search_in_project(obj_dict['keyword'], request.user)
+        obj_dict['issues'], obj_dict['prs'] = search_in_project(obj_dict['keyword'], request.user, project_id)
     if obj_dict['keyword'] not in {None, ''}:
         return render(request, "advanced_search_result.html", obj_dict)
     return render(request, "advanced_search_result.html", {'new_name_error': "Seaarch was not successful"})
