@@ -4,13 +4,7 @@
     <div class="col-auto mr-auto" style="display:flex;">
         <div style="border-bottom: groove">
             {% block advanced_search %}
-            {% if search_type == 's3' %}
-            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=project_id user_id=user_id %}
-            {% elif search_type == 's2' %}
-            {% include "advanced_search.html" with s1=True s2=True s3=False project_id=project_id user_id=user_id %}
-            {% else %}
             {% include "advanced_search.html" with s1=True s2=False s3=False project_id=project_id user_id=user_id %}
-            {% endif %}
             {% endblock advanced_search %}
         </div>
         {% if request.user.is_authenticated %}

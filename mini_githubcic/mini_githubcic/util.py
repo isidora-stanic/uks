@@ -10,9 +10,9 @@ def find_differences(old_obj, updated_obj):
     return diff
 
 
-def search_in_project(keyword, user):
-    filtered_issues = list(filter_query_issues(keyword, user))
-    filtered_prs = list(filter_query_prs(keyword, user))
+def search_in_project(keyword, user, project_id):
+    filtered_issues = list(filter_query_issues(keyword, user, project_id))
+    filtered_prs = list(filter_query_prs(keyword, user, project_id))
     return filtered_issues, filtered_prs
 
 
@@ -60,14 +60,14 @@ def search_query_projects(query, user):
     if 'in:name,description' in query:
         projects = projects.filter(title__contains=word[0].lower(), description__contains=word[0].lower()).distinct()
     if ('in:name' and 'in:name,description' and 'in:description') not in query :
-        projects = projects.filter(title__contains=word[0].lower(), description__contains=word[0].lower()).distinct()
+        projects = projects.filter(Q(title__contains=word[0].lower()) | Q(description__contains=word[0].lower())).distinct()
     if 'user:' in query:
         i = query.find('user:')
         author = query[i + 5:].split(" ")[0]
         projects = projects.filter(lead__username__contains=author.lower())
     if 'repo:' in query:
         i = query.find('repo:')
-        params = (query[i + 5:].split(" ")[0]).split('/')
+        params = (query[i + 5:].split(" ")[0]).split('-')
         projects = projects.filter(lead__username__contains=params[0].lower(),title__contains=params[1].lower())
     if 'forks:' in query:
         i = query.find('forks:')
@@ -119,8 +119,10 @@ def filter_query(query, user):
         return tasks
 
 
-def filter_query_issues(query, user):
+def filter_query_issues(query, user, project_id=-1):
     tasks = Issue.objects.all()
+    if project_id != -1:
+        tasks = tasks.filter(project__id=project_id)
     if 'is:open' in query or 'state:open' in query:
         tasks = tasks.filter(is_open=True)
     if 'is:closed' in query or 'state:closed' in query:
@@ -130,8 +132,10 @@ def filter_query_issues(query, user):
     return tasks
 
 
-def filter_query_prs(query, user):
+def filter_query_prs(query, user, project_id=-1):
     tasks = PullRequest.objects.all()
+    if project_id != -1:
+        tasks = tasks.filter(project__id=project_id)
     if 'is:open' in query or 'state:open' in query:
         tasks = tasks.filter(state='OPEN')
     if 'is:closed' in query or 'state:closed' in query:
@@ -169,21 +173,26 @@ def filter_params(query, tasks, user):
         tasks = tasks.filter(assigned_to__username__contains=assignee.lower())
     if 'no:assignee' in query:
         tasks = tasks.filter(assigned_to=None)
-    if 'in:' in query and len(word) == 1:
+    if 'in:' in query and len(word) >= 1:
         i = query.find('in:')
         param_list = query[i + 3:].split(" ")[0]
         if "," in param_list:
             params = param_list.split(',')
             for p in params:
-                tasks = in_filter(p, tasks, word[0])
+                if p in ['title', 'comments']:
+                    tasks = in_filter(p, tasks, word[0])
         else:
-            tasks = in_filter(param_list, tasks, word[0])
+            if param_list in ['title', 'comments']:
+                tasks = in_filter(param_list, tasks, word[0])
 
     if 'commenter:' in query:
         i = query.find('commenter:')
         commenter = query[i + 10:].split(" ")[0]
         temp = tasks.filter(event__in=Comment.objects.filter(author__username__contains=commenter.lower())).distinct()
         tasks = temp
+    if 'in:' not in query and len(word) >= 1:
+        tasks = tasks.filter(Q(title__contains=word[0].lower()) |
+                     Q(event__in=Comment.objects.filter(content__contains=word[0].lower()))).distinct()
     if 'comments:' in query:
         i = query.find('comments:')
         comments = query[i + 9:].split(" ")[0]
