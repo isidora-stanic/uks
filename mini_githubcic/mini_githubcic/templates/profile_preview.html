@@ -45,7 +45,7 @@
     <h1 class="title">User's contributions</h1>
     <div class="container">
         {% if commits %}
-        
+
             <div class="tab-content">
                 <div class="tab-pane  active" >
                     {% for c in commits %}
@@ -59,7 +59,7 @@
                     {% endfor %}
                 </div>
             </div>
-        
+
         {% else %}
         This user has no commits.
         {% endif %}
