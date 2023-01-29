@@ -1166,8 +1166,7 @@ def tasks_filter(request, task_type, selected_tab):
             else:
                 obj_dict['query'] = ""
 
-        obj_dict['tasks'] = filter_query(obj_dict['query'])
-        print(obj_dict)
+        obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
         return render(request, "tasks_filter.html", obj_dict)
 
     if request.method == 'POST':
@@ -1177,7 +1176,7 @@ def tasks_filter(request, task_type, selected_tab):
             'task_type': task_type,
         }
         if obj_dict['query'] not in {None, ''}:
-            obj_dict['tasks'] = filter_query(obj_dict['query'])
+            obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
             return render(request, "tasks_filter.html", obj_dict)
         return render(request, "tasks_filter.html", {'new_name_error': "Filter was not successful"})
 
