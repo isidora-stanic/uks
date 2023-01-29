@@ -452,7 +452,7 @@ class MilestoneCreateView(CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         form.instance.project = context['project']
-        if (form.instance.due_date - datetime.datetime.now(timezone.utc)).days < 0:
+        if (form.instance.due_date - datetime.now(timezone.utc)).days < 0:
             form.add_error(None, 'Day is before today')
             return super().form_invalid(form)
         form.instance.lead = self.request.user
