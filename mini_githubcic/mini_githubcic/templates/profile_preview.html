@@ -2,7 +2,16 @@
 {% load crispy_forms_tags %}
 {% load commit_extras %}
 {% block content %}
-<h1 class="title">Profile overview</h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=True s3=False project_id=0 user_id=user.id %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Profile overview</div>
+    </div>
+</h1>
     <div class="container">
         <div class="row">
             <div class="col-auto">

@@ -18,8 +18,9 @@
 <header class=" custom-header">Mini GitHub-cic
     <nav class="container">
         <div class="row">
-          
+         
           {% if request.user.is_authenticated %}
+
           <div class="col-auto ">
             <a class="nav-links" href="{% url 'list_projects'  %}">Projects</a>
           </div>
@@ -48,7 +49,7 @@
 {#                        <a  class="nav-links"  href="{% url 'changes'%}">Changes</a>#}
 {#                    </div>#}
                     <div class="col mb-0">
-                        <a  class="nav-links"  href="{% url 'list_notifications' request.user.username %}">My notifications</a>
+                        <a  class="nav-links"  href="{% url 'list_notifications' request.user.username %}">Notifications</a>
                     </div>
                     <div class="col mb-0">
                         <a  class="nav-links"  href="{% url 'profile_preview' request.user.username %}">Profile</a>

@@ -89,4 +89,20 @@ urlpatterns = [
     path('github_repos/<slug:username>/<slug:repo>/branches/<str:branch>/rename', github_rename_branch, name='github_rename_branch'),
     path('github_repos/<slug:username>/<slug:repo>/branches/<str:branch>/delete', github_delete_branch, name='github_delete_branch'),
 
+    path('insights/<slug:username>/<slug:repo>', insights, name='insights'),
+    path('insights/pulse/<slug:username>/<slug:repo>', pulse, name='pulse'),
+    path('insights/contributors/<slug:username>/<slug:repo>', contributors, name='contributors'),
+    path('insights/traffic/<slug:username>/<slug:repo>', traffic, name='traffic'),
+    path('insights/commits/<slug:username>/<slug:repo>', commits_chart, name='commits'),
+    path('insights/frequency/<slug:username>/<slug:repo>', code_frequency, name='code_frequency'),
+    path('insights/forks/<slug:username>/<slug:repo>', forks, name='forks'),
+    
+    path('search/<slug:project_id>/<slug:user_id>', advanced_search, name='advanced_search'),
+    path('search/<int:project_id>/<int:user_id>/<str:keyword>/<str:search_type>/<int:selected>',
+         toggle_search_results, name='toggle_search_results'),
+    path('search/results/<int:project_id>/<int:user_id>/<str:keyword>/<str:search_type>/<int:selected>',
+         advanced_search_result, name='advanced_search_results'),
+    path('tasks/<str:task_type>/<int:selected_tab>/filter', tasks_filter, name='tasks_filter'),
+    path('tasks/<int:pk>', forward_to_view_task, name='forward_to_view_task')
+
 ]

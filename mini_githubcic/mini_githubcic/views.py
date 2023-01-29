@@ -1,5 +1,4 @@
-import datetime
-import json
+from datetime import datetime
 
 from itertools import chain
 import markdown
@@ -9,6 +8,7 @@ import copy
 from django.apps.registry import apps
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.utils.timezone import timedelta
 from django.views.defaults import page_not_found
 from django.views.generic import (
     CreateView,
@@ -18,43 +18,12 @@ from django.views.generic import (
     DeleteView
 )
 
-from .util import find_differences
 
-from .github_api.service import (
-    get_user_actions,
-    get_user_info,
-    get_all_visible_repositories_by_user,
-    get_specific_repository,
-    get_specific_repository_readme,
-    get_repository_tree, 
-    get_file_content,
-    get_tree_recursively,
-    get_commit_changes, 
-    get_all_commits_for_branch, 
-    get_all_branches, 
-    rename_branch, 
-    delete_branch, 
-    create_branch
-)
+
+from .util import *
+from .github_api.service import *
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
-from .models import (
-    LabelApplication, 
-    User, 
-    Milestone, 
-    Commit, 
-    Visibility,
-    Reaction, 
-    Notification,
-    Project, 
-    Issue, 
-    Label, 
-    Branch, 
-    CreateEvent, 
-    Event, 
-    Task, 
-    UpdateEvent
-)
-
+from .models import *
 from .forms import *
 
 from django.urls import reverse_lazy
@@ -159,7 +128,7 @@ class ProjectCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.lead = self.request.user
-        form.instance.developers.push(self.request.user)
+        #form.instance.developers.push(self.request.user)
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if Project.objects.filter(title=form.instance.title).exists():
             form.add_error(None, 'Title already in use')
@@ -484,6 +453,9 @@ class MilestoneCreateView(CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         form.instance.project = context['project']
+        if (form.instance.due_date - datetime.datetime.now(timezone.utc)).days < 0:
+            form.add_error(None, 'Day is before today')
+            return super().form_invalid(form)
         form.instance.lead = self.request.user
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if len(Milestone.objects.filter(title=form.instance.title)) != 0:
@@ -727,7 +699,8 @@ def starr_project(request, pk=None, username=None):
         user = User.objects.get(username=username)
         project.starred.add(user)
         project.save()
-        return redirect(project)
+        return redirect("../../projects/"+str(project.id))
+
 
 def unstarr_project(request, pk=None, username=None):
     if request.method == 'GET':
@@ -801,6 +774,17 @@ def make_notification(project, type_notification):
 def fork_project(request, pk=None, username=None):
     # tj koliko u dublinu da kopiram
     project = Project.objects.filter(id=pk)[0]
+    names = project.link.split("/")
+    resp = git_fork_projects(request, names[len(names)-2], names[len(names)-1])
+    print(resp["html_url"])
+    # if 'ref' in resp.keys() and resp['ref'] == "refs/heads/" + new_name:
+    #     return redirect('github_branches', username=username, repo=repo)
+    # return render(request, "github_create_branch.html",
+    #               {'new_name_error': "Renaming was not successful", 'username': username, 'repo': repo})
+
+    #result
+    link = resp["html_url"]
+
     if project.visibility == 'PUBLIC':
         if project.number_of_forked_project is None:
             project.number_of_forked_project = 0
@@ -811,7 +795,7 @@ def fork_project(request, pk=None, username=None):
                               licence = project.licence,
                               description = project.description,
                               visibility = project.visibility,
-                              link= project.link,
+                              link= resp["html_url"], #novi todo
                               lead = user, fork_parent= project)
         new_project.save()
         saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
@@ -947,6 +931,7 @@ class PullRequestUpdateView(UpdateView):
 class PullRequestDetailView(DetailView):
     model = PullRequest
     template_name = 'pull_request_detail.html'
+
 
 def pull_request_new_comment(request, pk):
     reactions = add_reactions()
@@ -1104,3 +1089,371 @@ def after_auth(request):
     user.access_token = response.json()['access_token']
     user.save()
     return redirect('/login', {})
+
+
+def insights(request, username, repo):
+    project = Project.objects.filter(title=repo, lead__username=username).first()
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'project': project,
+        #'project_id': project.id
+    }
+    return render(request, 'insights.html', context)
+
+
+def pulse(request, username, repo):
+    project = Project.objects.filter(title=repo, lead__username=username).first()
+    today = timezone.now()
+    date_from = timezone.now() - timedelta(7)
+    date_from = date_from
+    set_filter = 'hours'
+    if request.GET.get('filter'):
+        date_filter = request.GET.get('filter')
+
+        if date_filter == 'hours':
+            date_from = timezone.now() - timedelta(1)
+        elif date_filter == 'days':
+            date_from = timezone.now() - timedelta(3)
+            set_filter = 'days'
+
+    merged_pull_requests = PullRequest.objects.filter(project=project, state=State.MERGED,
+                                                      date_created__range=[date_from, today]).all()
+    open_pull_requests = PullRequest.objects.filter(project=project, state=State.OPEN,
+                                                    date_created__range=[date_from, today]).all()
+    closed_issues = Issue.objects.filter(project=project, is_open=False, date_created__range=[date_from, today]).all()
+    new_issues = Issue.objects.filter(project=project, is_open=True,  date_created__range=[date_from, today]).all()
+
+    people_pr_merged = merged_pull_requests.values_list('creator_id', flat=True).distinct()
+    people_pr_open = open_pull_requests.values_list('creator_id', flat=True).distinct()
+    people_is_closed = closed_issues.values_list('creator_id', flat=True).distinct()
+    people_is_new = new_issues.values_list('creator_id', flat=True).distinct()
+    context = {
+        'filter': set_filter,
+        'repo_owner': username,
+        'repo_name': repo,
+        'date_from': date_from.date(),
+        'date_to': today.date(),
+        'count_active_pull_requests': len(merged_pull_requests) + len(open_pull_requests),  # 100 / total * x
+        'merged_pull_requests': merged_pull_requests,
+        'open_pull_requests': open_pull_requests,
+        'count_active_issues': len(closed_issues) + len(new_issues),
+        'closed_issues': closed_issues,
+        'new_issues': new_issues,
+        'people_pr_merged': people_pr_merged,
+        'people_pr_open': people_pr_open,
+        'people_is_closed': people_is_closed,
+        'people_is_new': people_is_new
+
+    }
+
+    return render(request, 'pulse.html', context)
+
+
+def traffic(request, username, repo):
+    labels = []
+    count = []
+    uniques = []
+    git_traffic_list = get_repository_traffic(request, username, repo)['clones']
+    if len(git_traffic_list) == 0:
+        context = {
+            'repo_owner': username,
+            'repo_name': repo,
+        }
+        return render(request, 'traffic.html', context)
+    start_date = datetime.strptime(git_traffic_list[0]['timestamp'].split('T')[0], '%Y-%m-%d').date()
+    end_date = datetime.strptime(git_traffic_list[-1]['timestamp'].split('T')[0], '%Y-%m-%d').date()
+    to = [n for n in range(int((end_date - start_date).days))]
+    for i in to:
+        labels.append(start_date.__str__())
+        for item in git_traffic_list:
+            if datetime.strptime(item['timestamp'].split('T')[0], '%Y-%m-%d').date() == start_date:
+                count.append(item['count'])
+                uniques.append(item['uniques'])
+                break
+            else:
+                count.append(0)
+                uniques.append(0)
+
+        start_date += timedelta(days=1)
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'labels': labels,
+        'count': count,
+        'uniques': uniques,
+        'result': git_traffic_list
+    }
+
+    return render(request, 'traffic.html', context)
+
+
+def contributors(request, username, repo):
+    repo_info = get_specific_repository(request, username, repo)
+    if not isinstance(repo_info, list) and 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
+        return page_not_found(request, "There is no repo like that")
+    branches = get_all_branches(request, username, repo)
+    commits = get_all_commits_for_branch(request, username, repo, 'main')
+    if not isinstance(commits, list) and 'message' in commits.keys() and commits['message'] == 'Not Found':
+        return
+    dates = [n['commit']['author']['date'] for n in commits]
+    dates = [datetime.strptime(n.split('T')[0], '%Y-%m-%d').date() for n in dates]
+
+    start_date = dates[-1]
+    end_date = timezone.now().date()
+    to = [n for n in range(int((end_date - start_date).days))]
+
+    labels = []
+    counts = []
+    # { 'developer' : { 'date': x, 'counts': y } }
+    developer_map = {}
+    for i in to:
+        labels.append(str(start_date))
+        count = 0
+        for item in commits:
+            if datetime.strptime(item['commit']['author']['date'].split('T')[0], '%Y-%m-%d').date() == start_date:
+                count += 1
+                author = item['commit']['author']['name']
+                if author in developer_map:
+                    if start_date in developer_map[author]:
+                        developer_map[author][start_date] += 1
+                    else:
+                        developer_map[author][start_date] = 0
+                else:
+                    developer_map[author] = {}
+                    developer_map[author][start_date] = 0
+
+        counts.append(count)
+        developers = developer_map.keys()
+        for developer in developers:
+            if start_date in developer_map[developer]:
+                continue
+            else:
+                developer_map[developer][start_date] = 0
+
+        start_date += timedelta(days=1)
+
+    for developer in developer_map.keys():
+        developer_map[developer] = list(developer_map[developer].values())
+    context = {
+        'repo_info': repo_info,
+        'commits': commits,
+        'branches': branches,
+        'repo_owner': username,
+        'repo_name': repo,
+        'dates': dates,
+        'labels': labels,
+        'counts': counts,
+        'developer_map': developer_map
+    }
+
+    return render(request, 'contributors.html', context)
+
+
+def commits_chart(request, username, repo):
+    repo_info = get_specific_repository(request, username, repo)
+    if not isinstance(repo_info, list) and 'message' in repo_info.keys() and repo_info['message'] == 'Not Found':
+        return page_not_found(request, "There is no repo like that")
+    branches = get_all_branches(request, username, repo)
+    commits = get_all_commits_for_branch(request, username, repo, 'main')
+    if not isinstance(commits, list) and 'message' in commits.keys() and commits['message'] == 'Not Found':
+        return
+    dates = [n['commit']['author']['date'] for n in commits]
+    dates = [datetime.strptime(n.split('T')[0], '%Y-%m-%d').date() for n in dates]
+
+    start_date = dates[-1]
+    end_date = timezone.now().date()
+    to = [n for n in range(int((end_date - start_date).days))]
+
+    labels = []
+    counts = []
+
+    for i in to:
+        labels.append(str(start_date))
+        count = 0
+        for item in commits:
+            if datetime.strptime(item['commit']['author']['date'].split('T')[0], '%Y-%m-%d').date() == start_date:
+                count += 1
+        counts.append(count)
+
+        start_date += timedelta(days=1)
+
+    context = {
+        'repo_info': repo_info,
+        'commits': commits,
+        'branches': branches,
+        'repo_owner': username,
+        'repo_name': repo,
+        'labels': labels,
+        'counts': counts,
+    }
+
+    return render(request, 'commits.html', context)
+
+
+def forks(request, username, repo):
+    forks_info = get_forks(request, username, repo)
+    # { 'user' : 'repo' }
+    forks_map = {}
+    for fork in forks_info:
+        forks_map[fork['full_name']] = fork['html_url']
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'forks': forks_map,
+    }
+
+    return render(request, 'forks.html', context)
+
+
+def code_frequency(request, username, repo):
+    git_code_frequency = get_code_frequency(request, username, repo)
+    temp_date = [datetime.fromtimestamp(n[0]).date() for n in git_code_frequency]
+
+    labels = []
+    added = []
+    deleted = []
+
+    if len(git_code_frequency) == 0:
+        context = {
+            'repo_owner': username,
+            'repo_name': repo,
+        }
+        return render(request, 'code_frequency.html', context)
+
+    start_date = temp_date[0]
+    end_date = temp_date[-1]
+    to = [n for n in range(int((end_date - start_date).days))]
+    for i in to:
+        labels.append(start_date.__str__())
+        add_count = 0
+        delete_count = 0
+        for item in git_code_frequency:
+            if datetime.fromtimestamp(item[0]).date() == start_date:
+                add_count += item[1]
+                delete_count += item[2]
+
+        added.append(add_count)
+        deleted.append(delete_count)
+        start_date += timedelta(days=1)
+
+    context = {
+        'repo_owner': username,
+        'repo_name': repo,
+        'labels': labels,
+        'added': added,
+        'deleted': deleted
+    }
+
+    return render(request, 'code_frequency.html', context)
+
+
+def advanced_search(request, project_id, user_id):
+    if request.method == 'GET':
+        return render(request, "advanced_search_result.html",
+                      {'project_id': project_id, 'user_id': user_id, 'selected': 2})
+    if request.method == 'POST':
+        obj_dict = {
+            'keyword': request.POST['keyword'],
+            'project_id': project_id,
+            'user_id': user_id,
+            'selected': 2
+        }
+        if 'search_user' in request.POST:
+            obj_dict['search_type'] = 's2'
+            u = User.objects.filter(id=user_id).first()
+            if 'user:' not in obj_dict['keyword']:
+                obj_dict['keyword'] = request.POST['keyword'] + " user:" + u.username + " author:" + u.username
+        if 'search_all' in request.POST:
+            obj_dict['search_type'] = 's1'
+        if 'search_project' in request.POST:
+            obj_dict['search_type'] = 's3'
+
+        if obj_dict['keyword'] not in {None, ''}:
+             #return render(request, "advanced_search_result.html", obj_dict)
+            return redirect('advanced_search_results', project_id=project_id,
+                            user_id=user_id, keyword=obj_dict['keyword'],
+                            search_type=obj_dict['search_type'], selected=obj_dict['selected'])
+
+        return render(request, "advanced_search.html", {'new_name_error': "Seaarch was not successful"})
+
+
+def toggle_search_results(request, project_id, user_id, keyword, search_type, selected):
+    if request.method == 'GET':
+        return redirect('advanced_search_results', project_id=project_id,
+                        user_id=user_id, keyword=keyword, search_type=search_type, selected=selected)
+
+
+def advanced_search_result(request, project_id, user_id, keyword=None,  search_type=None, selected=2):
+    obj_dict = {
+        'project_id': project_id,
+        'user_id': user_id,
+        'keyword': keyword,
+        'selected': selected,
+        'iss': 'issue'
+    }
+    if 's2' in search_type:
+        obj_dict['search_type'] = 's2'
+        u = User.objects.filter(id=user_id).first()
+        obj_dict['info'] = u.username
+        if 'user:' not in obj_dict['keyword']:
+            obj_dict['keyword'] = keyword + " user:" + u.username + " author:" + u.username
+        obj_dict['projects'], obj_dict['issues'], obj_dict['prs'] = search_in_user(obj_dict['keyword'], request.user)
+    if 's1' in search_type:
+        obj_dict['search_type'] = 's1'
+        obj_dict['projects'], obj_dict['issues'], obj_dict['users'], obj_dict['prs'] = search_in_github(obj_dict['keyword'], request.user)
+    if 's3' in search_type:
+        obj_dict['search_type'] = 's3'
+        p = Project.objects.filter(id=project_id).first()
+        obj_dict['info'] = p.title
+        obj_dict['issues'], obj_dict['prs'] = search_in_project(obj_dict['keyword'], request.user, project_id)
+    if obj_dict['keyword'] not in {None, ''}:
+        return render(request, "advanced_search_result.html", obj_dict)
+    return render(request, "advanced_search_result.html", {'new_name_error': "Seaarch was not successful"})
+
+
+def tasks_filter(request, task_type, selected_tab):
+    if request.method == 'GET':
+        obj_dict = {
+            'task_type': task_type,
+            'selected_tab': selected_tab,
+            'query': '',
+        }
+        if task_type in ['pr', 'issue']:
+            if selected_tab == 1: #created
+                obj_dict['query'] = "is:" + task_type + " author:"+request.user.username
+            elif selected_tab == 2: #assigned
+                obj_dict['query'] = "is:" + task_type + " assignee:" + request.user.username
+            else:
+                obj_dict['query'] = "is:" + task_type
+        else:
+            if selected_tab == 1: #created
+                obj_dict['query'] = "author:"+request.user.username
+            elif selected_tab == 2: #assigned
+                obj_dict['query'] = "assignee:" + request.user.username
+            else:
+                obj_dict['query'] = ""
+
+        obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
+        return render(request, "tasks_filter.html", obj_dict)
+
+    if request.method == 'POST':
+        obj_dict = {
+            'query': request.POST['query'],
+            'selected_tab': selected_tab,
+            'task_type': task_type,
+        }
+        if obj_dict['query'] not in {None, ''}:
+            obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
+            return render(request, "tasks_filter.html", obj_dict)
+        return render(request, "tasks_filter.html", {'new_name_error': "Filter was not successful"})
+
+
+def forward_to_view_task(request, pk):
+    if Issue.objects.filter(id=pk):
+        return redirect('issue_detail', pk=pk)
+    else:
+        return redirect('pull_request_detail', pk=pk)

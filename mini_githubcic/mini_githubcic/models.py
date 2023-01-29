@@ -125,7 +125,7 @@ class Task(models.Model):
 
 class Event(models.Model):
     date_time = models.DateTimeField(default=timezone.now)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="events", related_query_name="event")
     author = models.ForeignKey(User, blank=False, null=True, related_name='author', on_delete=models.CASCADE)
 
 
@@ -221,7 +221,7 @@ class Reaction(models.Model):
 
 class Notification(models.Model): #razmisli o referenci na comit bukvalno
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, unique=False)  # OneToOne
-    project = models.OneToOneField(Project, null=True, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     is_reded = models.BooleanField(default=False)
     message = models.CharField(max_length=50, unique=False, blank=True)
     #object_id = models. mozda id od toga sto je

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if project_id %}
+<h1 class="title">Insights <b>{{ project.title }}</b></h1>
+{% endif %}
+
+<div class="container">
+    <div class="row" style="padding: 10px;">
+        <div class="col-auto">
+
+        </div>
+    </div>
+
+    <div class="container" style="padding: 10px;">
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+               <!-- <a class=nav-link" href="{% url 'pulse' repo_owner repo_name %}">Pulse</a> -->
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'contributors' repo_owner repo_name %}">Contributors</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'traffic' repo_owner repo_name %}">Traffic</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'commits' repo_owner repo_name %}">Commits</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'code_frequency' repo_owner repo_name %}">Code frequency</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link"  href="{% url 'forks' repo_owner repo_name %}">Forks</a>
+            </li>
+        </ul>
+
+        <div>
+            {% block insights %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

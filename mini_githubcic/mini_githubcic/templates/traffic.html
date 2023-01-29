@@ -1,0 +1,64 @@
+{% extends 'insights.html' %}
+{% block insights %}
+
+<div>
+    <div>
+ <div id="container" style="width: 75%;">
+    <canvas id="line-chart"></canvas>
+  </div>
+{% if labels %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+  <script>
+    const config = {
+      type: 'line',
+      data: {
+        datasets: [{
+          data: {{ uniques |safe }},
+          backgroundColor: [
+            '#FFC0CB'
+          ],
+          label: 'Unique clone'
+        },
+        {
+          data: {{ count | safe }},
+          backgroundColor: [
+            '#FF1493'
+          ],
+          label: 'Clone'
+        }],
+        labels: {{ labels|safe }}
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Chart.js Line Chart - Logarithmic'
+          }
+        },
+        scales: {
+          x: {
+            display: true,
+          },
+          y: {
+            display: true,
+            min: -100,
+            max: 1000
+          }
+        }
+      },
+    };
+
+
+    window.onload = function() {
+      var ctx = document.getElementById('line-chart').getContext('2d');
+      window.myPie = new Chart(ctx, config);
+    };
+
+    </script>
+        {%endif %}
+    </div>
+</div>
+
+
+{% endblock %}
