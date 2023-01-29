@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+
 from itertools import chain
 import markdown
 
