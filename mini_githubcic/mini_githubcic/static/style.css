@@ -47,5 +47,173 @@ ul {
     background: #44B78B;
     padding: 0;
     left: 0;
+    width: -webkit-fill-available;
+}
+
+.comment-block {
+    background-color: #f6f8fa;
+    border-width: thin;
+    border-color: #d0d7de;
+    border-style: solid;
+    border-bottom-color: #d0d7de !important;
+    border-bottom-width: thin !important;
+    border-bottom-style: solid !important;
+    border-radius: 6px;
+}
+
+.item1 {
+  grid-area: myArea;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-areas: 'myArea myArea myArea .';
+  grid-gap: 10px;
+  padding: 10px;
+}
+
+.grid-container > div {
+  text-align: center;
+}
+
+.m-b-i{
+    margin-block-start: 10px;
+    margin-inline-start: 10px;
+    word-break: break-all;
+    white-space: normal;
+}
+
+.nb{
+    font-size: 30px !important;
+    border: none !important;
+    background: none !important;
+}
+
+.reaction_container{
+    height: 26px;
+    padding: 0 4px !important;
+    margin-right: 0 !important;
+    font-size: 12px;
+    line-height: 26px;
+    background-color: transparent;
+    border: 1px solid var(--color-border-default, #d2dff0);
+    border-radius: 100px;
+    margin-left: 10px !important;
+    margin-bottom: 10px !important;
+    margin-top: 10px !important;
+}
+.reaction_number{
+    height: 24px;
+    padding: 0 4px;
+    margin-left: 2px;
+    color: #57606a !important;
+    text-decoration: none !important;
+}
+
+.m-b-i blockquote{
+    padding: 0 1em;
+    color: #57606a;
+    border-left: 0.25em solid #d0d7de;
+}
+
+.added_field {
+    color: black;
+    font-weight: 300;
+    font-size: 20px;
+    background: #e6ffec;
+    padding: 0;
+    left: 0;
     width: 100vw !important;
+}
+
+.deleted_field {
+    color: black;
+    font-weight: 300;
+    font-size: 20px;
+    background: #ffebe9;
+    padding: 0;
+    left: 0;
+    width: 100vw !important;
+}
+
+.nothing_field {
+    color: black;
+    font-weight: 300;
+    font-size: 20px;
+    background: #acb3b0;
+    padding: 0;
+    left: 0;
+    width: 100vw !important;
+}
+.counter {
+    width: 3vw !important;
+    text-align: center;
+    background-color: #ccffd8;
+}
+.file_div{
+    background-color: #f6f8fa;
+    border-radius: 20px;
+    border-color: #96a59f;
+    border-width: 2px;
+}
+.card_ch{
+    margin-left: 15% !important;
+    width: 70%;}
+
+.menu{
+    background-color: #ffffff;
+    display: block !important;
+    border-radius: 6px;
+    list-style: none;
+    margin-bottom: 16px;
+    border: 1px solid #d0d7de !important;
+}
+
+.menu-item{
+    border-bottom: 1px solid hsla(210,18%,87%,1);
+    color: #24292f;
+    display: block;
+    padding: 8px 16px;
+    position: relative;
+}
+
+.counter{
+    float: right;
+    background-color: #6e7781;
+    color: #ffffff;
+    border: 1px solid;
+    border-radius: 2em;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 20px;
+    padding: 0 6px;
+    text-align: center;
+    margin-left: 4px !important;
+}
+
+.selected{
+    border-right: groove !important;
+}
+
+.subnav-item{
+    position: relative;
+    float: left;
+    padding: 5px 16px;
+    font-weight: 500;
+    line-height: 26px;
+    color: #24292f;
+    border: 1px solid #d0d7de;
+    text-align: center !important;
+}
+
+.first {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.last {
+    margin-left: -1px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
 }

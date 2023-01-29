@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Delete branch</h1>
+{% if err %}
+   <p>{{ err }} <a href="{% url 'github_branches' username repo %}">Go back</a></p>
+
+{% endif %}
+<div class="container">
+    <form method="POST" action="{% url 'github_delete_branch' username repo branch %}">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <h2>Are you sure you want to delete the {{branch}} branch?</h2>
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-danger" type="submit">Yes</button>
+            <a class="btn btn-primary" href="{% url 'github_branches' username repo %}">No</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}

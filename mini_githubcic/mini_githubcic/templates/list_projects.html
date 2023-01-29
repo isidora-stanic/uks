@@ -1,11 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1 class="title">Projects</h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=False s3=False project_id=0 user_id=0 %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Projects</div>
+    </div>
+</h1>
 
 <div class="container">
     {% if request.user.is_authenticated %}
         <a class="btn default-button" href="{% url 'add_project' %}">New project</a>
+        <a class="btn default-button" href="{% url 'list_starred_projects' request.user.username %}">Starred projects</a>
+        <a class="btn default-button" href="{% url 'list_watched_projects' request.user.username %}">Watched projects</a>
     {% endif %}
+
     <br/>
     {% if projects %}
     {% for project in projects %}

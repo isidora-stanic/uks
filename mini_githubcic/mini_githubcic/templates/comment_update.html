@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1 class="title">Edit comment</h1>
+<div class="container">
+    {% if error_add %}
+    <div class="alert alert-danger" role="alert">{{error_add}}</div>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            {{form.media}}
+            {{form.as_p}}
+        </fieldset>
+        <div class="form-group">
+            <a class="btn btn-secondary" href="{% url 'issue_detail' object.task.id %}">Cancel</a>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

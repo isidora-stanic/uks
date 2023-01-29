@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=False s3=False project_id=0 user_id=0 %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Watched projects</div>
+    </div>
+</h1>
+
+<div class="container">
+    <br/>
+    {% if projects %}
+    {% for project in projects %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="card-text">{{ project }} </p>
+            <a class="btn btn-primary" href="{% url 'project_detail' project.id %}">View</a>
+            <a class="btn btn-danger" href="{% url 'unwatch_project' project.id request.user.username %}">Unwatch</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    There are no watched projects.
+    {% endif %}
+</div>
+{% endblock %}

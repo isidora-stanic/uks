@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">Delete comment</h1>
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <h2>Are you sure you want to delete the comment?</h2>
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-danger" type="submit">Yes</button>
+            <a class="btn btn-primary" href="{% url 'issue_detail' object.task.id %}">No</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}

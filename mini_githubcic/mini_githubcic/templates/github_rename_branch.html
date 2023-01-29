@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Rename branch {{ branch }}</h1>
+<form method="post" action="{% url 'github_rename_branch' username repo branch %}">
+    {% csrf_token %}
+    <table>
+        <tr>
+            <td>New name:</td>
+            <td>
+                <input type="text" name="new_name" value="{{ new_name }}"/></td>
+            <td>
+                {% if new_name_error %}
+                <div class="greska">{{new_name_error}}</div>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</form>
+{% if response %}
+{{ response }} {{ status_code }}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load commit_extras %}
+{% block content %}
+{% if project_id %}
+<h1 class="title">Branches for <b>{{ username }}/{{ repo }}</b></h1>
+{% endif %}
+
+<div class="container">
+{#    {%if request.user in project.developers.all or request.user == project.lead %}#}
+    <a class="btn default-button" href="{% url 'github_create_branch' username repo %}">New branch</a>
+{#    {% endif %}#}
+    <br/>
+    {% if branches %}
+    <div class="container">
+        <div class="tab-content">
+            <div class="tab-pane container active">
+                {% for branch in branches %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                    <div class="row">
+                        <div class="col-auto mr-auto"><a href="{% url 'github_branch_commits' username repo branch.name|replace_slash %}" class="card-text">{{ branch.name }}</a></div>
+                        <div class="col-auto"><a href="{% url 'changes' username repo branch.commit.sha %}">[{{ branch.commit.sha|shorten_sha }}]</a></div>
+                    </div>
+                        {% if branch.name != 'main' %}
+{#                        {%if request.user in project.developers.all or request.user == project.lead %}#}
+                        <a class="btn btn-secondary" href="{% url 'github_rename_branch' username repo branch.name|replace_slash %}">Rename</a>
+                        <a class="btn btn-danger" href="{% url 'github_delete_branch' username repo branch.name|replace_slash %}">Delete</a>
+{#                        {% endif %}#}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    There are no added branches.
+    {% endif %}
+</div>
+{% endblock %}

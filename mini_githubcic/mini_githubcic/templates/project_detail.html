@@ -1,25 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Project details</h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=object.id user_id=object.lead.id %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Project details</div>
+    </div>
+</h1>
 <article class="container">
     <div>
         <h2> Title - {{ object.title }}</h2>
         <p> Description - {{ object.description }}</p>
         <p> Licence - {{ object.licence }}</p>
         <p> Visibility - {{ object.visibility | title }}</p>
-        <p> Link - {{ object.link }}</p>
+        <p> Repo - <a href="{{ object.link }}">{{ object.link }}</a></p>
         <p> Lead - <a href="{% url 'profile_preview' object.lead.username %}">{{ object.lead }}</a></p>
-        <p> Developers:</p>
+        <span> Developers:</span>
         {% for dev in object.developers.all %}
             <a href="{% url 'profile_preview' dev.username %}">{{ dev.username }}</a>
         {% endfor %}
+        <p>Number of times this project has been forked: {{ object.number_of_forked_project }}</p>
     <hr>
     </div>
     <div>
-        <a class="btn btn-primary" href="{% url 'branch_detail' main_branch.id %}">Code</a>
+        {% if repo_exists %}
+            <a class="btn btn-primary" href="{% url 'github_branch_commits' repo_owner repo_name 'main' %}">Branch history</a>
+        {% else %}
+            <a disabled class="btn btn-secondary disabled" href="#">Branch history</a>
+        {% endif %}
         <a class="btn btn-primary" href="{% url 'project_issues' object.id %}">Issues</a>
+        <a class="btn btn-primary" href="{% url 'pulse' object.lead.username object.title %}">Pulse</a>
+        <a class="btn btn-primary" href="{% url 'list_pull_requests' object.id %}">Pull requests</a>
         <a class="btn btn-primary" href="{% url 'list_milestones' object.id %}">Milestones</a>
         <a class="btn btn-primary" href="{% url 'list_labels' object.id %}">Labels</a>
+        {% if request.user.is_authenticated %}
+            <a class="btn btn-primary" href="{% url 'star_project' object.id request.user.username %}">Star project</a>
+            <a class="btn btn-primary" href="{% url 'watch_project' object.id request.user.username %}">Watch project</a>
+            <a class="btn btn-primary" href="{% url 'fork_project' object.id request.user.username %}">Fork project</a>
+        {% endif %}
         {% if request.user == project.lead %}
         <a class="btn btn-primary" href="{% url 'project_update' object.id %}">Update</a>
         {% endif %}

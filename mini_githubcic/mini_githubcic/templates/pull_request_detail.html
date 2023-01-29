@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=pr.project.id user_id=pr.project.lead.id %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Pull request details</div>
+    </div>
+</h1>
+<article class="container">
+    <div class="row">
+        <div class="col-auto mr-auto">
+            <h2> {{ pr.title }}</h2>
+        </div>
+        <div class="col-auto">
+            <a class="btn btn-secondary" href="{% url 'list_pull_requests' pr.project.id %}">Back to list</a>
+            {% if request.user == pr.creator %}
+            <a class="btn btn-primary" href="{% url 'pull_request_update' pr.id %}">Update</a>
+            <a class="btn btn-danger" href="{% url 'pull_request_delete' pr.id %}">Delete</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="grid-container">
+        <div class="item1"></div>
+        <div class="item2 comment-block">
+            <p> {{ pr.creator }} requested to merge <b>{{ pr.source.name }}</b> into <b>{{ pr.target.name }}</b>
+ {#                <a href="{% url 'branch_detail' pr.source.id %}">{{ pr.source.name }}</a> into#}
+ {#                <a href="{% url 'branch_detail' pr.target.id %}">{{ pr.target.name }}</a>#}
+
+            </p>
+            <p> Description - {{ pr.description }}</p>
+            <p> Date - {{ pr.date_created|date:"d M, Y" }}</p>
+            <p> Assigned to - {{ pr.assigned_to | title }}</p>
+            <p> Created by - {{ pr.creator }}</p>
+            <p> State - {{ pr.state }}</p>
+            <hr><h4>Labels</h4>
+            {% if pr.labels.all %} {% for label in pr.labels.all %}
+            <span
+                class="badge badge-primary"
+                style="background-color: {{label.color}}; margin-bottom: 10px; border-radius: 25px;"
+            >{{ label.name }}
+            </span>
+            {% endfor %}
+            {% else %} There are no added labels. {% endif %}
+            <hr/>
+        </div>
+        <div class="item1">
+            {% block comment_content %}
+            {% include "new_comment.html" %}
+            {% endblock %}
+        </div>
+    </div>
+    <h3>Timeline</h3>
+    {% include "timeline.html" with events=events %}    
+    <br>
+
+</article>
+{% endblock content %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load issue_extras %}
+{% block content %}
+<h1 class="title" style="display:flex;">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=False s3=False project_id=0 user_id=0 %}
+            {% endblock advanced_search %}
+        </div>
+        {% if request.user.is_authenticated %}
+        <a class="nav-links" style="line-height: 2px;" href="{% url 'tasks_filter' 'pr' 1 %}">Pull Requests</a>
+        <a class="nav-links" style="line-height: 2px;" href="{% url 'tasks_filter' 'issue' 1 %}">Issues</a>
+        {% endif %}
+    </div>
+</h1>
+<div class="container">
+    <div style="display:flex;">
+        <nav aria-label="Pull Requests">
+            <a class="subnav-item first "
+               style="{% if selected_tab is 1 %}
+                   background-color: blue !important;color: white;
+                   {% endif %}"
+               title="Pull Requests created by you"
+               aria-current="page"
+               href="{% url 'tasks_filter' task_type 1%}">Created</a>
+            <a class="subnav-item last "
+               style="{% if selected_tab is 2 %}
+                   background-color: blue !important;color: white;
+                   {% endif %}"
+               title="Pull Requests assigned to you"
+               href="{% url 'tasks_filter' task_type 2%}">Assigned</a>
+
+        </nav>
+        <div class="flex-auto min-width-0">
+            <form class="ml-0 ml-md-3 mt-3 mt-md-0" style="display: -webkit-box;"
+                  action="{% url 'tasks_filter' task_type selected_tab%}" method="post">
+                {% csrf_token %}
+                <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
+                     style="margin-right: 5px;margin-top: 8px;"
+                     data-view-component="true" class="octicon octicon-search subnav-search-icon">
+                    <path fill-rule="evenodd"
+                          d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z"></path>
+                </svg>
+                <input type="text" name="query" value="{{query}}" id="query"
+                       class="form-control subnav-search-input subnav-search-input-wide input-contrast width-full"
+                       placeholder="Search all tasks" required>
+
+            </form>
+        </div>
+    </div>
+    <br>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#open">
+                {{tasks|another:query|task_is_open:True|length}}
+                Open</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#closed">
+                {{tasks|another:query|task_is_open:False|length}}
+                Closed</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane container active" id="open">
+            {% if tasks|another:query|task_is_open:True  %}
+            {% for t in tasks|another:query|task_is_open:True %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <p class="card-text"><b>{{ t.title }}</b>
+                        <small>{{t.description}}</small>
+                    </p>
+                    <a class="btn btn-primary" href="{% url 'forward_to_view_task' t.id %}">View</a>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div data-view-component="true"
+                 style="padding: 32px;position: relative;text-align: center;padding-right: 8px !important;padding-left: 8px) !important;">
+                <svg aria-hidden="true" height="24" viewBox="0 0 24 24" version="1.1" width="24"
+                     data-view-component="true"
+                     class="octicon octicon-search blankslate-icon">
+                    <path fill-rule="evenodd"
+                          d="M10.25 2a8.25 8.25 0 105.28 14.59l5.69 5.69a.75.75 0 101.06-1.06l-5.69-5.69A8.25 8.25 0 0010.25 2zM3.5 10.25a6.75 6.75 0 1113.5 0 6.75 6.75 0 01-13.5 0z"></path>
+                </svg>
+                <h3 data-view-component="true" class="mb-1">No results matched your search</h3>
+                <p>None of the search qualifiers apply to this search type.</p>
+
+            </div>
+            {% endif %}
+        </div>
+        <div class="tab-pane container fade" id="closed">
+            {% if tasks|another:query|task_is_open:False %}
+            {% for t in tasks|another:query|task_is_open:False %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <p class="card-text"><b>{{ t.title }}</b>
+                        <small>{{t.description}}</small>
+                    </p>
+                    <a class="btn btn-primary" href="{% url 'forward_to_view_task' t.id %}">View</a>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div data-view-component="true"
+                 style="padding: 32px;position: relative;text-align: center;padding-right: 8px !important;padding-left: 8px) !important;">
+                <svg aria-hidden="true" height="24" viewBox="0 0 24 24" version="1.1" width="24"
+                     data-view-component="true"
+                     class="octicon octicon-search blankslate-icon">
+                    <path fill-rule="evenodd"
+                          d="M10.25 2a8.25 8.25 0 105.28 14.59l5.69 5.69a.75.75 0 101.06-1.06l-5.69-5.69A8.25 8.25 0 0010.25 2zM3.5 10.25a6.75 6.75 0 1113.5 0 6.75 6.75 0 01-13.5 0z"></path>
+                </svg>
+                <h3 data-view-component="true" class="mb-1">No results matched your search</h3>
+                <p>None of the search qualifiers apply to this search type.</p>
+
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
