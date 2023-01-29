@@ -16,7 +16,7 @@ class CommentsReactionsTest(TestCase):
         self.client.login(username='U1', password='123')
 
     def test_successful_add_reaction(self):
-        response = self.client.get(reverse('comment_reaction', args=[1, 'LIKE']), {}, follow=True)
+        response = self.client.get(reverse('comment_reaction', args=[1, 'SMILE']), {}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.context['comments'][0].get('reactions')) is 2)
         self.assertTrue(response.context['comments'][0].get('reactions')[1].type == ReactionType.LIKE)
