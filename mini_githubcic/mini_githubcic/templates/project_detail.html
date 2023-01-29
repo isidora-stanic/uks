@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">Project details</h1>
+<h1 class="title">
+    <div class="col-auto mr-auto" style="display:flex;">
+        <div style="border-bottom: groove">
+            {% block advanced_search %}
+            {% include "advanced_search.html" with s1=True s2=True s3=True project_id=object.id user_id=object.lead.id %}
+            {% endblock advanced_search %}
+        </div>
+        <div style="margin-top: 8px;margin-left:20px">Project details</div>
+    </div>
+</h1>
 <article class="container">
     <div>
         <h2> Title - {{ object.title }}</h2>

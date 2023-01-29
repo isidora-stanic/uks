@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\mini_githubcic\test\test_history_tracking_url.py">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\mini_githubcic\views.py">
           <value>
             <Attribute>

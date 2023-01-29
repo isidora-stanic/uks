@@ -122,3 +122,8 @@ def get_repository_traffic(request, username, repo):
 
 def get_forks(request, username, repo):
     return send_github_req('https://api.github.com/repos/' + username + '/' + repo + '/forks', request)
+
+    
+def git_fork_projects(request, username, repo): #default_branch_only
+    return send_github_req('https://api.github.com/repos/' + username + '/' + repo + '/forks', request, method='POST',
+                           data='{"default_branch_only":false,"name":"testing' + repo + '"}')

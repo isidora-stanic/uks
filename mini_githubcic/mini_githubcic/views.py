@@ -18,7 +18,7 @@ from django.views.generic import (
     DeleteView
 )
 
-from .util import find_differences
+from .util import *
 
 from .github_api.service import *
 from .github_api.utils import send_github_req, get_access_token, decode_base64_file
@@ -127,7 +127,7 @@ class ProjectCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.lead = self.request.user
-        form.instance.developers.push(self.request.user)
+        #form.instance.developers.push(self.request.user)
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if Project.objects.filter(title=form.instance.title).exists():
             form.add_error(None, 'Title already in use')
@@ -452,6 +452,9 @@ class MilestoneCreateView(CreateView):
     def form_valid(self, form):
         context = self.get_context_data()
         form.instance.project = context['project']
+        if (form.instance.due_date - datetime.datetime.now(timezone.utc)).days < 0:
+            form.add_error(None, 'Day is before today')
+            return super().form_invalid(form)
         form.instance.lead = self.request.user
         form.instance.link = "https://github.com/" + form.instance.lead.username + "/" + form.instance.title + ".git"
         if len(Milestone.objects.filter(title=form.instance.title)) != 0:
@@ -692,7 +695,8 @@ def starr_project(request, pk=None, username=None):
         user = User.objects.get(username=username)
         project.starred.add(user)
         project.save()
-        return redirect(project)
+        return redirect("../../projects/"+str(project.id))
+
 
 def unstarr_project(request, pk=None, username=None):
     if request.method == 'GET':
@@ -766,6 +770,17 @@ def make_notification(project, type_notification):
 def fork_project(request, pk=None, username=None):
     # tj koliko u dublinu da kopiram
     project = Project.objects.filter(id=pk)[0]
+    names = project.link.split("/")
+    resp = git_fork_projects(request, names[len(names)-2], names[len(names)-1])
+    print(resp["html_url"])
+    # if 'ref' in resp.keys() and resp['ref'] == "refs/heads/" + new_name:
+    #     return redirect('github_branches', username=username, repo=repo)
+    # return render(request, "github_create_branch.html",
+    #               {'new_name_error': "Renaming was not successful", 'username': username, 'repo': repo})
+
+    #result
+    link = resp["html_url"]
+
     if project.visibility == 'PUBLIC':
         if project.number_of_forked_project is None:
             project.number_of_forked_project = 0
@@ -776,7 +791,7 @@ def fork_project(request, pk=None, username=None):
                               licence = project.licence,
                               description = project.description,
                               visibility = project.visibility,
-                              link= project.link,
+                              link= resp["html_url"], #novi todo
                               lead = user, fork_parent= project)
         new_project.save()
         saved_project = Project.objects.filter(title=new_project.title, lead = new_project.lead)[0]
@@ -910,6 +925,7 @@ class PullRequestUpdateView(UpdateView):
 class PullRequestDetailView(DetailView):
     model = PullRequest
     template_name = 'pull_request_detail.html'
+
 
 def pull_request_new_comment(request, pk):
     reactions = add_reactions()
@@ -1330,27 +1346,109 @@ def code_frequency(request, username, repo):
     return render(request, 'code_frequency.html', context)
 
 
-"""
-def get_code_frequency(request, username, repo,):
-    project = Project.objects.get(pk=pk)
-    tasks = Task.objects.filter(project=project)
-    open_tasks = []
-    closed_tasks = []
-    for task in tasks:
-        if task.current_state():
-            if task.current_state().task_state == "DONE":
-                closed_tasks.append(task)
-            else:
-                open_tasks.append(task)
-    percentage = 0
-    if len(open_tasks) + len(closed_tasks) != 0:
-        percentage =  round(len(closed_tasks)/(len(open_tasks) + len(closed_tasks)) * 100)
+def advanced_search(request, project_id, user_id):
+    if request.method == 'GET':
+        return render(request, "advanced_search_result.html",
+                      {'project_id': project_id, 'user_id': user_id, 'selected': 2})
+    if request.method == 'POST':
+        obj_dict = {
+            'keyword': request.POST['keyword'],
+            'project_id': project_id,
+            'user_id': user_id,
+            'selected': 2
+        }
+        if 'search_user' in request.POST:
+            obj_dict['search_type'] = 's2'
+            u = User.objects.filter(id=user_id).first()
+            if 'user:' not in obj_dict['keyword']:
+                obj_dict['keyword'] = request.POST['keyword'] + " user:" + u.username + " author:" + u.username
+        if 'search_all' in request.POST:
+            obj_dict['search_type'] = 's1'
+        if 'search_project' in request.POST:
+            obj_dict['search_type'] = 's3'
 
-    context = {
-        'object': project,
-        'open_tasks': open_tasks,
-        'closed_tasks': closed_tasks,
-        'percent_done': percentage
+        if obj_dict['keyword'] not in {None, ''}:
+             #return render(request, "advanced_search_result.html", obj_dict)
+            return redirect('advanced_search_results', project_id=project_id,
+                            user_id=user_id, keyword=obj_dict['keyword'],
+                            search_type=obj_dict['search_type'], selected=obj_dict['selected'])
+
+        return render(request, "advanced_search.html", {'new_name_error': "Seaarch was not successful"})
+
+
+def toggle_search_results(request, project_id, user_id, keyword, search_type, selected):
+    if request.method == 'GET':
+        return redirect('advanced_search_results', project_id=project_id,
+                        user_id=user_id, keyword=keyword, search_type=search_type, selected=selected)
+
+
+def advanced_search_result(request, project_id, user_id, keyword=None,  search_type=None, selected=2):
+    obj_dict = {
+        'project_id': project_id,
+        'user_id': user_id,
+        'keyword': keyword,
+        'selected': selected,
+        'iss': 'issue'
     }
-    return render(request, 'app/project/statistics_pulse.html', context)
-"""
+    if 's2' in search_type:
+        obj_dict['search_type'] = 's2'
+        u = User.objects.filter(id=user_id).first()
+        obj_dict['info'] = u.username
+        if 'user:' not in obj_dict['keyword']:
+            obj_dict['keyword'] = keyword + " user:" + u.username + " author:" + u.username
+        obj_dict['projects'], obj_dict['issues'], obj_dict['prs'] = search_in_user(obj_dict['keyword'], request.user)
+    if 's1' in search_type:
+        obj_dict['search_type'] = 's1'
+        obj_dict['projects'], obj_dict['issues'], obj_dict['users'], obj_dict['prs'] = search_in_github(obj_dict['keyword'], request.user)
+    if 's3' in search_type:
+        obj_dict['search_type'] = 's3'
+        p = Project.objects.filter(id=project_id).first()
+        obj_dict['info'] = p.title
+        obj_dict['issues'], obj_dict['prs'] = search_in_project(obj_dict['keyword'], request.user, project_id)
+    if obj_dict['keyword'] not in {None, ''}:
+        return render(request, "advanced_search_result.html", obj_dict)
+    return render(request, "advanced_search_result.html", {'new_name_error': "Seaarch was not successful"})
+
+
+def tasks_filter(request, task_type, selected_tab):
+    if request.method == 'GET':
+        obj_dict = {
+            'task_type': task_type,
+            'selected_tab': selected_tab,
+            'query': '',
+        }
+        if task_type in ['pr', 'issue']:
+            if selected_tab == 1: #created
+                obj_dict['query'] = "is:" + task_type + " author:"+request.user.username
+            elif selected_tab == 2: #assigned
+                obj_dict['query'] = "is:" + task_type + " assignee:" + request.user.username
+            else:
+                obj_dict['query'] = "is:" + task_type
+        else:
+            if selected_tab == 1: #created
+                obj_dict['query'] = "author:"+request.user.username
+            elif selected_tab == 2: #assigned
+                obj_dict['query'] = "assignee:" + request.user.username
+            else:
+                obj_dict['query'] = ""
+
+        obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
+        return render(request, "tasks_filter.html", obj_dict)
+
+    if request.method == 'POST':
+        obj_dict = {
+            'query': request.POST['query'],
+            'selected_tab': selected_tab,
+            'task_type': task_type,
+        }
+        if obj_dict['query'] not in {None, ''}:
+            obj_dict['tasks'] = filter_query(obj_dict['query'], request.user)
+            return render(request, "tasks_filter.html", obj_dict)
+        return render(request, "tasks_filter.html", {'new_name_error': "Filter was not successful"})
+
+
+def forward_to_view_task(request, pk):
+    if Issue.objects.filter(id=pk):
+        return redirect('issue_detail', pk=pk)
+    else:
+        return redirect('pull_request_detail', pk=pk)
