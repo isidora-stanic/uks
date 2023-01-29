@@ -82,12 +82,12 @@ WSGI_APPLICATION = 'mini_githubcic.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-
-        # 'TEST': {
-        #             'NAME': 'testdb'
-        #         }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': 'db',
+        'PORT': 5432,
     }
 }
 
@@ -145,6 +145,33 @@ CKEDITOR_CONFIGS = {
         'toolbar': 'Basic',
     },
 }
+
+
+use_testdb = os.environ.get('UKS_TEST_DB', '')
+if use_testdb == 'ON':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            # custom name for testing db
+            'TEST': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': os.path.join(BASE_DIR, 'testdb.sqlite3'),
+            }
+        }
+    }
+else:
+    # use redis as a cache in production
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://redis:6379",
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient"
+            },
+            "KEY_PREFIX": "uks"
+        }
+    }
 
 # Github OAuth App information - can be replaced anytime with another OAuth App's info
 # Currently Mini Github-cic from isidora-stanic
